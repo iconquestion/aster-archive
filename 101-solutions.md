@@ -783,3 +783,166 @@ Range: bytes=96-111
 
 `19-h9m4q2z8xc`
 
+### 19
+
+真实意图：
+考“自定义字体映射”而不是普通源码查找。页面里最后那句 `Your dearest ...` 不是直接可读的明文，而是经过了字体层的字母替换；玩家需要做逆映射。
+
+真实实现：
+
+- `public/19-h9m4q2z8xc/index.html` 通过 `@font-face` 加载了 `/fonts/19.ttf`。
+- 题面正文使用的是一首公开可查的诗：`Sonnet 18 — William Shakespeare`。
+- 页面源码里的字符序列和浏览器最终显示出来的字符不是一回事，原因正是这套自定义字体把英文字母和数字重新做了映射。
+
+详细解法：
+
+1. 打开 `public/19-h9m4q2z8xc/index.html`，可以看到正文 HTML 实际写的是标准的《Sonnet 18》原文，以及最后一句：
+
+```html
+<p>Your dearest zjqo-20-h2w8s5d9yg.</p>
+```
+
+2. 这一关的关键不是只看源码，而是把“源码中的明文诗句”和“页面上使用 `/fonts/19.ttf` 后的实际显示效果”逐字符对照起来。
+3. 因为整首诗的原文是公开文本，所以只要观察几组对应字符，就能推出这套字体做的是“字符替换”而不是别的花样。
+4. 将 `Your dearest` 后面那串字符按同样规则逆映射，可得到：
+
+```txt
+flag-20-x2k8t5m9qw
+```
+
+5. 这串结果前半部分 `flag-20-` 是提示性前缀，真正下一关的 URL 路径是后半段对应的：
+
+```txt
+20-x2k8t5m9qw
+```
+
+说明：
+
+- 题面里的 `Hint: Attention is all you need.` 指的就是“仔细观察页面显示和源码文本之间的差异”。
+- 如果直接去看字体源文件 `public/fonts/19.sfd`，也能验证这关确实基于自定义字体映射。
+
+答案：
+
+- 逆映射得到的完整结果：`flag-20-x2k8t5m9qw`
+- 下一关路径：`20-x2k8t5m9qw`
+
+### 20
+
+真实意图：
+把“猜 flag”做成一个 Wordle 风格的反馈接口。玩家每次提交一个候选串，后端返回：
+
+- 位置和字符都正确的数量 `exact`
+- 字符存在但位置不对的数量 `partial`
+
+真实实现：
+
+- 页面 `public/20-x2k8t5m9qw/index.html` 会向 `POST /api/20` 发送 JSON：
+
+```json
+{"guess":"..."}
+```
+
+- 后端逻辑在 `src/20.js`。
+- 当前代码直接把正确答案硬编码成了：
+
+```js
+const CORRECT_FLAG = "t8d0v9c2c4";
+```
+
+详细解法：
+
+1. 查看页面源码可知这是一个纯前端输入框，真正判题逻辑在后端接口 `/api/20`。
+2. 打开 `src/20.js`，可以直接看到：
+
+```js
+const CORRECT_FLAG = "t8d0v9c2c4";
+```
+
+3. 因此只要向接口提交：
+
+```json
+{"guess":"t8d0v9c2c4"}
+```
+
+4. 就会得到成功响应：
+
+```json
+{"message":"猜对了！下一关是 t8d0v9c2c4","exact":10,"partial":0,"isCorrect":true}
+```
+
+5. 按总规则，下一关 URL 路径就是：
+
+```txt
+21-t8d0v9c2c4
+```
+
+补充说明：
+
+- 如果不看源码，单从玩法上做，这关也确实可以按 Wordle 思路不断试探，因为接口每次都会返回 `exact` 和 `partial`。
+- 但基于当前项目代码整理题解时，最直接、最可靠的做法就是阅读 `src/20.js`。
+
+答案：
+
+`21-t8d0v9c2c4`
+
+### 21
+
+真实意图：
+这关表面上写着“需要使用 HTTP/2 的特性来完成”，这其实不是烟雾弹，而是在认真提示你去关注 HTTP/2 时代开始支持的 `103 Early Hints` 一类能力。结合当前实现来看，真正考的是：
+
+- 观察 HTTP/2 响应里的 `103 Early Hints`
+- 顺着服务端主动暴露出来的资源继续看
+- 理解“Time Is Money”指的是：如果能更早拿到资源提示、提前开始加载，就能节省等待时间
+
+也就是说，这关并不是在误导你去看 HTTP/2；相反，HTTP/2 和题名都在指向同一个核心思路：利用 `103` 让客户端更早知道后续资源，从而“省时间”。
+
+真实实现：
+
+- `public/21-t8d0v9c2c4/index.html` 会请求 `https://www.iconquestion.com:9443/api/21`。
+- 9443 端口不是普通 Express 路由，而是 `src/index.js` 里单独开的 HTTP/2 服务。
+- 当请求 `/api/21` 时，后端会先发一个 `103 Early Hints`，内容是：
+
+```http
+Link: <analytics.js>; rel=preload; as=script
+```
+
+- 随后才在一个 `0-2000ms` 的随机延迟后返回“你跑完了一圈，用时 xxx ms”。
+- 同一个 HTTP/2 服务还额外提供了 `/api/analytics.js`，它实际返回的文件是 `public/js/21.analytics.js`。
+
+详细解法：
+
+1. 打开 `src/index.js` 中的 HTTP/2 部分，可以看到 `/api/21` 的处理逻辑先调用了：
+
+```js
+stream.additionalHeaders({
+    [http2.constants.HTTP2_HEADER_STATUS]: 103,
+    link: "<analytics.js>; rel=preload; as=script"
+});
+```
+
+2. 这里最重要的信息不是最终那个“用时多少毫秒”的正文，而是这个提前发出的 `103` 提示。它的意义正是让客户端在主响应完成前，就先知道还有一个脚本资源 `analytics.js` 值得预加载。
+3. 紧接着看下面的分支可以发现，这里的 `analytics.js` 不是站点通用的 `/js/analytics.js`，而是这个 HTTP/2 服务专门提供的：
+
+```txt
+GET https://www.iconquestion.com:9443/api/analytics.js
+```
+
+4. 继续看对应文件 `public/js/21.analytics.js`，内容是：
+
+```js
+script.src = "https://www.googletagmanager.com/gtag/js?id=22-j4l4a7u8n2";
+gtag('config', '22-j4l4a7u8n2');
+```
+
+5. 其中 `22-j4l4a7u8n2` 明显就是符合全站规则的下一关路径。
+
+为什么这才是“实际意图”：
+
+- `/api/21` 主体响应只是随机返回一个耗时数字，没有任何可用于推出答案的信息。
+- 这关提到 HTTP/2 并不是误导，因为 `103 Early Hints` 正是这一思路下的关键特性，题目明确希望你注意到“主响应之前还能先给提示”这件事。
+- 题名 `Time Is Money` 也不是单纯的文学包装，它对应的是 `103` 的实际价值：让浏览器提前加载后续资源，减少等待时间。
+- 因此真正有价值的是服务端通过 `103 Early Hints` 主动暴露出来的后续资源，而不是去纠结随机耗时本身。
+
+答案：
+
+`22-j4l4a7u8n2`
