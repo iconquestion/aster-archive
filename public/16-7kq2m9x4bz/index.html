@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16 - A Magic Museum</title>
+</head>
+
+<body>
+    <div>
+        <h1>16 - A Magic Museum</h1>
+        <p>你看到一块时间展台，可以把你短暂投送到任意年份的观测窗口。</p>
+        <p>它对过去的播放相当稳定，</p>
+        <p>可一旦你把年份拨向未来，整台机器就开始摆出“请使用更先进通道”的高贵姿态。</p>
+        <p>像那种看见老协议就翻白眼的新时代设备。</p>
+        <p>你会查看哪些时间点呢？</p>
+
+        <input type="number" id="timepoint" placeholder="请输入时间点, 格式为yyyy" />
+        <button id="getresult" value="Get Result">
+            Get Result
+        </button>
+        <p id="result"></p>
+        <details>
+            <summary>Hint</summary>
+            <p>未来不是不给看，只是它嫌你来的路不够新。</p>
+        </details>
+    </div>
+    <script src="/js/get_json_response.js"></script>
+    <script>
+        let trigger_ele_id = "getresult";
+        let response_show_ele_id = "result";
+
+        document.getElementById(trigger_ele_id).addEventListener("click", async () => {
+            let response_show_ele = document.getElementById(response_show_ele_id);
+            response_show_ele.innerText = "";
+
+            await fetch("/api/16?timepoint=" + document.getElementById("timepoint").value)
+                .then((res) => { return res.json() })
+                .then((data) => {
+                    console.log(data);
+                    if (!data || !data.message) throw ("Invalid response.");
+
+                    response_show_ele.innerText = data.message;
+                })
+                .catch((err) => {
+                    let err_summary = "Sorry but we've encountered an issue. Please try again later.";
+                    response_show_ele.innerText = err_summary;
+                    console.log(err_summary);
+                    console.error(err);
+                });
+        })
+    </script>
+    <script src="/js/analytics.js"></script>
+</body>
+
+</html>

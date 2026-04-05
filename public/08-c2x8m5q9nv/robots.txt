@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /exhibition
+Disallow: /infra
+Disallow: /reading_room
+Disallow: /stack
+Disallow: /staff
+
+# Aster Archive

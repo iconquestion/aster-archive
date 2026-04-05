@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17 - Für Elise</title>
+</head>
+
+<body>
+    <div>
+        <h1>17 - Für Elise</h1>
+        <p>你走进一间音乐室，钢琴上压着一封已经发黄的旧信。</p>
+        <p>正文写得体面又克制，像每一个怕自己太用力的人一样故作平静。</p>
+        <p>可你总觉得，真正没说完的话还在后面。</p>
+        <p>有些人把心意写进附言，有些系统则喜欢把真话留到“传完再补”。</p>
+        <p>总之，别太早相信“内容到此结束”。</p>
+        <button id="get_envelope">打开信封</button>
+        <p id="envelope_content"></p>
+        <details>
+            <summary>Hint</summary>
+            <p>信读完了，不代表送信的人就真的说完了。</p>
+        </details>
+    </div>
+    <script src="/js/get_json_response.js"></script>
+    <script>
+        get_json_response("get_envelope", "envelope_content", "https://www.iconquestion.com:8443/api/17");
+    </script>
+    <script src="/js/analytics.js"></script>
+</body>
+
+</html>

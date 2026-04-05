@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>迷宫小游戏</title>
+  <script defer src="/js/alpinejs3.min.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .status {
+      margin-bottom: 12px;
+      line-height: 1.8;
+    }
+
+    .win {
+      color: green;
+      font-weight: bold;
+    }
+
+    .board {
+      display: grid;
+      gap: 2px;
+      margin-bottom: 20px;
+      background: #ccc;
+      width: fit-content;
+      padding: 2px;
+    }
+
+    .cell {
+      width: 48px;
+      height: 48px;
+      box-sizing: border-box;
+      position: relative;
+      border: 1px solid #ddd;
+      background: #fff;
+    }
+
+    .cell-wall-known {
+      background: #111;
+      border-color: #111;
+    }
+
+    .cell-wall-unknown {
+      background: #999;
+      border-color: #999;
+    }
+
+    .cell-start {
+      background: #e8f7e8;
+    }
+
+    .cell-end {
+      background: #fff3cd;
+    }
+
+    .player {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #e33;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+
+    .controls {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 60px);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      height: 40px;
+      cursor: pointer;
+    }
+
+    .log {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid #ccc;
+      width: 420px;
+      min-height: 180px;
+      white-space: pre-wrap;
+      background: #fafafa;
+      overflow-wrap: break-word;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app" x-data="mazeGame()" x-init="connect()" @keydown.window.arrow-up.prevent="move('up')"
+    @keydown.window.arrow-down.prevent="move('down')" @keydown.window.arrow-left.prevent="move('left')"
+    @keydown.window.arrow-right.prevent="move('right')">
+    <div class="status">
+      <div>连接状态：<span x-text="connected ? '已连接' : '未连接'"></span></div>
+      <div>当前位置：(<span x-text="player.x"></span>, <span x-text="player.y"></span>)</div>
+      <div>地图大小：<span x-text="size.x"></span> x <span x-text="size.y"></span></div>
+      <div x-show="win" class="win">你赢了！</div>
+    </div>
+
+    <template x-if="initialized">
+      <div class="board"
+        :style="`grid-template-columns: repeat(${size.x}, 48px); grid-template-rows: repeat(${size.y}, 48px);`">
+        <template x-for="(row, y) in maze" :key="'row-' + y">
+          <template x-for="(cell, x) in row" :key="'cell-' + x + '-' + y">
+            <div class="cell" :class="cellClass(x, y)">
+              <div x-show="player.x === x && player.y === y" class="player"></div>
+            </div>
+          </template>
+        </template>
+      </div>
+    </template>
+
+    <div class="controls">
+      <div></div>
+      <button @click="move('up')">上</button>
+      <div></div>
+
+      <button @click="move('left')">左</button>
+      <button disabled>●</button>
+      <button @click="move('right')">右</button>
+
+      <div></div>
+      <button @click="move('down')">下</button>
+      <div></div>
+    </div>
+
+    <div>
+      <button @click="reconnect()">重新连接</button>
+    </div>
+
+    <div class="log" x-text="logs.join('\n')"></div>
+  </div>
+
+  <script>
+    function mazeGame() {
+      return {
+        ws: null,
+        connected: false,
+        initialized: false,
+        win: false,
+
+        player: { x: 0, y: 0 },
+        size: { x: 0, y: 0 },
+
+        // 探索态：0=未知/白，1=已探索墙/黑
+        maze: [],
+
+        // 通关后完整地图：0/1/s/e
+        fullMaze: null,
+
+        logs: [],
+        pendingDir: null,
+        lastMoveAt: 0,
+        moveCooldownMs: 120,
+
+        connect() {
+          const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
+          const wsUrl = `${wsProtocol}//${location.host}/api/15/challenge`;
+
+          this.logs.push("尝试连接: " + wsUrl);
+
+          this.ws = new WebSocket(wsUrl);
+
+          this.ws.onopen = () => {
+            this.connected = true;
+            this.logs.push("WebSocket 已连接");
+            this.initGame();
+          };
+
+          this.ws.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              this.handleMessage(data, event.data);
+            } catch (e) {
+              this.logs.push("收到非法数据: " + event.data);
+            }
+          };
+
+          this.ws.onclose = () => {
+            this.connected = false;
+            this.pendingDir = null;
+            this.logs.push("连接关闭");
+          };
+
+          this.ws.onerror = (e) => {
+            this.pendingDir = null;
+            this.logs.push("连接出错");
+            console.error("ws error", e);
+          };
+        },
+
+        initGame() {
+          if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            this.logs.push("init 失败：连接尚未就绪");
+            return;
+          }
+
+          this.logs.push("发送 init");
+          this.ws.send(JSON.stringify({ action: "init" }));
+        },
+
+        handleMessage(data, rawText) {
+          if (
+            typeof data.x === "number" &&
+            typeof data.y === "number" &&
+            this.initialized === false
+          ) {
+            this.applyInit(data);
+            return;
+          }
+
+          if (
+            typeof data.wall === "number" &&
+            typeof data.win === "boolean"
+          ) {
+            this.handleMoveResult(data);
+            return;
+          }
+
+          if (data.message) {
+            this.logs.push(data.message);
+            return;
+          }
+
+          if (data.error) {
+            this.logs.push("错误: " + data.error);
+            this.pendingDir = null;
+            return;
+          }
+
+          this.logs.push("收到未知消息: " + rawText);
+        },
+
+        applyInit(data) {
+          this.size = {
+            x: data.x,
+            y: data.y,
+          };
+
+          this.maze = Array.from({ length: this.size.y }, () =>
+            Array.from({ length: this.size.x }, () => 0)
+          );
+
+          this.fullMaze = null;
+          this.player = { x: 0, y: 0 };
+          this.win = false;
+          this.pendingDir = null;
+          this.initialized = true;
+
+          this.logs.push(`游戏初始化完成，地图大小：${this.size.x} x ${this.size.y}`);
+        },
+
+        reconnect() {
+          try {
+            if (this.ws) this.ws.close();
+          } catch (e) { }
+
+          this.connected = false;
+          this.initialized = false;
+          this.win = false;
+          this.pendingDir = null;
+          this.size = { x: 0, y: 0 };
+          this.maze = [];
+          this.fullMaze = null;
+          this.player = { x: 0, y: 0 };
+
+          this.logs.push("开始重新连接");
+          this.connect();
+        },
+
+        move(direction) {
+          if (!this.connected || !this.initialized || this.win) return;
+          if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            this.logs.push("连接尚未就绪");
+            return;
+          }
+          if (this.pendingDir) return;
+
+          const now = Date.now();
+          if (now - this.lastMoveAt < this.moveCooldownMs) return;
+          this.lastMoveAt = now;
+
+          this.pendingDir = direction;
+          this.logs.push("尝试移动: " + direction);
+
+          this.ws.send(JSON.stringify({
+            action: "move",
+            direction,
+          }));
+        },
+
+        handleMoveResult(data) {
+          const dir = this.pendingDir;
+          if (!dir) return;
+
+          const next = this.getNextPosition(this.player.x, this.player.y, dir);
+
+          if (data.wall === 1) {
+            if (this.inBounds(next.x, next.y)) {
+              this.maze[next.y][next.x] = 1;
+            }
+            this.logs.push("撞墙");
+            this.pendingDir = null;
+            return;
+          }
+
+          this.player = next;
+
+          if (data.win === true) {
+            this.win = true;
+
+            if (Array.isArray(data.maze)) {
+              this.fullMaze = data.maze;
+            }
+
+            this.logs.push("胜利！");
+            if (data.flag) {
+              this.logs.push("flag: " + data.flag);
+            }
+          } else {
+            this.logs.push("前进成功");
+          }
+
+          this.pendingDir = null;
+        },
+
+        getNextPosition(x, y, dir) {
+          if (dir === "up") return { x, y: y - 1 };
+          if (dir === "down") return { x, y: y + 1 };
+          if (dir === "left") return { x: x - 1, y };
+          if (dir === "right") return { x: x + 1, y };
+          return { x, y };
+        },
+
+        inBounds(x, y) {
+          return x >= 0 && x < this.size.x && y >= 0 && y < this.size.y;
+        },
+
+        cellClass(x, y) {
+          const known = this.maze[y]?.[x];
+          const actual = this.fullMaze?.[y]?.[x];
+
+          // 已探索到的墙：始终黑色，优先级最高
+          if (known === 1) {
+            return "cell-wall-known";
+          }
+
+          // 通关后，未探索到但真实是墙：灰色
+          if (this.win && actual === 1) {
+            return "cell-wall-unknown";
+          }
+
+          // 可选：显示起点终点
+          if (this.win && actual === "s") {
+            return "cell-start";
+          }
+
+          if (this.win && actual === "e") {
+            return "cell-end";
+          }
+
+          return "";
+        }
+      };
+    }
+  </script>
+</body>
+
+</html>

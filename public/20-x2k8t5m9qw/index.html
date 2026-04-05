@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20 - Guess Guess Guess</title>
+    <style>
+        #guess_input {
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <h1>20 - Guess Guess Guess</h1>
+        <p>你面前出现了一把怪脾气密码锁。</p>
+        <p>它不肯直接告诉你答案，</p>
+        <p>但每次试错后都会很欠揍地给出一点“接近了，但没完全接近”的反馈。</p>
+        <p>看起来它很享受这种把人当 Wordle 玩家训练的感觉。</p>
+        <input type="text" id="guess_input" placeholder="请输入你的猜测(1-10个字符)" minlength="1" maxlength="10" />
+        <button id="submit">猜猜看！</button>
+        <p id="result_show"></p>
+        <details>
+            <summary>Hint</summary>
+            <p>小写字母+数字 only</p>
+            <p>反馈不是废话，它是在告诉你“位置对不对”和“字符像不像”。</p>
+            <p>如有余力可以按Wordle来做，暴力美学也未尝不可。</p>
+        </details>
+    </div>
+    <script src="/js/get_json_response.js"></script>
+    <script>
+        document.getElementById("submit").addEventListener("click", async () => {
+            let response_show_ele = document.getElementById("result_show");
+            response_show_ele.innerText = "";
+
+            await fetch("/api/20", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ guess: document.getElementById("guess_input").value })
+            })
+                .then((res) => { return res.json() })
+                .then((data) => {
+                    console.log(data);
+                    if (!data || !data.message) throw ("Invalid response.");
+
+                    response_show_ele.innerText = data.message;
+                })
+                .catch((err) => {
+                    let err_summary = "Sorry but we've encountered an issue. Please try again later.";
+                    response_show_ele.innerText = err_summary;
+                    console.log(err_summary);
+                    console.error(err);
+                });
+        })
+    </script>
+    <script src="/js/analytics.js"></script>
+</body>
+
+</html>

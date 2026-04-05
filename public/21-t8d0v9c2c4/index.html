@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21 - Time Is Money</title>
+</head>
+
+<body>
+    <div>
+        <h1>21 - Time Is Money</h1>
+        <p>你从后院绕出去，意外发现档案馆居然自带一个小操场。</p>
+        <p>跑道边竖着块老标语牌，写着：<br>“时间就是金钱！”</p>
+        <p>这句话已经够复古了，旁边的设备更离谱，</p>
+        <p>它会在你真正开跑前，先偷偷把“等会儿可能会用到的东西”往前递一手。</p>
+        <p>像极了那种你还没张嘴，热心同事已经把链接甩你脸上的高并发卷王。</p>
+
+        <button id="run">来都来了，跑一圈!</button>
+        <p id="result"> </p>
+
+        <details>
+            <summary>Hint</summary>
+            <p>比结果更早到场的东西，往往才是这关真正值钱的信息。</p>
+        </details>
+    </div>
+    <script src="/js/get_json_response.js"></script>
+    <script>
+        get_json_response("run", "result", "https://www.iconquestion.com:9443/api/21");
+    </script>
+    <script src="/js/analytics.js"></script>
+
+</body>
+
+</html>

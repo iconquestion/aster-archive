@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10 - Time Fragments</title>
+</head>
+
+<body>
+    <div>
+        <h1>10 - Time Fragments</h1>
+        <p>你闯进了一间时间整理室，地上散落着一堆没来得及归档的旧照片。</p>
+        <p>墙边还杵着一台“全自动时间线整理机”，</p>
+        <p>看上去很智能，实际气质非常像那种会把 Excel 排成抽象艺术的东西。</p>
+        <p>它似乎知道该怎么把碎片拼回顺序，只是写说明书的人已经和工位一起蒸发了。</p>
+        <br />
+        <button id="sortit">按日期一键排序</button>
+        <div id="photos">
+            <div id="w">
+                <p>2006/09/14</p>
+                <p>几排金属档案柜的照片，表面略有氧化，标签整齐排列，但内容已经看不清。</p>
+            </div>
+            <hr />
+            <div id="3">
+                <p>1998/11/03</p>
+                <p>一张多人合照，穿着偏旧式的正式服装，像是很多年前的一次集体留影。</p>
+            </div>
+            <hr />
+            <div id="n">
+                <p>2003/07/12</p>
+                <p>一张桌面照片，堆着编号卡片和文件，摆放略显凌乱，像是整理到一半被中断。</p>
+            </div>
+            <hr />
+            <div id="9">
+                <p>2010/01/22</p>
+                <p>一台较早年代的终端设备，屏幕偏暗，像是已经不再被使用的旧系统。</p>
+            </div>
+            <hr />
+            <div id="c">
+                <p>2001/04/09</p>
+                <p>几只旧式储物箱被平码在一起，边角磨损明显，看不出里面存放着什么。</p>
+            </div>
+            <hr />
+            <div id="6">
+                <p>2008/02/21</p>
+                <p>一张两人的合影，靠得很近，神情自然放松，看起来关系亲密。</p>
+            </div>
+            <hr />
+            <div id="v">
+                <p>1995/06/18</p>
+                <p>一条走廊的照片，灯光昏黄，两侧是紧闭的门，看不出通向哪里。</p>
+            </div>
+            <hr />
+            <div id="2">
+                <p>2004/12/02</p>
+                <p>几个人围在桌边的照片，像是在讨论或整理资料，动作停在一个瞬间。</p>
+            </div>
+            <hr />
+            <div id="&">
+                <p>2007/05/30</p>
+                <p>墙面的一角，上面贴着几张纸和照片，排列并不规则，边角有反复揭贴的痕迹。</p>
+            </div>
+            <hr />
+            <div id="?">
+                <p>1999/08/27</p>
+                <p>一张空椅子的照片，正对着一张桌子，桌面上只有一本合上的笔记本。</p>
+            </div>
+            <hr />
+        </div>
+        <br />
+        <details>
+            <summary>Hint</summary>
+            <p>别太相信这台机器嘴上说的“算法”，时间本身通常比它靠谱。</p>
+        </details>
+    </div>
+
+    <script>
+        function sortit() {
+            const root = document.getElementById("photos");
+            if (!root) return;
+
+            const alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
+
+            // 计算日期的...
+            function hashDate(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = (hash * 31 + str.charCodeAt(i)) | 0;
+                }
+                return hash;
+            }
+
+            // 映射为...
+            function hashToChar(hash) {
+                hash ^= (hash >>> 16);
+                hash ^= (hash << 5);
+                return alphabet[Math.abs(hash) % alphabet.length];
+            }
+
+            const result = [];
+
+            Array.from(root.children).forEach(block => {
+                if (!(block instanceof HTMLElement)) return;
+
+                const first = block.firstElementChild;
+                if (!first) return;
+
+                const rawDate = first.textContent.trim();
+
+                // 计算 hash 和 ch 并将其 ......... lt 中
+                const hash = hashDate(rawDate);
+                const ch = hashToChar(hash);
+
+                /*
+                    re..lt.push(...
+                    .....ash.(数据部分损坏)...
+                    .....ch......
+                    }); 
+                */
+            });
+
+            /*
+            (数据部分损坏)
+            // 按照 ..te... 而不是 ... 中的 i... 进行排 .....
+            c..st flag = result
+                .sort((a, b) => new D...(a.date) - n.. Date(b.da..))
+                .map(x => x.ch..)
+                .join("");
+
+            con...e.log("FLAG:", "11-" + flag);
+            */
+        }
+
+        document.getElementById("sortit").addEventListener("click", sortit);
+    </script>
+    <script src="/js/analytics.js"></script>
+</body>
+
+</html>

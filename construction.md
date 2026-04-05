@@ -1,0 +1,5 @@
+nginx只负责转发proxy_pass，所有请求均由node处理
+node负责返回静态页面，以及响应API请求。
+node监听的8443对公网开放，路径/api/xxx
+有一关需要trailers，必须绕过nginx，因此需要直接访问node
+测试脚本中此关的测试也绕过了nginx，其他均走nginx

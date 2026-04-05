@@ -1,0 +1,22 @@
+{
+  "name": "mywebgame",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "iconquestion",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node test/test.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "chalk": "^5.6.2",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "serve-index": "^1.9.2",
+    "winston": "^3.19.0",
+    "ws": "^8.20.0"
+  }
+}
