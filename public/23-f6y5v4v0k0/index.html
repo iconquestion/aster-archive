@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>23 - Security Office</title>
+</head>
+
+<body>
+  <div>
+    <div id="panel">
+      <h1>23 - Security Office</h1>
+      <p>你走进了档案馆的安保值班室。几台老旧终端还亮着。</p>
+      <p>值班记录提到，在终端的最深处保存着重要的信息（高级秘密，不可外泄）！</p>
+
+      <details>
+        <summary>Hint</summary>
+        <p>有些页面不喜欢被“过度观察”。</p>
+      </details>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      // 用来保证控制台探针只初始化一次。
+      // 虽然当前脚本只会运行一遍，但保留这个开关能让逻辑更稳，也方便以后扩展。
+      let consoleTrapArmed = false;
+
+      // 入口拦截：静默拦掉最常见的开发者工具入口。
+      // 这里监听的是整个 document 的 keydown 事件，也就是“按键刚按下去”的时机。
+      // 之所以选 keydown，而不是 keyup，是因为 keydown 更早触发，适合提前阻止默认行为。
+      function blockShortcuts(event) {
+        // event.key 拿到当前按下的键名，例如 "F12"、"I"、"u"。
+        // 统一转成小写后，后面的判断就不用同时兼容大小写了。
+        const key = String(event.key || "").toLowerCase();
+
+        // 这里列出几个最常见的开发者工具相关快捷键：
+        // 1. F12：最直接的开发者工具入口
+        // 2. Ctrl/Cmd + Shift + I/J/C：打开 DevTools、Console、Elements
+        // 3. Ctrl/Cmd + U：查看页面源码
+        //
+        // event.ctrlKey / event.metaKey 用来同时兼容 Windows/Linux 和 macOS。
+        // Windows/Linux 常用 Ctrl，macOS 常用 Command，对应 metaKey。
+        const blocked =
+          key === "f12" ||
+          ((event.ctrlKey || event.metaKey) && event.shiftKey && ["i", "j", "c"].includes(key)) ||
+          ((event.ctrlKey || event.metaKey) && key === "u");
+
+        // 如果本次按键不在拦截名单里，就直接放行，不影响页面正常操作。
+        if (blocked) {
+          // preventDefault() 的作用是阻止浏览器执行这个按键本来的默认行为。
+          // 例如按 F12 时，浏览器原本会尝试打开开发者工具；调用后就会被静默拦下。
+          event.preventDefault();
+        }
+      }
+
+      // 右键菜单通常也是“检查元素”的入口之一，所以这里顺手一起拦掉。
+      // 监听 contextmenu 事件并阻止默认行为后，浏览器就不会弹出右键菜单。
+      function blockContextMenu(event) {
+        event.preventDefault();
+      }
+
+      // 控制台探针：某些浏览器在控制台展开对象时会触发 getter。
+      // 这里利用这一点放一个很轻量的“探针”。
+      function armConsoleTrap() {
+        // 如果已经初始化过，就不再重复注册，避免后续扩展时重复执行。
+        if (consoleTrapArmed) {
+          return;
+        }
+        consoleTrapArmed = true;
+
+        // 这里构造一个普通对象作为“诱饵”。
+        // 之所以用 Image()，只是为了拿到一个现成对象；并不依赖图片能力本身。
+        const bait = new Image();
+
+        // 给对象的 id 属性挂一个 getter。
+        // 在某些浏览器/开发者工具里，当控制台尝试展示这个对象时，会读取它的属性，
+        // 从而触发这个 getter。很多反调试代码会在这里埋检测或干扰逻辑。
+        Object.defineProperty(bait, "id", {
+          get() {
+            return "devtools-open";
+          }
+        });
+      }
+
+      // 统一初始化，避免事件绑定散落在脚本各处。
+      // 页面一加载，就立刻注册快捷键/右键拦截。
+      document.addEventListener("keydown", blockShortcuts);
+      document.addEventListener("contextmenu", blockContextMenu);
+
+      // 最后启动控制台探针。
+      armConsoleTrap();
+
+      // ???
+      const _0x21df36 = _0x1290; function _0x1290(_0x32ed06, _0x4f3ca9) { const _0x1fd618 = _0x1fd6(); return _0x1290 = function (_0x12908c, _0x13e729) { _0x12908c = _0x12908c - 0x1ac; let _0x27e0f2 = _0x1fd618[_0x12908c]; return _0x27e0f2; }, _0x1290(_0x32ed06, _0x4f3ca9); } (function (_0x15204d, _0x4f1877) { const _0x31547d = _0x1290, _0x3bcc5f = _0x15204d(); while (!![]) { try { const _0x529780 = parseInt(_0x31547d(0x1b1)) / 0x1 + parseInt(_0x31547d(0x1af)) / 0x2 + parseInt(_0x31547d(0x1b9)) / 0x3 + -parseInt(_0x31547d(0x1b2)) / 0x4 + -parseInt(_0x31547d(0x1b5)) / 0x5 * (-parseInt(_0x31547d(0x1ac)) / 0x6) + -parseInt(_0x31547d(0x1b7)) / 0x7 * (-parseInt(_0x31547d(0x1b6)) / 0x8) + -parseInt(_0x31547d(0x1ad)) / 0x9; if (_0x529780 === _0x4f1877) break; else _0x3bcc5f['push'](_0x3bcc5f['shift']()); } catch (_0x4e358d) { _0x3bcc5f['push'](_0x3bcc5f['shift']()); } } }(_0x1fd6, 0x4b591)); const puzzleStorageKey = _0x21df36(0x1b0), puzzleSeed = _0x21df36(0x1b3), puzzleEncodedHex = _0x21df36(0x1bd); function persistPuzzleKey() { const _0xb7f573 = _0x21df36; localStorage[_0xb7f573(0x1bc)](puzzleStorageKey, puzzleSeed); } function _0x1fd6() { const _0xff847c = ['charCodeAt', '293282zPKjbS', 'archive_key_24', '338682HJLuXW', '2446824zJZlku', 'n2w0', 'fromCharCode', '115RLJrUu', '24FMcPnE', '845096YyofvP', 'length', '266451XUPKek', 'join', 'getItem', 'setItem', '085e16574300431d000000000d0b1b011a0a', 'match', 'map', '67278Psvmso', '2465028jzDXzt']; _0x1fd6 = function () { return _0xff847c; }; return _0x1fd6(); } function buildFinalFlag() { const _0xf0dc6d = _0x21df36, _0x27b414 = localStorage[_0xf0dc6d(0x1bb)](puzzleStorageKey) || ''; if (!_0x27b414) return ''; return puzzleEncodedHex[_0xf0dc6d(0x1be)](/.{1,2}/g)[_0xf0dc6d(0x1bf)](_0x56d18e => parseInt(_0x56d18e, 0x10))[_0xf0dc6d(0x1bf)]((_0x7f1840, _0x3e4649) => String[_0xf0dc6d(0x1b4)](_0x7f1840 ^ _0x27b414[_0xf0dc6d(0x1ae)](_0x3e4649 % _0x27b414[_0xf0dc6d(0x1b8)])))[_0xf0dc6d(0x1ba)](''); }
+    })();
+  </script>
+  <script src="/js/analytics.js"></script>
+</body>
+
+</html>
