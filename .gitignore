@@ -146,3 +146,6 @@ dist
 # Start of custom ignores
 # AI related files
 .codex
+
+# daily password file
+password.xdxdxdxd

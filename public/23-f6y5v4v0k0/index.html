@@ -26,6 +26,7 @@
       // 用来保证控制台探针只初始化一次。
       // 虽然当前脚本只会运行一遍，但保留这个开关能让逻辑更稳，也方便以后扩展。
       let consoleTrapArmed = false;
+      let devtoolsReloadTimer = null;
 
       // 入口拦截：静默拦掉最常见的开发者工具入口。
       // 这里监听的是整个 document 的 keydown 事件，也就是“按键刚按下去”的时机。
@@ -61,6 +62,40 @@
         event.preventDefault();
       }
 
+      // 一旦判断开发者工具已打开，就在控制台警告用户，并在 10 秒后强制刷新。
+      // 这里故意只触发一次，避免重复创建定时器或刷屏。
+      function handleDevtoolsDetected(source) {
+        if (devtoolsReloadTimer) {
+          return;
+        }
+
+        let secondsLeft = 10;
+        console.warn(`[Security Office] 检测到开发者工具已打开（${source}），界面将在 10 秒后强制刷新。`);
+        devtoolsReloadTimer = window.setInterval(() => {
+          secondsLeft -= 1;
+
+          if (secondsLeft > 0) {
+            console.warn(`[Security Office] 检测到开发者工具已打开（${source}），界面将在 ${secondsLeft} 秒后强制刷新。`);
+            return;
+          }
+
+          window.clearInterval(devtoolsReloadTimer);
+          devtoolsReloadTimer = null;
+          window.location.reload();
+        }, 1000);
+      }
+
+      // 通过 outer/inner 宽高差做一个低门槛检测。
+      // 当 DevTools 以侧边栏或底栏形式停靠时，窗口内外尺寸常会出现明显差值。
+      function detectDevtoolsByViewportGap() {
+        const widthGap = Math.abs(window.outerWidth - window.innerWidth);
+        const heightGap = Math.abs(window.outerHeight - window.innerHeight);
+
+        if (widthGap > 160 || heightGap > 160) {
+          handleDevtoolsDetected("viewport-gap");
+        }
+      }
+
       // 控制台探针：某些浏览器在控制台展开对象时会触发 getter。
       // 这里利用这一点放一个很轻量的“探针”。
       function armConsoleTrap() {
@@ -79,15 +114,23 @@
         // 从而触发这个 getter。很多反调试代码会在这里埋检测或干扰逻辑。
         Object.defineProperty(bait, "id", {
           get() {
+            handleDevtoolsDetected("console-getter");
             return "devtools-open";
           }
         });
+
+        // 定时把诱饵对象送进控制台。
+        // 正常情况下这不会影响页面；如果控制台处于打开状态，某些浏览器会在展示对象时读取 getter。
+        window.setInterval(() => {
+          console.log(bait);
+        }, 1500);
       }
 
       // 统一初始化，避免事件绑定散落在脚本各处。
       // 页面一加载，就立刻注册快捷键/右键拦截。
       document.addEventListener("keydown", blockShortcuts);
       document.addEventListener("contextmenu", blockContextMenu);
+      window.setInterval(detectDevtoolsByViewportGap, 1000);
 
       // 最后启动控制台探针。
       armConsoleTrap();
