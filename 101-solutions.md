@@ -946,3 +946,65 @@ gtag('config', '22-j4l4a7u8n2');
 答案：
 
 `22-j4l4a7u8n2`
+
+### 22
+
+真实意图：
+这关前端的提示是“国际人，国际化(话)”，核心意思就是让你去关注请求的语言协商信息，也就是 `Accept-Language`。页面本身只是点击按钮请求 `/api/22`，真正的线索藏在服务端依据请求语言返回的不同文案里。
+
+真实实现：
+
+- `public/22-j4l4a7u8n2/index.html` 点击按钮后会调用：
+
+```txt
+GET /api/22
+```
+
+- 后端逻辑在 `src/22.js`。
+- 这个接口会读取请求头里的 `Accept-Language`，取第一个语言标签：
+
+```js
+const acceptLanguage = req.get("accept-language");
+const [firstLang = ""] = acceptLanguage.split(",");
+const [langTag = ""] = firstLang.split(";");
+return langTag;
+```
+
+- 如果这个语言标签里包含 `en`，就返回英文介绍；否则返回中文介绍：
+
+```js
+if (lang.includes("en")) {
+    return res.json({
+        message: "... 23-f6y5v4v0k0 ..."
+    });
+}
+```
+
+详细解法：
+
+1. 先看前端 `public/22-j4l4a7u8n2/index.html`，可以确认按钮实际请求的是 `/api/22`，没有额外参数，说明关键一定在请求头或服务端分支逻辑。
+2. 再看 `src/22.js`，可以发现它明确读取了 `Accept-Language`，并按第一个语言标签决定返回中文还是英文。
+3. 因此只要把请求头改成英文环境，例如：
+
+```http
+Accept-Language: en-US,en;q=0.9
+```
+
+4. 服务端就会走英文分支，返回一段英文介绍。该介绍中有一句：
+
+```txt
+... provides multilingual service at 23-f6y5v4v0k0 hours ...
+```
+
+5. 其中 `23-f6y5v4v0k0` 明显就是下一关路径。
+
+为什么这才是“实际意图”：
+
+- 页面上的“国际化(话)”提示，本质上就是在提醒你从语言环境入手。
+- 前端没有任何输入框，也没有别的可操作项，说明解题点不是“提交内容”，而是“改变请求上下文”。
+- 服务端的确按照 `Accept-Language` 走不同分支，所以这关考的是最基础的语言协商/国际化思路。
+- 下一关线索不是作为独立字段返回，而是直接夹在英文介绍文本里，因此只看默认中文响应是拿不到答案的。
+
+答案：
+
+`23-f6y5v4v0k0`

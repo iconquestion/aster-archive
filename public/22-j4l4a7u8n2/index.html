@@ -1,1 +1,30 @@
-<p>开发中</p>
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>22 - International Guest Room</title>
+</head>
+
+<body>
+    <div>
+        <h1>22 - International Guest Room</h1>
+        <p>一间高端大气上档次（也许）的国际宾客厅！</p>
+        <p>不过由于年代久远，只有一股浓浓的霉味和沉闷的回声。</p>
+        <p>你发现了一台电脑，并尝试启动它。</p>
+        <button id="start_pc">启动电脑</button>
+        <p id="pc_output"></p>
+        <details>
+            <summary>Hint</summary>
+            <p>国际人，国际化(话)。</p>
+        </details>
+    </div>
+    <script src="/js/get_json_response.js"></script>
+    <script>
+        get_json_response("start_pc", "pc_output", "/api/22");
+    </script>
+    <script src="/js/analytics.js"></script>
+</body>
+
+</html>

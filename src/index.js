@@ -123,6 +123,7 @@ app.use("/api/16", require("./16"));
 app.use("/api/17", require("./17"));
 app.use("/api/18", require("./18"));
 app.use("/api/20", require("./20"));
+app.use("/api/22", require("./22"));
 
 // 15 导出 { router, handleUpgrade }
 const level15 = require("./15");
