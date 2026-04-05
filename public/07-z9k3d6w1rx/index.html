@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>07 - Closed Door</title>
+</head>
+
+<body>
+    <div>
+        <h1>07 - Closed Door</h1>
+        <p>有些门从一开始就不会为你打开。</p>
+        <p>但门上贴的告示，</p>
+        <p>往往比门后的内容更诚实。</p>
+        <br />
+        <p>要参观哪里呢？</p>
+        <div>
+            <button id="visit_grand_reading_hall">主览大厅</button>
+            <button id="visit_archive_room">公共档案区</button>
+            <button id="visit_exhibit_corridor">展示长廊</button>
+        </div>
+        <p id="result"></p>
+        <details>
+            <summary>Hint</summary>
+            <p>就这些地方了吗?有点无趣呢...</p>
+        </details>
+    </div>
+    <script src="/js/get_json_response.js"></script>
+    <script>
+        get_json_response("visit_grand_reading_hall", "result", "/api/07?location=visit_grand_reading_hall");
+        get_json_response("visit_archive_room", "result", "/api/07?location=visit_archive_room");
+        get_json_response("visit_exhibit_corridor", "result", "/api/07?location=visit_exhibit_corridor");
+
+        // 更多区域正在开发中...
+        /*
+            get_json_response("visit_", "result", "/api/07?location=visit_"); //下一个可展示房间还未确定...
+            get_json_response(...)
+        */
+    </script>
+    <script src="/js/analytics.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17 - Für Elise</title>
+</head>
+
+<body>
+    <div>
+        <h1>17 - Für Elise</h1>
+        <p>你发现了一间音乐室，里面摆放着一架古老的钢琴。</p>
+        <p>琴上放着一封早已泛黄的信件。</p>
+        <p>你小心翼翼地打开它，生怕它脆弱得碎掉。</p>
+        <p>在信的末尾，你看到一句浪漫的告白。</p>
+        <p>也许，真正的心意永远藏在正文之后。</p>
+        <button id="get_envelope">打开信封</button>
+        <p id="envelope_content"></p>
+        <details>
+            <summary>Hint</summary>
+            <p>Read it carefully</p>
+        </details>
+    </div>
+    <script src="/js/get_json_response.js"></script>
+    <script>
+        get_json_response("get_envelope", "envelope_content", "https://www.iconquestion.com:8443/api/17");
+    </script>
+    <script src="/js/analytics.js"></script>
+</body>
+
+</html>

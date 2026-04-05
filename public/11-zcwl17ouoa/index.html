@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>11 - Weird Book</title>
+</head>
+
+<body>
+  <div>
+    <h1>11 - A Weird Book</h1>
+    <p>你找到了一本有着奇怪封面的书，</p>
+    <p>书上落满了灰尘，无言诉说着岁月的沧桑。</p>
+    <p>或许它藏着什么尘封已久的秘密？</p>
+    <button id="openbook">翻开书</button>
+    <button id="closebook">合上书</button>
+    <p id="content"></p>
+    <details>
+      <summary>Hint</summary>
+      <p>https://cyberchef.org/</p>
+      <p>答案格式: flags-12-xxxxxxxxxx</p>
+    </details>
+  </div>
+  <script>
+    document.getElementById("openbook").addEventListener("click", () => {
+      let content_ele = document.getElementById("content");
+      content_ele.textContent = "和谐公正和谐民主和谐平等和谐法治和谐自由公正自由和谐和谐和谐自由和谐公正和谐文明和谐平等和谐自由和谐平等和谐文明和谐和谐和谐公正和谐自由公正平等和谐和谐和谐文明和谐平等和谐民主和谐法治和谐爱国和谐公正和谐和谐和谐平等和谐和谐和谐和谐和谐富强和谐法治和谐敬业和谐自由公正自由和谐平等和谐和谐和谐和谐和谐民主和谐公正公正自由和谐公正和谐自由和谐自由和谐法治和谐和谐和谐平等和谐和谐和谐平等和谐公正和谐和谐和谐法治和谐法治和谐和谐公正自由和谐和谐公正自由";
+    })
+
+    document.getElementById("closebook").addEventListener("click", () => {
+      let content_ele = document.getElementById("content");
+      content_ele.textContent = "";
+    })
+  </script>
+  <script src="/js/analytics.js"></script>
+</body>
+
+</html>

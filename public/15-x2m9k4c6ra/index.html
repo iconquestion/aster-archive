@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>15 - Let's Play Maze!</title>
+  <script defer src="/js/alpinejs3.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .status {
+      margin-bottom: 12px;
+      line-height: 1.8;
+    }
+
+    .win {
+      color: green;
+      font-weight: bold;
+    }
+
+    .controls {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 60px);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      height: 40px;
+      cursor: pointer;
+    }
+
+    .log {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid #ccc;
+      width: 420px;
+      max-width: calc(100vw - 48px);
+      min-height: 260px;
+      height: 50vh;
+      max-height: 620px;
+      white-space: pre-wrap;
+      background: #fafafa;
+      overflow-wrap: break-word;
+      overflow-y: auto;
+      line-height: 1.8;
+    }
+
+    .log-line {
+      padding: 0 4px;
+      border-radius: 4px;
+      transition: background-color 0.25s ease;
+    }
+
+    .log-line-highlight {
+      background: #fff3b0;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <h1>15 - Let's Play Maze!</h1>
+    <p>来玩迷宫小游戏吧！</p>
+    <p>但是好像...少了点什么</p>
+    <p>我的图图呢?!</p>
+    <p>Can U Do It?</p>
+    <details>
+      <summary>Hint</summary>
+      <p>本关基于极其高级的WebSocket技术设计!!!!!!!!!!!!!!!!!!!!快夸我</p>
+      <p>其实你是可以用纸和笔演算迷宫的...</p>
+      <p>我去，不早说!</p>
+    </details>
+  </div>
+
+  <div class="app" x-data="mazeGame()" x-init="connect()" @keydown.window.arrow-up.prevent="move('up')"
+    @keydown.window.arrow-down.prevent="move('down')" @keydown.window.arrow-left.prevent="move('left')"
+    @keydown.window.arrow-right.prevent="move('right')">
+    <div class="status">
+      <div>连接状态：<span x-text="connected ? '已连接' : '未连接'"></span></div>
+      <div x-show="win" class="win">你赢了！</div>
+    </div>
+
+    <div class="controls">
+      <div></div>
+      <button @click="move('up')">上</button>
+      <div></div>
+
+      <button @click="move('left')">左</button>
+      <button disabled>●</button>
+      <button @click="move('right')">右</button>
+
+      <div></div>
+      <button @click="move('down')">下</button>
+      <div></div>
+    </div>
+
+    <div>
+      <button @click="reconnect()">重新连接</button>
+    </div>
+
+    <div class="log" x-ref="logBox">
+      <template x-for="item in logs" :key="item.id">
+        <div class="log-line" :class="item.highlight ? 'log-line-highlight' : ''" x-text="item.text"></div>
+      </template>
+    </div>
+  </div>
+
+  <script>
+    function mazeGame() {
+      return {
+        ws: null,
+        connected: false,
+        initialized: false,
+        win: false,
+        logs: [],
+        logId: 0,
+        pendingDir: null,
+        lastMoveAt: 0,
+        moveCooldownMs: 120,
+
+        addLog(text) {
+          const id = ++this.logId;
+          this.logs.push({ id, text, highlight: true });
+
+          setTimeout(() => {
+            const target = this.logs.find((item) => item.id === id);
+            if (target) target.highlight = false;
+          }, 1000);
+
+          this.$nextTick(() => this.scrollLogToBottom());
+        },
+
+        scrollLogToBottom() {
+          const box = this.$refs.logBox;
+          if (!box) return;
+          box.scrollTop = box.scrollHeight;
+        },
+
+        connect() {
+          const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
+          const wsUrl = `${wsProtocol}//${location.host}/api/15/challenge`;
+
+          this.addLog("尝试连接: " + wsUrl);
+          this.ws = new WebSocket(wsUrl);
+
+          this.ws.onopen = () => {
+            this.connected = true;
+            this.addLog("WebSocket 已连接");
+            this.initGame();
+          };
+
+          this.ws.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              this.handleMessage(data, event.data);
+            } catch (e) {
+              this.addLog("收到非法数据: " + event.data);
+            }
+          };
+
+          this.ws.onclose = () => {
+            this.connected = false;
+            this.pendingDir = null;
+            this.addLog("连接关闭");
+          };
+
+          this.ws.onerror = () => {
+            this.pendingDir = null;
+            this.addLog("连接出错");
+          };
+        },
+
+        initGame() {
+          if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            this.addLog("init 失败：连接尚未就绪");
+            return;
+          }
+
+          this.addLog("发送 init");
+          this.ws.send(JSON.stringify({ action: "init" }));
+        },
+
+        handleMessage(data, rawText) {
+          if (
+            typeof data.x === "number" &&
+            typeof data.y === "number" &&
+            !this.initialized
+          ) {
+            this.initialized = true;
+            this.win = false;
+            this.pendingDir = null;
+            this.addLog(`游戏初始化完成，地图大小：${data.x} x ${data.y}`);
+            this.addLog(`Have Fun! :)`);
+            return;
+          }
+
+          if (
+            typeof data.wall === "number" &&
+            typeof data.win === "boolean"
+          ) {
+            this.handleMoveResult(data);
+            return;
+          }
+
+          if (data.message) {
+            this.addLog(data.message);
+            return;
+          }
+
+          if (data.error) {
+            this.addLog("错误: " + data.error);
+            this.pendingDir = null;
+            return;
+          }
+
+          this.addLog("收到未知消息: " + rawText);
+        },
+
+        move(direction) {
+          if (!this.connected || !this.initialized || this.win) return;
+          if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            this.addLog("连接尚未就绪");
+            return;
+          }
+          if (this.pendingDir) return;
+
+          const now = Date.now();
+          if (now - this.lastMoveAt < this.moveCooldownMs) return;
+          this.lastMoveAt = now;
+
+          this.pendingDir = direction;
+          this.addLog("尝试移动: " + direction);
+
+          this.ws.send(JSON.stringify({
+            action: "move",
+            direction,
+          }));
+        },
+
+        handleMoveResult(data) {
+          if (data.wall === 1) {
+            this.addLog("撞墙");
+            this.pendingDir = null;
+            return;
+          }
+
+          if (data.win === true) {
+            this.win = true;
+            this.addLog("胜利！");
+            if (data.flag) {
+              this.addLog("flag:\n" + data.flag);
+            }
+          } else {
+            this.addLog("前进成功");
+          }
+
+          this.pendingDir = null;
+        },
+
+        reconnect() {
+          try {
+            if (this.ws) this.ws.close();
+          } catch (e) { }
+
+          this.connected = false;
+          this.initialized = false;
+          this.win = false;
+          this.pendingDir = null;
+          this.logs = [];
+          this.addLog("开始重新连接");
+          this.connect();
+        }
+      };
+    }
+  </script>
+  <script src="/js/analytics.js"></script>
+</body>
+
+</html>

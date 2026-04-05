@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21 - Time Is Money</title>
+</head>
+
+<body>
+    <div>
+        <h1>21 - Time Is Money</h1>
+        <p>你从后院走出档案馆，发现这里居然还有一个小小的操场。</p>
+        <p>一片荒芜破败的景色让你有些哀伤。</p>
+        <p>操场的旁边还立着标语牌，</p>
+        <p>上面写着：<br>“时间就是金钱！”（一种很古典的字体）</p>
+        <p>Wait...这不是车间常用的标语吗！</p>
+
+        <button id="run">来都来了，跑一圈!</button>
+        <p id="result"> </p>
+
+        <details>
+            <summary>Hint</summary>
+            <p>这个关卡需要你使用 HTTP/2 的特性来完成。</p>
+        </details>
+    </div>
+    <script src="/js/get_json_response.js"></script>
+    <script>
+        get_json_response("run", "result", "https://www.iconquestion.com:9443/api/21");
+    </script>
+    <script src="/js/analytics.js"></script>
+
+</body>
+
+</html>

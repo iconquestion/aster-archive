@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12 - A Way Impossible To Find</title>
+</head>
+
+<body>
+    <div>
+        <h1>12 - A Way Impossible To Find</h1>
+        <p>你走到档案馆走廊的尽头，已经无路可走。</p>
+        <p>但地图上却标注出了一个不可能存在的房间。</p>
+        <p>现实和地图，</p>
+        <p>谁在说谎？</p>
+        <p>这时你看到有一台仍然在工作的售货机...</p>
+        <p>显示着"搭载了最新的AI系统!"</p>
+        <p>它可能是谜题的关键吗？</p>
+        <p><button id="start">开机</button></p>
+        <details>
+            <summary>Hint</summary>
+            <p>不妨撞撞运气。</p>
+        </details>
+    </div>
+    <div id="app"></div>
+
+    <script>
+        const start_btn = document.getElementById("start");
+        start_btn.addEventListener("click", () => { attentionisallyouneed() });
+
+        function attentionisallyouneed() {
+            start_btn.disabled = true;
+
+            const API_BASE = "/api/12/";
+
+            const app = document.getElementById("app");
+
+            const state = {
+                screen: "boot",
+                aiTapCount: 0,
+                adminEntryUnlocked: false,
+
+                selectedItem: null,
+                selectedRoom: "",
+
+                cashPending: false,
+                cashTimer: null,
+
+                adminLoggedIn: false,
+                swipeCooling: false
+            };
+
+            const items = [
+                { id: "cola", name: "可乐", price: 3, stock: 6 },
+                { id: "soda", name: "苏打水", price: 2, stock: 8 },
+                { id: "tea", name: "冰红茶", price: 4, stock: 5 },
+                { id: "chips", name: "薯片", price: 5, stock: 7 },
+                { id: "candy", name: "糖果", price: 2, stock: 11 }
+            ];
+
+            function clearApp() {
+                app.innerHTML = "";
+            }
+
+            function createEl(tag, text) {
+                const el = document.createElement(tag);
+                if (text !== undefined && text !== null) {
+                    el.textContent = text;
+                }
+                return el;
+            }
+
+            function createButton(text, onClick) {
+                const btn = document.createElement("button");
+                btn.textContent = text;
+                btn.addEventListener("click", onClick);
+                return btn;
+            }
+
+            function createHr() {
+                return document.createElement("hr");
+            }
+
+            function setScreen(screen) {
+                state.screen = screen;
+                render();
+            }
+
+            function cleanupCashTimer() {
+                if (state.cashTimer) {
+                    clearTimeout(state.cashTimer);
+                    state.cashTimer = null;
+                }
+            }
+
+            function isValidRoomNumber(value) {
+                if (!/^\d+$/.test(value)) return false;
+                const num = Number(value);
+                return num >= 1 && num <= 99;
+            }
+
+            async function postForm(url, dataObj) {
+                const body = new URLSearchParams(dataObj).toString();
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+                    },
+                    body: body,
+                    credentials: "include",
+                });
+
+                let json;
+                try {
+                    json = await response.json();
+                } catch (err) {
+                    json = { message: "返回数据不是合法 JSON。" };
+                }
+
+                return {
+                    ok: response.ok,
+                    status: response.status,
+                    data: json
+                };
+            }
+
+            function render() {
+                clearApp();
+
+                switch (state.screen) {
+                    case "boot":
+                        renderBoot();
+                        break;
+                    case "attract":
+                        renderAttract();
+                        break;
+                    case "mainMenu":
+                        renderMainMenu();
+                        break;
+                    case "shop":
+                        renderShop();
+                        break;
+                    case "checkout":
+                        renderCheckout();
+                        break;
+                    case "delivery":
+                        renderDelivery();
+                        break;
+                    case "adminLogin":
+                        renderAdminLogin();
+                        break;
+                    case "adminPanel":
+                        renderAdminPanel();
+                        break;
+                    default:
+                        renderAttract();
+                }
+            }
+
+            function renderBoot() {
+                const title = createEl("h1", "AI 智能售货终端");
+                app.appendChild(title);
+
+                const lines = [
+                    "系统启动中...",
+                    "Inventory module loaded",
+                    "Internal logistics module loaded",
+                    "Currency parser loaded",
+                    "Remote auth bridge loaded"
+                ];
+
+                let index = 0;
+
+                const timer = setInterval(function () {
+                    if (index < lines.length) {
+                        const p = createEl("p", lines[index]);
+                        app.appendChild(p);
+                        index++;
+                    } else {
+                        clearInterval(timer);
+
+                        // 所有行显示完后再跳转（可选再延迟一点）
+                        setTimeout(function () {
+                            if (state.screen === "boot") {
+                                setScreen("attract");
+                            }
+                        }, 1000);
+                    }
+                }, 1000);
+            }
+
+            function renderAttract() {
+                const title = createEl("h1", "AI 智能售货终端");
+                const p1 = createEl("p", "欢迎使用自助售货服务。");
+                const p2 = createEl("p", "请点击屏幕开始。");
+
+                const aiLine = createEl("p", "搭载最新 AI 系统!");
+                aiLine.style.cursor = "pointer";
+                aiLine.addEventListener("click", function () {
+                    state.aiTapCount += 1;
+                    if (!state.adminEntryUnlocked && state.aiTapCount >= 5) {
+                        state.adminEntryUnlocked = true;
+                        alert("隐藏维护入口已解锁。");
+                    }
+                });
+
+                const startBtn = createButton("开始", function () {
+                    setScreen("mainMenu");
+                });
+
+                app.appendChild(title);
+                app.appendChild(p1);
+                app.appendChild(p2);
+                app.appendChild(aiLine);
+                app.appendChild(createHr());
+                app.appendChild(startBtn);
+            }
+
+            function renderMainMenu() {
+                cleanupCashTimer();
+
+                const title = createEl("h1", "主菜单");
+                const buyBtn = createButton("购买", function () {
+                    setScreen("shop");
+                });
+                const backBtn = createButton("返回", function () {
+                    setScreen("attract");
+                });
+
+                app.appendChild(title);
+                app.appendChild(buyBtn);
+                app.appendChild(document.createTextNode(" "));
+                app.appendChild(backBtn);
+
+                if (state.adminEntryUnlocked) {
+                    app.appendChild(createHr());
+                    const adminBtn = createButton("管理员入口", function () {
+                        setScreen("adminLogin");
+                    });
+                    app.appendChild(adminBtn);
+                }
+            }
+
+            function renderShop() {
+                cleanupCashTimer();
+
+                const title = createEl("h1", "商品列表");
+                app.appendChild(title);
+
+                items.forEach(function (item) {
+                    const row = createEl("div");
+                    const text = createEl(
+                        "span",
+                        item.name + " - " + item.price + " 元 - 库存: " + item.stock + " "
+                    );
+                    const btn = createButton("选择", function () {
+                        state.selectedItem = item;
+                        state.cashPending = false;
+                        setScreen("checkout");
+                    });
+
+                    row.appendChild(text);
+                    row.appendChild(btn);
+                    app.appendChild(row);
+                });
+
+                app.appendChild(createHr());
+                app.appendChild(createButton("返回主菜单", function () {
+                    setScreen("mainMenu");
+                }));
+            }
+
+            function renderCheckout() {
+                const title = createEl("h1", "结算");
+                app.appendChild(title);
+
+                if (!state.selectedItem) {
+                    app.appendChild(createEl("p", "未选择商品。"));
+                    app.appendChild(createButton("返回商品列表", function () {
+                        setScreen("shop");
+                    }));
+                    return;
+                }
+
+                const itemInfo = createEl(
+                    "p",
+                    "已选择商品：" + state.selectedItem.name + "，价格：" + state.selectedItem.price + " 元"
+                );
+                const stockInfo = createEl("p", "库存显示：" + state.selectedItem.stock);
+                const resultBox = createEl("div");
+
+                const insert1Btn = createButton("投入 1 元现金", function () {
+                    handleInsertCash(resultBox, insert1Btn, insert5Btn);
+                });
+
+                const insert5Btn = createButton("投入 5 元现金", function () {
+                    handleInsertCash(resultBox, insert1Btn, insert5Btn);
+                });
+
+                const pickupBtn = createButton("立即取出", function () {
+                    resultBox.innerHTML = "";
+                    resultBox.appendChild(createEl("p", "未完成支付，无法出货。"));
+                });
+
+                const deliveryBtn = createButton("配送", function () {
+                    setScreen("delivery");
+                });
+
+                const cancelBtn = createButton("取消", function () {
+                    cleanupCashTimer();
+                    state.cashPending = false;
+                    state.selectedItem = null;
+                    setScreen("shop");
+                });
+
+                app.appendChild(itemInfo);
+                app.appendChild(stockInfo);
+                app.appendChild(createHr());
+                app.appendChild(insert1Btn);
+                app.appendChild(document.createTextNode(" "));
+                app.appendChild(insert5Btn);
+                app.appendChild(createHr());
+                app.appendChild(pickupBtn);
+                app.appendChild(document.createTextNode(" "));
+                app.appendChild(deliveryBtn);
+                app.appendChild(createHr());
+                app.appendChild(resultBox);
+                app.appendChild(createHr());
+                app.appendChild(cancelBtn);
+            }
+
+            function handleInsertCash(resultBoxEl, insert1Btn, insert5Btn) {
+                if (state.cashPending) {
+                    return;
+                }
+
+                cleanupCashTimer();
+                state.cashPending = true;
+
+                insert1Btn.disabled = true;
+                insert5Btn.disabled = true;
+
+                resultBoxEl.innerHTML = "";
+                resultBoxEl.appendChild(createEl("p", "已检测到支付媒介，正在识别..."));
+
+                state.cashTimer = setTimeout(function () {
+                    state.cashPending = false;
+                    insert1Btn.disabled = false;
+                    insert5Btn.disabled = false;
+
+                    resultBoxEl.innerHTML = "";
+                    resultBoxEl.appendChild(createEl("p", "支付失败。"));
+                    resultBoxEl.appendChild(createEl("p", "无法识别该现金媒介。"));
+                    resultBoxEl.appendChild(createEl("p", "现金已自动退回。"));
+                    resultBoxEl.appendChild(createEl("p", "终端记录：支付制式不匹配。"));
+                    resultBoxEl.appendChild(createEl("p", "你与这台设备之间，似乎隔着过远的年代与技术差异。"));
+                }, 2500);
+            }
+
+            function renderDelivery() {
+                cleanupCashTimer();
+
+                const title = createEl("h1", "配送");
+                const itemLine = createEl(
+                    "p",
+                    state.selectedItem
+                        ? "当前商品：" + state.selectedItem.name
+                        : "当前无商品"
+                );
+                const p1 = createEl("p", "请输入目标房间号（1-99）：");
+
+                const input = document.createElement("input");
+                input.type = "text";
+                input.value = state.selectedRoom;
+                input.placeholder = "例如 12";
+
+                const resultBox = createEl("div");
+
+                const verifyBtn = createButton("验证配送", function () {
+                    state.selectedRoom = input.value.trim();
+                    resultBox.innerHTML = "";
+
+                    if (!isValidRoomNumber(state.selectedRoom)) {
+                        resultBox.appendChild(createEl("p", "房间号无效。请输入 1-99 的数字。"));
+                        return;
+                    }
+
+                    resultBox.appendChild(createEl("p", "目标房间：" + state.selectedRoom));
+                    resultBox.appendChild(createEl("p", "房间存在。"));
+                    resultBox.appendChild(createEl("p", "配送需验证对应房间 ID 卡。"));
+                    resultBox.appendChild(createEl("p", "请刷卡以继续。"));
+                });
+
+                const swipeBtn = createButton("刷卡", function () {
+                    if (state.swipeCooling) {
+                        resultBox.innerHTML = "";
+                        resultBox.appendChild(createEl("p", "读卡器冷却中，请稍后再试。"));
+                        return;
+                    }
+
+                    resultBox.innerHTML = "";
+
+                    if (!isValidRoomNumber(input.value.trim())) {
+                        resultBox.appendChild(createEl("p", "请先输入有效房间号。"));
+                        return;
+                    }
+
+                    state.selectedRoom = input.value.trim();
+                    state.swipeCooling = true;
+                    swipeBtn.disabled = true;
+
+                    resultBox.appendChild(createEl("p", "正在检测 ID 卡..."));
+                    resultBox.appendChild(createEl("p", "未检测到有效 ID 卡。"));
+                    resultBox.appendChild(createEl("p", "配送验证失败。"));
+                    resultBox.appendChild(createEl("p", "读卡器冷却中，请稍后再试。"));
+
+                    setTimeout(function () {
+                        state.swipeCooling = false;
+                        swipeBtn.disabled = false;
+                    }, 2000);
+                });
+
+                const backBtn = createButton("返回结算", function () {
+                    setScreen("checkout");
+                });
+
+                app.appendChild(title);
+                app.appendChild(itemLine);
+                app.appendChild(p1);
+                app.appendChild(input);
+                app.appendChild(document.createTextNode(" "));
+                app.appendChild(verifyBtn);
+                app.appendChild(document.createTextNode(" "));
+                app.appendChild(swipeBtn);
+                app.appendChild(createHr());
+                app.appendChild(resultBox);
+                app.appendChild(createHr());
+                app.appendChild(backBtn);
+            }
+
+            function renderAdminLogin() {
+                cleanupCashTimer();
+
+                const title = createEl("h1", "管理员登录");
+                const p1 = createEl("p", "请输入管理员用户名与密码。");
+                const p2 = createEl("p", "此系统受到严格保护，密码每天轮动更新，以确保无法猜测4位随机生成的数字。");
+
+                const usernameInput = document.createElement("input");
+                usernameInput.type = "text";
+                usernameInput.value = "admin";
+                usernameInput.placeholder = "用户名";
+                usernameInput.disabled = true;
+
+                const passwordInput = document.createElement("input");
+                passwordInput.type = "password";
+                passwordInput.placeholder = "密码";
+
+                const resultBox = createEl("div");
+
+                const loginBtn = createButton("登录", async function () {
+                    resultBox.innerHTML = "";
+                    loginBtn.disabled = true;
+
+                    try {
+                        const result = await postForm(API_BASE + "login", {
+                            username: "admin",
+                            password: passwordInput.value
+                        });
+
+                        if (result.status !== 200) {
+                            resultBox.appendChild(
+                                createEl("p", result.data.message || "internal server error")
+                            );
+                            return;
+                        }
+
+                        resultBox.appendChild(
+                            createEl("p", result.data.message)
+                        );
+
+                        state.adminLoggedIn = true;
+                        setScreen("adminPanel");
+                    } catch (err) {
+                        resultBox.appendChild(createEl("p", "网络请求失败。"));
+                    } finally {
+                        loginBtn.disabled = false;
+                    }
+                });
+
+                const backBtn = createButton("返回主菜单", function () {
+                    setScreen("mainMenu");
+                });
+
+                app.appendChild(title);
+                app.appendChild(p1);
+                app.appendChild(p2);
+                app.appendChild(usernameInput);
+                app.appendChild(document.createTextNode(" "));
+                app.appendChild(passwordInput);
+                app.appendChild(document.createTextNode(" "));
+                app.appendChild(loginBtn);
+                app.appendChild(createHr());
+                app.appendChild(resultBox);
+                app.appendChild(createHr());
+                app.appendChild(backBtn);
+            }
+
+            function renderAdminPanel() {
+                cleanupCashTimer();
+
+                const title = createEl("h1", "管理员面板");
+                const p1 = createEl("p", "已进入管理员模式。");
+                const p2 = createEl("p", "请输入房间号以查询房间信息。");
+
+                const roomInput = document.createElement("input");
+                roomInput.type = "text";
+                roomInput.placeholder = "1-99";
+                roomInput.value = state.selectedRoom || "";
+
+                const resultBox = createEl("div");
+
+                const queryBtn = createButton("查询房间信息", async function () {
+                    resultBox.innerHTML = "";
+                    const roomValue = roomInput.value.trim();
+                    state.selectedRoom = roomValue;
+
+                    if (!/^\d+$/.test(roomValue)) {
+                        resultBox.appendChild(createEl("p", "房间号仅支持数字。"));
+                        return;
+                    }
+
+                    queryBtn.disabled = true;
+
+                    try {
+                        const result = await getWithQuery(API_BASE + "get_room_info", {
+                            room_id: roomValue
+                        });
+
+                        if (result.status !== 200) {
+                            resultBox.appendChild(
+                                createEl("p", result.data.message)
+                            );
+                            return;
+                        }
+
+                        resultBox.appendChild(
+                            createEl("p", result.data.message)
+                        );
+
+                        Object.keys(result.data).forEach(function (key) {
+                            if (key === "message") return;
+                            const value = result.data[key];
+                            resultBox.appendChild(
+                                createEl("p", key + ": " + String(value))
+                            );
+                        });
+                    } catch (err) {
+                        resultBox.appendChild(createEl("p", "网络请求失败。"));
+                    } finally {
+                        queryBtn.disabled = false;
+                    }
+                });
+
+                const backBtn = createButton("退出管理员面板", function () {
+                    state.adminLoggedIn = false;
+                    setScreen("mainMenu");
+                });
+
+                app.appendChild(title);
+                app.appendChild(p1);
+                app.appendChild(p2);
+                app.appendChild(roomInput);
+                app.appendChild(document.createTextNode(" "));
+                app.appendChild(queryBtn);
+                app.appendChild(createHr());
+                app.appendChild(resultBox);
+                app.appendChild(createHr());
+                app.appendChild(backBtn);
+            }
+
+            async function getWithQuery(url, queryObj) {
+                const query = new URLSearchParams(queryObj).toString();
+                const response = await fetch(url + "?" + query, {
+                    method: "GET",
+                    credentials: "include"
+                });
+
+                let json;
+                try {
+                    json = await response.json();
+                } catch (err) {
+                    json = { message: "返回数据不是合法 JSON。" };
+                }
+
+                return {
+                    ok: response.ok,
+                    status: response.status,
+                    data: json
+                };
+            }
+
+            render();
+        }
+    </script>
+    <script src="/js/analytics.js"></script>
+</body>
+
+</html>

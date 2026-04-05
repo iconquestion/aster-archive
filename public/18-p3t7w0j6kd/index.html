@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18 - Dinner Time</title>
+</head>
+
+<body>
+    <div>
+        <h1>18 - Dinner Time</h1>
+        <p>该吃晚饭了！</p>
+        <p>摆在你面前的是好长好长的一条面包（不是法棍！）</p>
+        <p>你要从哪里开始吃起？:D</p>
+        <button id="get_left">左边!</button>
+        <button id="get_middle">中间!</button>
+        <button id="get_right">右边!</button>
+        <p id="response"></p>
+        <details>
+            <summary>Hint</summary>
+            <p>嗯...切分的[方式]好像...不太对</p>
+        </details>
+    </div>
+    <script src="/js/get_json_response.js"></script>
+    <script>
+        get_json_response("get_left", "response", "/api/18?food=left");
+        get_json_response("get_middle", "response", "/api/18?food=middle");
+        get_json_response("get_right", "response", "/api/18?food=right");
+    </script>
+    <script src="/js/analytics.js"></script>
+</body>
+
+</html>

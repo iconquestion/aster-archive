@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>05 - Visitor's manner</title>
+</head>
+
+<body>
+    <div>
+        <h1>05 - Visitor's manner</h1>
+        <p>门无言，它从不询问你是谁。</p>
+        <p>它只会从你说话的方式，</p>
+        <p>判断是否是它熟悉的那一类人。</p>
+        <button id="knock">敲一下门并问候</button>
+        <p id="responseMsg"></p>
+        <details>
+            <summary>Hint</summary>
+            <p>换一种说话方式，再试一次。</p>
+        </details>
+    </div>
+    <script src="/js/get_json_response.js"></script>
+    <script>
+        get_json_response("knock", "responseMsg", "/api/05");
+    </script>
+    <script src="/js/analytics.js"></script>
+</body>
+
+</html>
