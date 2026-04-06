@@ -2,7 +2,7 @@ const express = require("express");
 
 const router = express.Router();
 
-
+// 17关：使用 chunked 响应输出正文，并把下一关线索藏在 Trailer 头里。
 router.get("/", (req, res) => {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     res.setHeader("Trailer", "X-Never-Be-Apart");

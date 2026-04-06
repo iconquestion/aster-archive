@@ -7,6 +7,7 @@ function attachAuthChallenge(res) {
 	res.setHeader("W3-xxthxxtixxtx", '13xxix xxxlx="zako zako"');
 }
 
+// 14关：通过伪装后的认证头暗示 Basic Auth，只有用户名和密码都为 admin 才会返回下一关密码。
 // 14关登录：使用 Basic Auth，要求用户名与密码均为 admin。
 router.post("/login", (req, res) => {
 	const authHeader = req.headers.authorization;

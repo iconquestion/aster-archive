@@ -12,6 +12,7 @@ function extractPreferredLang(req) {
     return langTag;
 }
 
+// 22关：根据 Accept-Language 返回不同语言内容，英文响应中包含下一关线索。
 router.get("/", (req, res) => {
     const lang = extractPreferredLang(req);
 

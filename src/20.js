@@ -4,6 +4,7 @@ const router = express.Router();
 
 const CORRECT_FLAG = "t8d0v9c2c4";
 
+// 20关：实现类似猜密码的反馈机制，返回猜测中完全匹配和部分匹配的字符数量。
 function countMatches(guess, target) {
 	const exactIndices = new Set();
 	let exact = 0;
@@ -40,6 +41,7 @@ function countMatches(guess, target) {
 	return { exact, partial };
 }
 
+// 20关提交：接收 guess 参数，猜中后直接返回结果，否则仅反馈接近程度。
 router.post("/", (req, res) => {
 	const guess = String(req.body?.guess || "").trim();
 	if (!guess) {

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
+// 18关：模拟受限的 Range 读取接口，需要通过多次分段请求拼出包含下一关密码的完整文本。
 // 信息全文，包含 flag
 const FULL_TEXT =
     "Iamalonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongbreaddonoteat19-h9m4q2z8xcpleasepleasepleasepleasepleaseplease";
@@ -8,6 +9,7 @@ const FULL_TEXT =
 // 一次性请求的最大 range 宽度
 const MAX_RANGE_SIZE = 16;
 
+// 18关接口：只接受明确起止位置的 bytes range，请求过大或格式不符都会被拒绝。
 router.get("/", (req, res) => {
     const total = FULL_TEXT.length;
     res.set("Accept-Ranges", "bytes");

@@ -4,6 +4,7 @@ const { WebSocketServer } = require("ws");
 const router = express.Router();
 const challengeWss = new WebSocketServer({ noServer: true });
 
+// 15关：提供一个 WebSocket 迷宫挑战，玩家初始化地图后不断移动，到达终点即可拿到下一关密码。
 /**
  * 生成随机奇数尺寸
  * 范围：7, 9, 11
@@ -237,6 +238,7 @@ challengeWss.on("connection", (ws) => {
 
         if (win) {
             ws.gameState.finished = true;
+            // 到达终点后返回完整迷宫和下一关线索，然后关闭连接。
             ws.send(JSON.stringify({
                 wall: 0,
                 win: true,
@@ -256,6 +258,7 @@ challengeWss.on("connection", (ws) => {
 });
 
 function handleUpgrade(req, socket, head, logger = console) {
+    // 只允许升级 /api/15/challenge，其余路径直接拒绝。
     const requestUrl = new URL(req.url, "http://hello.world");
     if (requestUrl.pathname !== "/api/15/challenge") {
         socket.destroy();

@@ -6,9 +6,7 @@ function isHttp3(req) {
     return req.get("X-Forwarded-Http3") === "h3";
 }
 
-/**
- * GET /api/16
- */
+// 16关：根据查询参数 timepoint 判断是否来到未来，并借助请求头模拟 HTTP/3 场景返回下一关线索。
 router.get("/", (req, res) => {
     res.header("X-Forwarded-Http3", isHttp3(req));
 
