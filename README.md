@@ -1,4 +1,4 @@
-# aster-archive
+# Aster Archive
 
 一个以网页本身为谜题载体的 Web 闯关游戏。
 
