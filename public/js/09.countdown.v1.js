@@ -64,30 +64,29 @@
    END OF TERMS AND CONDITIONS
 */
 
-
 // 作者: iconquestion
 // 版本: 2000/01/01
 
 // 获取 startBtn 和 timer
 // startBtn 监听 onclick 事件
 // timer 更新计时显示
-const btn = document.getElementById("startBtn");
-const timerEl = document.getElementById("timer");
+const btn = document.getElementById('startBtn');
+const timerEl = document.getElementById('timer');
 
 btn.onclick = () => {
-    // 默认 30s 倒计时
-    let left = 30;
-    btn.disabled = true;
+  // 默认 30s 倒计时
+  let left = 30;
+  btn.disabled = true;
 
-    const timer = setInterval(() => {
-        left--;
-        timerEl.textContent = left;
+  const timer = setInterval(() => {
+    left--;
+    timerEl.textContent = left;
 
-        // 允许倒计时完成后重新开始
-        if (left <= 0) {
-            clearInterval(timer);
-            timerEl.textContent = "--";
-            btn.disabled = false;
-        }
-    }, 1000);
+    // 允许倒计时完成后重新开始
+    if (left <= 0) {
+      clearInterval(timer);
+      timerEl.textContent = '--';
+      btn.disabled = false;
+    }
+  }, 1000);
 };

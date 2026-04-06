@@ -1,56 +1,63 @@
 <!doctype html>
 <html lang="zh-CN">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>16 - A Magic Museum</title>
-</head>
+  </head>
 
-<body>
+  <body>
     <div>
-        <h1>16 - A Magic Museum</h1>
-        <p>你发现了一块展台，</p>
-        <p>这块展台具有特殊的魔力，</p>
-        <p>可以选择任意一个时间点，查看对应时间人类的发展进程。</p>
-        <p>你会查看哪些时间点呢？</p>
+      <h1>16 - A Magic Museum</h1>
+      <p>你发现了一块展台，</p>
+      <p>这块展台具有特殊的魔力，</p>
+      <p>可以选择任意一个时间点，查看对应时间人类的发展进程。</p>
+      <p>你会查看哪些时间点呢？</p>
 
-        <input type="number" id="timepoint" placeholder="请输入时间点, 格式为yyyy" />
-        <button id="getresult" value="Get Result">
-            Get Result
-        </button>
-        <p id="result"></p>
-        <details>
-            <summary>Hint</summary>
-            <p>为什么不看看未来呢?</p>
-        </details>
+      <input
+        type="number"
+        id="timepoint"
+        placeholder="请输入时间点, 格式为yyyy"
+      />
+      <button id="getresult" value="Get Result">Get Result</button>
+      <p id="result"></p>
+      <details>
+        <summary>Hint</summary>
+        <p>为什么不看看未来呢?</p>
+      </details>
     </div>
     <script src="/js/get_json_response.js"></script>
     <script>
-        let trigger_ele_id = "getresult";
-        let response_show_ele_id = "result";
+      let trigger_ele_id = 'getresult';
+      let response_show_ele_id = 'result';
 
-        document.getElementById(trigger_ele_id).addEventListener("click", async () => {
-            let response_show_ele = document.getElementById(response_show_ele_id);
-            response_show_ele.innerText = "";
+      document
+        .getElementById(trigger_ele_id)
+        .addEventListener('click', async () => {
+          let response_show_ele = document.getElementById(response_show_ele_id);
+          response_show_ele.innerText = '';
 
-            await fetch("/api/16?timepoint=" + document.getElementById("timepoint").value)
-                .then((res) => { return res.json() })
-                .then((data) => {
-                    console.log(data);
-                    if (!data || !data.message) throw ("Invalid response.");
+          await fetch(
+            '/api/16?timepoint=' + document.getElementById('timepoint').value
+          )
+            .then((res) => {
+              return res.json();
+            })
+            .then((data) => {
+              console.log(data);
+              if (!data || !data.message) throw 'Invalid response.';
 
-                    response_show_ele.innerText = data.message;
-                })
-                .catch((err) => {
-                    let err_summary = "Sorry but we've encountered an issue. Please try again later.";
-                    response_show_ele.innerText = err_summary;
-                    console.log(err_summary);
-                    console.error(err);
-                });
-        })
+              response_show_ele.innerText = data.message;
+            })
+            .catch((err) => {
+              let err_summary =
+                "Sorry but we've encountered an issue. Please try again later.";
+              response_show_ele.innerText = err_summary;
+              console.log(err_summary);
+              console.error(err);
+            });
+        });
     </script>
     <script src="/js/analytics.js"></script>
-</body>
-
+  </body>
 </html>

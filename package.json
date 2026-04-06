@@ -9,7 +9,9 @@
   "scripts": {
     "test": "jest --runInBand",
     "oldtest": "node test/test.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
@@ -23,6 +25,7 @@
   },
   "devDependencies": {
     "jest": "^30.3.0",
+    "prettier": "^3.8.1",
     "supertest": "^7.2.2"
   }
 }

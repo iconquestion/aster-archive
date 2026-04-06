@@ -1,31 +1,29 @@
 <!doctype html>
 <html lang="zh-CN">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>06 - Here's your ID card</title>
-</head>
+  </head>
 
-<body>
+  <body>
     <div>
-        <h1>06 - Here's your ID card</h1>
-        <p>每个进入馆内的人，</p>
-        <p>都会收到一张ID卡片。</p>
-        <p>有人用它来区分身份，</p>
-        <p>也有人把它当作备忘。</p>
-        <button id="getmyidcard">获取我的ID卡片</button>
-        <p id="result"></p>
-        <details>
-            <summary>Hint</summary>
-            <p>看看自己的ID卡片</p>
-        </details>
+      <h1>06 - Here's your ID card</h1>
+      <p>每个进入馆内的人，</p>
+      <p>都会收到一张ID卡片。</p>
+      <p>有人用它来区分身份，</p>
+      <p>也有人把它当作备忘。</p>
+      <button id="getmyidcard">获取我的ID卡片</button>
+      <p id="result"></p>
+      <details>
+        <summary>Hint</summary>
+        <p>看看自己的ID卡片</p>
+      </details>
     </div>
     <script src="/js/get_json_response.js"></script>
     <script>
-        get_json_response("getmyidcard", "result", "/api/06?level=guest");
+      get_json_response('getmyidcard', 'result', '/api/06?level=guest');
     </script>
     <script src="/js/analytics.js"></script>
-</body>
-
+  </body>
 </html>

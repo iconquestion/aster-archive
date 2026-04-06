@@ -1,54 +1,80 @@
 <!doctype html>
 <html lang="zh-CN">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>00 - Tips</title>
-</head>
+  </head>
 
-<body>
+  <body>
     <main>
-        <header>
-            <h1>00 - Tips</h1>
-            <p>欢迎来到 Aster Archive。</p>
-            <p>在正式进入档案馆之前，先读完这份简短说明。它会帮助你更顺利地开始探索。</p>
-        </header>
+      <header>
+        <h1>00 - Tips</h1>
+        <p>欢迎来到 Aster Archive。</p>
+        <p>
+          在正式进入档案馆之前，先读完这份简短说明。它会帮助你更顺利地开始探索。
+        </p>
+      </header>
 
-        <section aria-labelledby="game-tips">
-            <h2 id="game-tips">游戏提示</h2>
-            <ol>
-                <li>每一关都是独立的，不会影响前后关卡，你可以把它理解为一个独立网站的根目录页面。</li>
-                <li>每一关都会给出通往下一关的 Flag；它同时也是下一关的入口 URL，格式为 <code>{下一关的两位数关卡号}-{十位随机小写字符串}</code>。</li>
-                <li>如果访问后出现 404，通常说明 Flag 不正确。</li>
-                <li>部分关卡需要与后端交互，请求路径统一为 <code>/api/{当前关的两位数关卡号}/...</code>。</li>
-                <li>每一关都会提供提示，有些关卡还会有多级提示；如果存在特殊规则或例外情况，页面中会明确说明。</li>
-                <li>解题思路不会简单重复之前用过的方法，也不需要强行把前几关的方法拼接组合。</li>
-                <li>关卡难度会逐步提升，但整体会尽量保持在适合持续探索的范围内。</li>
-                <li>内容主要涉及前后端基础知识，以及入门级 CTF 相关概念。</li>
-                <li>如果卡关了，不妨换个角度再试试，或者借助 LLM 获取一些思路和启发。</li>
-            </ol>
-        </section>
+      <section aria-labelledby="game-tips">
+        <h2 id="game-tips">游戏提示</h2>
+        <ol>
+          <li>
+            每一关都是独立的，不会影响前后关卡，你可以把它理解为一个独立网站的根目录页面。
+          </li>
+          <li>
+            每一关都会给出通往下一关的 Flag；它同时也是下一关的入口 URL，格式为
+            <code>{下一关的两位数关卡号}-{十位随机小写字符串}</code>。
+          </li>
+          <li>如果访问后出现 404，通常说明 Flag 不正确。</li>
+          <li>
+            部分关卡需要与后端交互，请求路径统一为
+            <code>/api/{当前关的两位数关卡号}/...</code>。
+          </li>
+          <li>
+            每一关都会提供提示，有些关卡还会有多级提示；如果存在特殊规则或例外情况，页面中会明确说明。
+          </li>
+          <li>
+            解题思路不会简单重复之前用过的方法，也不需要强行把前几关的方法拼接组合。
+          </li>
+          <li>关卡难度会逐步提升，但整体会尽量保持在适合持续探索的范围内。</li>
+          <li>内容主要涉及前后端基础知识，以及入门级 CTF 相关概念。</li>
+          <li>
+            如果卡关了，不妨换个角度再试试，或者借助 LLM 获取一些思路和启发。
+          </li>
+        </ol>
+      </section>
 
-        <section aria-labelledby="ai-statement">
-            <h3 id="ai-statement">AI 使用声明</h3>
-            <p>本网站的部分内容设计与代码编写过程中有 AI 参与。</p>
-            <p>这并不意味着放弃创作与判断；相反，我将 AI 视为一种必要且高效的工具，用来辅助整理思路、提升开发效率，并帮助这个项目更稳定地持续推进。</p>
-            <p>项目的整体方向、关卡设计取舍与最终呈现，仍由作者本人负责。</p>
-            <p>本网站由作者个人维护，因此会带有较强的主观性与个人判断；部分内容也可能随时调整或更新，相关改动通常会同步推送到 GitHub。</p>
-            <p>更新时我会尽量避免影响正在闯关的玩家，但这一点无法完全保证，还请理解。</p>
-            <p>GitHub 已开放 Discussions，如果你有建议、想法，或想分享自己的体验，欢迎前往评论交流；如果你遇到了明确的问题，也可以通过 Issues 提出反馈。</p>
-        </section>
+      <section aria-labelledby="ai-statement">
+        <h3 id="ai-statement">AI 使用声明</h3>
+        <p>本网站的部分内容设计与代码编写过程中有 AI 参与。</p>
+        <p>
+          这并不意味着放弃创作与判断；相反，我将 AI
+          视为一种必要且高效的工具，用来辅助整理思路、提升开发效率，并帮助这个项目更稳定地持续推进。
+        </p>
+        <p>项目的整体方向、关卡设计取舍与最终呈现，仍由作者本人负责。</p>
+        <p>
+          本网站由作者个人维护，因此会带有较强的主观性与个人判断；部分内容也可能随时调整或更新，相关改动通常会同步推送到
+          GitHub。
+        </p>
+        <p>
+          更新时我会尽量避免影响正在闯关的玩家，但这一点无法完全保证，还请理解。
+        </p>
+        <p>
+          GitHub 已开放
+          Discussions，如果你有建议、想法，或想分享自己的体验，欢迎前往评论交流；如果你遇到了明确的问题，也可以通过
+          Issues 提出反馈。
+        </p>
+      </section>
 
-        <footer>
-            <p>Finally, wish you have fun playing this game.</p>
-            <p>Enjoy the journey of exploring and learning!</p>
+      <footer>
+        <p>Finally, wish you have fun playing this game.</p>
+        <p>Enjoy the journey of exploring and learning!</p>
 
-            <nav aria-label="Game start">
-                <p><a href="/01-k3f9x2m7qd">开始游戏</a></p>
-            </nav>
-        </footer>
+        <nav aria-label="Game start">
+          <p><a href="/01-k3f9x2m7qd">开始游戏</a></p>
+        </nav>
+      </footer>
     </main>
-</body>
-
+  </body>
 </html>

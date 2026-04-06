@@ -1,221 +1,268 @@
 <!doctype html>
 <html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <link rel="icon" href="/favicon.ico">
-    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="shortcut icon" href="/favicon.ico" />
 
     <!-- 基础 SEO -->
     <title>Aster Archive - Web解谜小游戏</title>
-    <meta name="description" content="《Aster Archive》是一款以探索与解谜为核心的微型Web闯关游戏，在神秘档案馆中寻找线索，找到通往下一关的入口，揭开被遗忘的真相。">
-    <meta name="keywords" content="Aster Archive, 解谜游戏, 探索游戏, 独立游戏, puzzle game, indie game">
+    <meta
+      name="description"
+      content="《Aster Archive》是一款以探索与解谜为核心的微型Web闯关游戏，在神秘档案馆中寻找线索，找到通往下一关的入口，揭开被遗忘的真相。"
+    />
+    <meta
+      name="keywords"
+      content="Aster Archive, 解谜游戏, 探索游戏, 独立游戏, puzzle game, indie game"
+    />
 
     <!-- 作者 & 版权 -->
-    <meta name="author" content="iconquestion">
+    <meta name="author" content="iconquestion" />
 
     <!-- Open Graph（分享用） -->
-    <meta property="og:title" content="Aster Archive">
-    <meta property="og:description" content="探索尘封档案馆，揭开被遗忘的记录。">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.iconquestion.com/">
-    <meta property="og:image" content="https://www.iconquestion.com/cover.png">
+    <meta property="og:title" content="Aster Archive" />
+    <meta
+      property="og:description"
+      content="探索尘封档案馆，揭开被遗忘的记录。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.iconquestion.com/" />
+    <meta
+      property="og:image"
+      content="https://www.iconquestion.com/cover.png"
+    />
 
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Aster Archive">
-    <meta name="twitter:description" content="一款探索与解谜驱动的微型Web闯关游戏。">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Aster Archive" />
+    <meta
+      name="twitter:description"
+      content="一款探索与解谜驱动的微型Web闯关游戏。"
+    />
 
     <!-- 规范 URL -->
-    <link rel="canonical" href="https://www.iconquestion.com/">
+    <link rel="canonical" href="https://www.iconquestion.com/" />
 
     <!-- Bootstrap -->
-    <link rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.css" />
 
     <!-- 结构化数据 -->
     <script type="application/ld+json">
-    {
+      {
         "@context": "https://schema.org",
         "@type": "VideoGame",
         "name": "Aster Archive",
         "author": {
-            "@type": "Person",
-            "name": "iconquestion"
+          "@type": "Person",
+          "name": "iconquestion"
         },
         "genre": ["Puzzle", "Exploration"],
         "description": "一款以探索与解谜为核心的微型Web闯关游戏，在神秘档案馆中寻找线索。",
         "url": "https://www.iconquestion.com/"
-    }
+      }
     </script>
     <style>
-        body {
-            min-height: 100vh;
-            background:
-                radial-gradient(circle at top, rgba(13, 110, 253, 0.12), transparent 35%),
-                linear-gradient(180deg, #f8f9fa 0%, #eef2f7 100%);
-        }
+      body {
+        min-height: 100vh;
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(13, 110, 253, 0.12),
+            transparent 35%
+          ),
+          linear-gradient(180deg, #f8f9fa 0%, #eef2f7 100%);
+      }
 
-        .hero-card {
-            border: 0;
-            border-radius: 1.5rem;
-            background: rgba(255, 255, 255, 0.94);
-        }
+      .hero-card {
+        border: 0;
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.94);
+      }
 
-        .archive-badge {
-            letter-spacing: .08em;
-        }
+      .archive-badge {
+        letter-spacing: 0.08em;
+      }
 
-        .hero-title {
-            line-height: 1.1;
-        }
+      .hero-title {
+        line-height: 1.1;
+      }
 
-        .hero-text {
-            color: #495057;
-            line-height: 1.9;
-        }
+      .hero-text {
+        color: #495057;
+        line-height: 1.9;
+      }
 
-        .story-block p:last-child {
-            margin-bottom: 0;
-        }
+      .story-block p:last-child {
+        margin-bottom: 0;
+      }
 
-        .start-btn {
-            padding: .85rem 1.5rem;
-            font-weight: 600;
-        }
+      .start-btn {
+        padding: 0.85rem 1.5rem;
+        font-weight: 600;
+      }
 
-        .author-card {
-            border-radius: 1rem;
-        }
+      .author-card {
+        border-radius: 1rem;
+      }
 
-        .progress-block {
-            border-radius: 1rem;
-            background: linear-gradient(135deg, rgba(13, 110, 253, 0.08), rgba(13, 202, 240, 0.1));
-            border: 1px solid rgba(13, 110, 253, 0.12);
-        }
+      .progress-block {
+        border-radius: 1rem;
+        background: linear-gradient(
+          135deg,
+          rgba(13, 110, 253, 0.08),
+          rgba(13, 202, 240, 0.1)
+        );
+        border: 1px solid rgba(13, 110, 253, 0.12);
+      }
 
-        .progress-kicker {
-            letter-spacing: .08em;
-        }
+      .progress-kicker {
+        letter-spacing: 0.08em;
+      }
 
-        .progress-level {
-            line-height: 1;
-        }
+      .progress-level {
+        line-height: 1;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <main class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-10 col-xl-9">
-                <section class="card hero-card shadow-lg">
-                    <div class="card-body p-4 p-md-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-9">
+          <section class="card hero-card shadow-lg">
+            <div class="card-body p-4 p-md-5">
+              <div class="text-center mb-5">
+                <span class="badge text-bg-dark archive-badge px-3 py-2 mb-3">
+                  MICRO PUZZLE GAME
+                </span>
+                <h1 class="display-4 fw-bold hero-title mb-3">
+                  Welcome to Aster Archive
+                </h1>
+                <p class="lead text-secondary mb-0">
+                  探索尘封馆藏，追寻被封存的记录，在沉默中靠近真相。
+                </p>
+                <p class="lead text-secondary mb-0">
+                  一款Web解谜游戏，类似于WebCTF，通过你的前后端Web知识来找出隐藏在数据流中的线索！
+                </p>
+              </div>
 
-                        <div class="text-center mb-5">
-                            <span class="badge text-bg-dark archive-badge px-3 py-2 mb-3">
-                                MICRO PUZZLE GAME
-                            </span>
-                            <h1 class="display-4 fw-bold hero-title mb-3">Welcome to Aster Archive</h1>
-                            <p class="lead text-secondary mb-0">
-                                探索尘封馆藏，追寻被封存的记录，在沉默中靠近真相。
-                            </p>
-                            <p class="lead text-secondary mb-0">一款Web解谜游戏，类似于WebCTF，通过你的前后端Web知识来找出隐藏在数据流中的线索！</p>
+              <div class="row g-4 align-items-stretch">
+                <div class="col-md-7">
+                  <div class="story-block h-100 p-4 bg-light rounded-4 border">
+                    <p class="hero-text mb-4">
+                      《Aster Archive》是一款以探索与解谜为核心的微型闯关游戏。
+                      你将踏入一座早已被遗弃的神秘馆藏，在尘封的空间中寻找前行的路径。
+                    </p>
+                    <p class="hero-text mb-4">
+                      在这座逐渐苏醒的档案馆中，你将穿行于层层封闭的区域，
+                      触碰散落各处的线索，开启通往更深处的门扉。
+                      那些被遗忘的记录、未曾公开的片段，正等待被重新发现。
+                    </p>
+                    <p class="hero-text mb-4">
+                      可以沿着隐约留下的指引不断深入，也可以停下脚步，
+                      在细微之处捕捉异样的痕迹，让直觉带你接近真相。
+                    </p>
+                    <p class="fs-5 fw-semibold text-dark mb-2">但请牢记——</p>
+                    <p class="hero-text fst-italic">
+                      当你凝视深渊时，深渊也在凝视你。
+                    </p>
+                  </div>
+                </div>
+
+                <div class="col-md-5">
+                  <div
+                    class="h-100 d-flex flex-column justify-content-between p-4 bg-white rounded-4 border shadow-sm"
+                  >
+                    <div>
+                      <h2 class="h4 fw-bold mb-3">Begin Your Journey</h2>
+                      <p class="text-secondary mb-4">
+                        沿着档案馆留下的微弱指引前进，开启第一段探索。
+                      </p>
+
+                      <div class="d-grid gap-3">
+                        <a
+                          href="/00-letsstart"
+                          class="btn btn-primary btn-lg start-btn"
+                        >
+                          Enter the Archive
+                        </a>
+                      </div>
+
+                      <div class="progress-block mt-4 p-3 p-xl-4">
+                        <div
+                          class="small text-uppercase text-primary fw-semibold progress-kicker mb-2"
+                        >
+                          Progress Update
                         </div>
-
-                        <div class="row g-4 align-items-stretch">
-                            <div class="col-md-7">
-                                <div class="story-block h-100 p-4 bg-light rounded-4 border">
-                                    <p class="hero-text mb-4">
-                                        《Aster Archive》是一款以探索与解谜为核心的微型闯关游戏。
-                                        你将踏入一座早已被遗弃的神秘馆藏，在尘封的空间中寻找前行的路径。
-                                    </p>
-                                    <p class="hero-text mb-4">
-                                        在这座逐渐苏醒的档案馆中，你将穿行于层层封闭的区域，
-                                        触碰散落各处的线索，开启通往更深处的门扉。
-                                        那些被遗忘的记录、未曾公开的片段，正等待被重新发现。
-                                    </p>
-                                    <p class="hero-text mb-4">
-                                        可以沿着隐约留下的指引不断深入，也可以停下脚步，
-                                        在细微之处捕捉异样的痕迹，让直觉带你接近真相。
-                                    </p>
-                                    <p class="fs-5 fw-semibold text-dark mb-2">但请牢记——</p>
-                                    <p class="hero-text fst-italic">
-                                        当你凝视深渊时，深渊也在凝视你。
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="col-md-5">
-                                <div
-                                    class="h-100 d-flex flex-column justify-content-between p-4 bg-white rounded-4 border shadow-sm">
-                                    <div>
-                                        <h2 class="h4 fw-bold mb-3">Begin Your Journey</h2>
-                                        <p class="text-secondary mb-4">
-                                            沿着档案馆留下的微弱指引前进，开启第一段探索。
-                                        </p>
-
-                                        <div class="d-grid gap-3">
-                                            <a href="/00-letsstart" class="btn btn-primary btn-lg start-btn">
-                                                Enter the Archive
-                                            </a>
-                                        </div>
-
-                                        <div class="progress-block mt-4 p-3 p-xl-4">
-                                            <div class="small text-uppercase text-primary fw-semibold progress-kicker mb-2">
-                                                Progress Update
-                                            </div>
-                                            <div class="d-flex align-items-end gap-2 mb-2">
-                                                <span class="display-6 fw-bold text-dark progress-level">24</span>
-                                                <span class="text-secondary fw-semibold pb-1">关已开放</span>
-                                            </div>
-                                            <p class="text-secondary small mb-0">
-                                                当前首页入口已开放至第 24 关，后续章节会继续补充。
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-4 pt-4 border-top">
-                                        <div class="small text-uppercase text-secondary fw-semibold mb-2">
-                                            Archive Notes
-                                        </div>
-                                        <ul class="list-unstyled text-secondary small mb-0">
-                                            <li class="mb-2">探索 + 解谜驱动</li>
-                                            <li class="mb-2">微型闯关体验</li>
-                                            <li>碎片化线索叙事</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="d-flex align-items-end gap-2 mb-2">
+                          <span
+                            class="display-6 fw-bold text-dark progress-level"
+                            >24</span
+                          >
+                          <span class="text-secondary fw-semibold pb-1"
+                            >关已开放</span
+                          >
                         </div>
-
-                        <div class="mt-4 mt-md-5">
-                            <div class="card author-card border-0 bg-dark text-white shadow-sm">
-                                <div
-                                    class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                                    <div>
-                                        <p class="mb-1 fw-semibold">Author: iconquestion</p>
-                                        <p class="mb-0 text-white-50">Follow the archive keeper or get in touch.</p>
-                                    </div>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <a href="https://github.com/iconquestion/aster-archive" target="_blank"
-                                            class="btn btn-outline-light btn-sm">
-                                            Github
-                                        </a>
-                                        <a href="mailto:mojavenight@qq.com" class="btn btn-light btn-sm">
-                                            Mail
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                        <p class="text-secondary small mb-0">
+                          当前首页入口已开放至第 24 关，后续章节会继续补充。
+                        </p>
+                      </div>
                     </div>
-                </section>
+
+                    <div class="mt-4 pt-4 border-top">
+                      <div
+                        class="small text-uppercase text-secondary fw-semibold mb-2"
+                      >
+                        Archive Notes
+                      </div>
+                      <ul class="list-unstyled text-secondary small mb-0">
+                        <li class="mb-2">探索 + 解谜驱动</li>
+                        <li class="mb-2">微型闯关体验</li>
+                        <li>碎片化线索叙事</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 mt-md-5">
+                <div
+                  class="card author-card border-0 bg-dark text-white shadow-sm"
+                >
+                  <div
+                    class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3"
+                  >
+                    <div>
+                      <p class="mb-1 fw-semibold">Author: iconquestion</p>
+                      <p class="mb-0 text-white-50">
+                        Follow the archive keeper or get in touch.
+                      </p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                      <a
+                        href="https://github.com/iconquestion/aster-archive"
+                        target="_blank"
+                        class="btn btn-outline-light btn-sm"
+                      >
+                        Github
+                      </a>
+                      <a
+                        href="mailto:mojavenight@qq.com"
+                        class="btn btn-light btn-sm"
+                      >
+                        Mail
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </section>
         </div>
+      </div>
     </main>
     <script src="/js/analytics.js"></script>
-</body>
-
+  </body>
 </html>

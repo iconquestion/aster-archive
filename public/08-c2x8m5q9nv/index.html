@@ -1,42 +1,40 @@
 <!doctype html>
 <html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>08 - A Book Without A Catalog</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>08 - A Book Without A Catalog</title>
-</head>
+  <body>
+    <div>
+      <h1>08 - A Book Without A Catalog</h1>
+      <p>你发现有一片区域尚未探索，但始终无法找到入口。</p>
+      <p>这时你注意到一张剥落的壁画。</p>
+      <p>你顺手撕了下来，露出了背后的墙。</p>
+      <p>墙上的字已经斑驳不清，需要费点力气才能勉强辨认。</p>
+      <button id="clickme">开始使劲辨认</button>
+      <pre id="result"></pre>
+      <details>
+        <summary>Hint</summary>
+        <p>每一关都可以视作独立的网站的根目录...</p>
+      </details>
+    </div>
+    <script>
+      let btn = document.getElementById('clickme');
+      let result = document.getElementById('result');
 
-<body>
-  <div>
-    <h1>08 - A Book Without A Catalog</h1>
-    <p>你发现有一片区域尚未探索，但始终无法找到入口。</p>
-    <p>这时你注意到一张剥落的壁画。</p>
-    <p>你顺手撕了下来，露出了背后的墙。</p>
-    <p>墙上的字已经斑驳不清，需要费点力气才能勉强辨认。</p>
-    <button id="clickme">开始使劲辨认</button>
-    <pre id="result"></pre>
-    <details>
-      <summary>Hint</summary>
-      <p>每一关都可以视作独立的网站的根目录...</p>
-    </details>
-  </div>
-  <script>
-    let btn = document.getElementById('clickme');
-    let result = document.getElementById('result');
-
-    btn.addEventListener('click', function () {
-      result.textContent = `
+      btn.addEventListener('click', function () {
+        result.textContent = `
         location /08-c2x8m5q9nv/ {
             autoindex on;
             autoindex_exact_size on;
             autoindex_localtime on;
         }
-        `
-      btn.disabled = true;
-    });
-  </script>
-  <script src="/js/analytics.js"></script>
-</body>
-
+        `;
+        btn.disabled = true;
+      });
+    </script>
+    <script src="/js/analytics.js"></script>
+  </body>
 </html>

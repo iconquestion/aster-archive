@@ -1,80 +1,86 @@
-const path = require("path");
-const fs = require("fs");
-const dotenv = require("dotenv");
+const path = require('path');
+const fs = require('fs');
+const dotenv = require('dotenv');
 
 // 配置读取与校验。
 // 仅处理环境变量和通用的路径存在性校验，不承担应用装配职责。
 function requireEnv(name) {
-    const value = process.env[name];
+  const value = process.env[name];
 
-    if (typeof value !== "string" || value.trim() === "") {
-        throw new Error(`Missing required environment variable: ${name}`);
-    }
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
 
-    return value.trim();
+  return value.trim();
 }
 
 function requireIntegerEnv(name) {
-    const value = requireEnv(name);
-    if (!/^-?\d+$/.test(value)) {
-        throw new Error(`Environment variable ${name} must be an integer, received: ${value}`);
-    }
+  const value = requireEnv(name);
+  if (!/^-?\d+$/.test(value)) {
+    throw new Error(
+      `Environment variable ${name} must be an integer, received: ${value}`
+    );
+  }
 
-    const parsed = Number.parseInt(value, 10);
+  const parsed = Number.parseInt(value, 10);
 
-    if (!Number.isInteger(parsed)) {
-        throw new Error(`Environment variable ${name} must be an integer, received: ${value}`);
-    }
+  if (!Number.isInteger(parsed)) {
+    throw new Error(
+      `Environment variable ${name} must be an integer, received: ${value}`
+    );
+  }
 
-    return parsed;
+  return parsed;
 }
 
 function requireExistingPathEnv(name) {
-    const value = requireEnv(name);
+  const value = requireEnv(name);
 
-    if (!fs.existsSync(value)) {
-        throw new Error(`Path configured by ${name} does not exist: ${value}`);
-    }
+  if (!fs.existsSync(value)) {
+    throw new Error(`Path configured by ${name} does not exist: ${value}`);
+  }
 
-    return value;
+  return value;
 }
 
 function requireExistingPath(filePath, label) {
-    if (!fs.existsSync(filePath)) {
-        throw new Error(`${label} does not exist: ${filePath}`);
-    }
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`${label} does not exist: ${filePath}`);
+  }
 
-    return filePath;
+  return filePath;
 }
 
 function loadConfig() {
-    // 统一从项目内的 config/.env 加载运行配置，避免入口与测试各自维护一套解析逻辑。
-    const envPath = path.join(__dirname, "../config/.env");
-    const envResult = dotenv.config({ path: envPath });
+  // 统一从项目内的 config/.env 加载运行配置，避免入口与测试各自维护一套解析逻辑。
+  const envPath = path.join(__dirname, '../config/.env');
+  const envResult = dotenv.config({ path: envPath });
 
-    if (envResult.error) {
-        throw new Error(`Failed to load env file at ${envPath}: ${envResult.error.message}`);
-    }
+  if (envResult.error) {
+    throw new Error(
+      `Failed to load env file at ${envPath}: ${envResult.error.message}`
+    );
+  }
 
-    const config = {
-        envPath,
-        httpPort: requireIntegerEnv("HTTP_PORT"),
-        httpsPort: requireIntegerEnv("HTTPS_PORT"),
-        http2Port: requireIntegerEnv("HTTP2_PORT"),
-        appOrigin: requireEnv("APP_ORIGIN"),
-        tlsKeyPath: requireExistingPathEnv("TLS_KEY_PATH"),
-        tlsCertPath: requireExistingPathEnv("TLS_CERT_PATH"),
-        http2TargetPath: "/api/21",
-        logsDir: path.join(__dirname, "../logs"),
-    };
+  const config = {
+    envPath,
+    httpPort: requireIntegerEnv('HTTP_PORT'),
+    httpsPort: requireIntegerEnv('HTTPS_PORT'),
+    http2Port: requireIntegerEnv('HTTP2_PORT'),
+    appOrigin: requireEnv('APP_ORIGIN'),
+    tlsKeyPath: requireExistingPathEnv('TLS_KEY_PATH'),
+    tlsCertPath: requireExistingPathEnv('TLS_CERT_PATH'),
+    http2TargetPath: '/api/21',
+    logsDir: path.join(__dirname, '../logs'),
+  };
 
-    return config;
+  return config;
 }
 
 module.exports = {
-    loadConfig,
-    requireEnv,
-    requireIntegerEnv,
-    requireExistingPathEnv,
-    requireExistingPath,
+  loadConfig,
+  requireEnv,
+  requireIntegerEnv,
+  requireExistingPathEnv,
+  requireExistingPath,
 };

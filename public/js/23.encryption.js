@@ -46,56 +46,56 @@ setTimeout(async () => {
 */
 
 const _m = [
-  "subtle",     // 0
-  "importKey",  // 1
-  "decrypt",    // 2
-  "setItem",    // 3
-  "match",      // 4
-  "from",       // 5
-  "join",       // 6
-  "padStart",   // 7
-  "toString",   // 8
-  "encode",     // 9
-  "decode",     // 10
-  "name",       // 11
-  "AES",        // 12
-  "CBC",        // 13
-  "raw",        // 14
-  "top",        // 15
-  "secret",     // 16
-  "local",      // 17
-  "Storage"     // 18
+  'subtle', // 0
+  'importKey', // 1
+  'decrypt', // 2
+  'setItem', // 3
+  'match', // 4
+  'from', // 5
+  'join', // 6
+  'padStart', // 7
+  'toString', // 8
+  'encode', // 9
+  'decode', // 10
+  'name', // 11
+  'AES', // 12
+  'CBC', // 13
+  'raw', // 14
+  'top', // 15
+  'secret', // 16
+  'local', // 17
+  'Storage', // 18
 ];
 
-const _j = (...x) => x.join("");
-const _p = xs => _j(...xs);
+const _j = (...x) => x.join('');
+const _p = (xs) => _j(...xs);
 
-const _k = ["nothing", "isgonna", "changemy", "loveforyou"];
-const _v = ["i", "'", "llloveu", "fora1k", "+"];
+const _k = ['nothing', 'isgonna', 'changemy', 'loveforyou'];
+const _v = ['i', "'", 'llloveu', 'fora1k', '+'];
 const _c = [
-  "23bba64d",
-  "e33d8ad3",
-  "026da485",
-  "50b70a1a",
-  "0d76cb50",
-  "421f46f1",
-  "241b46a2",
-  "a2c069f1"
+  '23bba64d',
+  'e33d8ad3',
+  '026da485',
+  '50b70a1a',
+  '0d76cb50',
+  '421f46f1',
+  '241b46a2',
+  'a2c069f1',
 ];
 
-const _alg = _p([_m[12], "-", _m[13]]);
-const _storeKey = _p([_m[15], "_", _m[16]]);
-const _keyText = _k.join("");
-const _ivText = _v.join("");
-const _cipherHex = _c.join("");
+const _alg = _p([_m[12], '-', _m[13]]);
+const _storeKey = _p([_m[15], '_', _m[16]]);
+const _keyText = _k.join('');
+const _ivText = _v.join('');
+const _cipherHex = _c.join('');
 
-const _hexToBytes = s =>
-  new Uint8Array((s.match(/../g) || []).map(x => parseInt(x, 16)));
+const _hexToBytes = (s) =>
+  new Uint8Array((s.match(/../g) || []).map((x) => parseInt(x, 16)));
 
-const _bytesToHex = buf =>
+const _bytesToHex = (buf) =>
   Array.from(buf)
-    .map(x => x.toString(16).padStart(2, "0"))
-    .join("");
+    .map((x) => x.toString(16).padStart(2, '0'))
+    .join('');
 
 async function _a() {
   const _te = new TextEncoder();

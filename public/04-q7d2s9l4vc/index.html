@@ -1,29 +1,27 @@
 <!doctype html>
 <html lang="zh-CN">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>04 - An echo from the past</title>
-</head>
+  </head>
 
-<body>
+  <body>
     <div>
-        <h1>04 - An echo from the past</h1>
-        <p>你听见了来自远古的回音，</p>
-        <p>却未曾留意它的面容。</p>
-        <button id="getecho">Click me to get an echo</button>
-        <p id="echo"></p>
-        <details>
-            <summary>Hint</summary>
-            <p>有时候，"怎么说"比"说什么"更重要。</p>
-        </details>
+      <h1>04 - An echo from the past</h1>
+      <p>你听见了来自远古的回音，</p>
+      <p>却未曾留意它的面容。</p>
+      <button id="getecho">Click me to get an echo</button>
+      <p id="echo"></p>
+      <details>
+        <summary>Hint</summary>
+        <p>有时候，"怎么说"比"说什么"更重要。</p>
+      </details>
     </div>
     <script src="/js/get_json_response.js"></script>
     <script>
-        get_json_response("getecho", "echo", "/api/04");
+      get_json_response('getecho', 'echo', '/api/04');
     </script>
     <script src="/js/analytics.js"></script>
-</body>
-
+  </body>
 </html>

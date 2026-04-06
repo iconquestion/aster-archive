@@ -34,7 +34,7 @@
 
 ```css
 .archive {
-    font-family: 'Courier New', Courier, '03-r5t9m1x8wb', monospace;
+  font-family: 'Courier New', Courier, '03-r5t9m1x8wb', monospace;
 }
 ```
 
@@ -56,7 +56,7 @@
 2. 在 `<head>` 里可以看到：
 
 ```html
-<meta name="version" content="04-q7d2s9l4vc">
+<meta name="version" content="04-q7d2s9l4vc" />
 ```
 
 ### 答案
@@ -74,6 +74,7 @@
 后端在 `src/04.js` 中对 `GET /api/04` 设置了自定义响应头 `X-Archive-Next`。
 
 ### 解题步骤
+
 1. 点击页面按钮，请求 `/api/04`。
 2. 使用浏览器开发人员工具或第三方工具查看响应头。
 
@@ -105,7 +106,7 @@ Content-Type: application/json; charset=utf-8
 1. 查看JS代码
 
 ```js
-get_json_response("knock", "responseMsg", "/api/05");
+get_json_response('knock', 'responseMsg', '/api/05');
 ```
 
 `get_json_response` 默认不传 `fetch_attrs`，所以这是一个 `GET` 请求。
@@ -124,7 +125,7 @@ Host: www.iconquestion.com
 错误响应：
 
 ```json
-{"message":"YOU SHALL NOT PASS!!!"}
+{ "message": "YOU SHALL NOT PASS!!!" }
 ```
 
 正确请求示例：
@@ -144,7 +145,7 @@ curl -X POST https://www.iconquestion.com/api/05
 正确响应：
 
 ```json
-{"message":"Welcome back, my master. \nThe password is 06-m4v7q2c9ta."}
+{ "message": "Welcome back, my master. \nThe password is 06-m4v7q2c9ta." }
 ```
 
 ### 答案
@@ -166,7 +167,7 @@ curl -X POST https://www.iconquestion.com/api/05
 1. 查看JS代码
 
 ```js
-get_json_response("getmyidcard", "result", "/api/06?level=guest");
+get_json_response('getmyidcard', 'result', '/api/06?level=guest');
 ```
 
 2. 把 query 参数从 `guest` 改成 `admin` ，重新发送请求。
@@ -176,7 +177,9 @@ get_json_response("getmyidcard", "result", "/api/06?level=guest");
 响应：
 
 ```json
-{"message":"Your identity: admin. \nYour office is located at No.z9k3d6w1rx, 7th floor."}
+{
+  "message": "Your identity: admin. \nYour office is located at No.z9k3d6w1rx, 7th floor."
+}
 ```
 
 ### 答案
@@ -198,7 +201,6 @@ get_json_response("getmyidcard", "result", "/api/06?level=guest");
 1. 查看页面和页面源码。
 
    页面上只提供了三个按钮：
-
    - `visit_grand_reading_hall`
    - `visit_archive_room`
    - `visit_exhibit_corridor`
@@ -216,7 +218,9 @@ get_json_response("getmyidcard", "result", "/api/06?level=guest");
    返回：
 
    ```json
-   {"message":"很抱歉，该区域当前不对外开放。建议您前往其他区域参观，以获取更多关于档案馆的公开信息。\n以下是推荐的区域：主览大厅, 公共档案区, 展示长廊，管理办公室"}
+   {
+     "message": "很抱歉，该区域当前不对外开放。建议您前往其他区域参观，以获取更多关于档案馆的公开信息。\n以下是推荐的区域：主览大厅, 公共档案区, 展示长廊，管理办公室"
+   }
    ```
 
    这个响应已经明确把"管理办公室"作为新的可尝试方向暴露出来了。
@@ -236,7 +240,9 @@ get_json_response("getmyidcard", "result", "/api/06?level=guest");
    响应：
 
    ```json
-   {"message":"这里曾经是档案的管理办公室，陈列着早已泛黄的旧文件和木制桌椅。最上面的文件是有关08房间c2x8m5q9nv档案的展出规划资料。"}
+   {
+     "message": "这里曾经是档案的管理办公室，陈列着早已泛黄的旧文件和木制桌椅。最上面的文件是有关08房间c2x8m5q9nv档案的展出规划资料。"
+   }
    ```
 
 ### 答案
@@ -341,7 +347,6 @@ get_json_response("getmyidcard", "result", "/api/06?level=guest");
 1. 查看页面源码，可以发现每张"照片"都对应一个 DOM id 和一个日期。
 
 2. 结合现有代码推断真实逻辑。
-
    - 对日期字符串做 `hashDate`
 
    - 再通过 `hashToChar` 映射成一个字符
@@ -358,16 +363,16 @@ get_json_response("getmyidcard", "result", "/api/06?level=guest");
 
    ```js
    result.push({
-   date: rawDate,
-   ch: ch
+     date: rawDate,
+     ch: ch,
    });
 
    const flag = result
-   .sort((a, b) => new Date(a.date) - new Date(b.date))
-   .map(x => x.ch)
-   .join("");
+     .sort((a, b) => new Date(a.date) - new Date(b.date))
+     .map((x) => x.ch)
+     .join('');
 
-   console.log("FLAG:", "11-" + flag);
+   console.log('FLAG:', '11-' + flag);
    ```
 
 4. 运行脚本。
@@ -403,7 +408,6 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 2. 再按上面的 PoC 链路继续处理。
 
    由于玩家无法拿到 PoC，需要凭借经验进行猜测和尝试，故此关具有一定难度。但本站鼓励玩家使用 LLM 等其他方式进行解谜，而非硬核技术攻关。
-
    - From Hex
    - From Base64
    - ROT13
@@ -460,7 +464,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 4. 观察爆破出正确密码后的返回结果。
 
    ```json
-   {"message":"登录成功"}
+   { "message": "登录成功" }
    ```
 
    同时设置 Cookie，例如：
@@ -478,7 +482,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 6. 查看正确响应。
 
    ```json
-   {"message":"13-k9c3x6n2tw"}
+   { "message": "13-k9c3x6n2tw" }
    ```
 
 ### 答案
@@ -561,7 +565,9 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
    凭据正确的响应：
 
    ```json
-   {"message":"Welcome, admin! The password for the next room is 15-x2m9k4c6ra."}
+   {
+     "message": "Welcome, admin! The password for the next room is 15-x2m9k4c6ra."
+   }
    ```
 
 ### 答案
@@ -599,19 +605,19 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 2. 建立连接后，先观察服务端返回的提示消息。
 
    ```json
-   {"message":"WebSocket connected. Please send { action: 'init' }"}
+   { "message": "WebSocket connected. Please send { action: 'init' }" }
    ```
 
 3. 按提示先发送初始化消息。
 
    ```json
-   {"action":"init"}
+   { "action": "init" }
    ```
 
 4. 服务器返回地图尺寸。
 
    ```json
-   {"x":5,"y":5}
+   { "x": 5, "y": 5 }
    ```
 
 5. 之后开始发送移动指令。
@@ -622,7 +628,6 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
    ```
 
 6. 每次发送移动指令后，观察普通响应中的状态反馈。
-
    - 撞墙：`{"wall":1,"win":false}`
    - 走通：`{"wall":0,"win":false}`
 
@@ -667,7 +672,9 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 4. 查看响应内容。
 
    ```json
-   {"message":"Welcome to 2077 Cyberpunk! 17-c8v1n5r2ya 由于HTTP/3支持原因 未找到合适的solution 本关日后将重新设计 您可以跳过"}
+   {
+     "message": "Welcome to 2077 Cyberpunk! 17-c8v1n5r2ya 由于HTTP/3支持原因 未找到合适的solution 本关日后将重新设计 您可以跳过"
+   }
    ```
 
 ### 答案
@@ -681,6 +688,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 让玩家学习观察 HTTP Trailer，理解有些信息既不在普通响应头里，也不在响应体里。
 
 ### 实现方式
+
 题目真正的线索不在页面正文里，也不在普通响应体里，而是在响应完成时额外追加的 Trailer 中。
 
 ### 解题步骤
@@ -702,7 +710,9 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 3. 再查看响应体本身。
 
    ```json
-   {"message":"在这个世界上，有些东西是无法用言语表达的。就像这封信一样，它承载着无尽的情感和回忆......"}
+   {
+     "message": "在这个世界上，有些东西是无法用言语表达的。就像这封信一样，它承载着无尽的情感和回忆......"
+   }
    ```
 
 4. 继续读取 Trailer。
@@ -730,7 +740,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 1. 先直接请求 `/api/18`。
 
    ```json
-   {"message":"What's the dog doing? :P"}
+   { "message": "What's the dog doing? :P" }
    ```
 
 2. 再观察响应头。
@@ -746,7 +756,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
    如果读取的一段长度过大，则后端会提示：
 
    ```json
-   {"message":"Too greedy..."}
+   { "message": "Too greedy..." }
    ```
 
    那么我们每次只能取一小段，所以需要分片请求。
@@ -762,7 +772,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
    响应：
 
    ```json
-   {"message":"ddonoteat19-h9m4"}
+   { "message": "ddonoteat19-h9m4" }
    ```
 
 5. 再继续请求下一段。
@@ -774,7 +784,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
    响应：
 
    ```json
-   {"message":"q2z8xcpleaseplea"}
+   { "message": "q2z8xcpleaseplea" }
    ```
 
 6. 把两段中的有效内容拼起来。
@@ -804,7 +814,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
    ```
 
    这一关不能只看源码，还要把"源码中的明文诗句"和"页面上使用 `/fonts/19.ttf` 后的实际显示效果"逐字符对照起来。
-   
+
    由于整首诗原文是公开文本，只要观察几组对应字符，就能推出这套字体做的是"字符替换"。
 
 2. 将 `Your dearest` 后面那串字符按同样规则逆映射。
@@ -830,7 +840,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 - 页面会向 `POST /api/20` 发送 JSON：
 
   ```json
-  {"guess":"..."}
+  { "guess": "..." }
   ```
 
 - 每次提交后，接口都会返回和 Wordle 类似的反馈。
@@ -840,7 +850,6 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 1. 查看页面可知这是一个纯输入型题目，真正的交互发生在接口 `/api/20`。
 
    页面会返回两类反馈：
-
    - 位置和字符都正确的数量 `exact`
 
    - 字符存在但位置不对的数量 `partial`
@@ -856,13 +865,18 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 3. 然后向接口提交这个结果。
 
    ```json
-   {"guess":"t8d0v9c2c4"}
+   { "guess": "t8d0v9c2c4" }
    ```
 
 4. 查看成功响应。
 
    ```json
-   {"message":"猜对了！下一关是 t8d0v9c2c4","exact":10,"partial":0,"isCorrect":true}
+   {
+     "message": "猜对了！下一关是 t8d0v9c2c4",
+     "exact": 10,
+     "partial": 0,
+     "isCorrect": true
+   }
    ```
 
 ### 答案
@@ -906,7 +920,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 3. 查看返回的脚本内容。
 
    ```js
-   script.src = "https://www.googletagmanager.com/gtag/js?id=22-j4l4a7u8n2";
+   script.src = 'https://www.googletagmanager.com/gtag/js?id=22-j4l4a7u8n2';
    gtag('config', '22-j4l4a7u8n2');
    ```
 
@@ -965,7 +979,6 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 ### 实现方式
 
 - 页面使用了几种低门槛前端反调试手段：
-
   - 阻止 `F12`、`Ctrl/Cmd + Shift + I/J/C`、`Ctrl/Cmd + U`
 
   - 阻止右键菜单
