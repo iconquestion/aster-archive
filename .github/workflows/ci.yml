@@ -26,6 +26,26 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Prepare CI environment
+        run: |
+          mkdir -p config/.ci-tls
+          openssl req \
+            -x509 \
+            -newkey rsa:2048 \
+            -nodes \
+            -keyout config/.ci-tls/key.pem \
+            -out config/.ci-tls/cert.pem \
+            -days 7 \
+            -subj "/CN=localhost"
+          cat <<EOF > config/.env
+          HTTP_PORT=8080
+          HTTPS_PORT=8443
+          HTTP2_PORT=9443
+          APP_ORIGIN=https://localhost:8443
+          TLS_KEY_PATH=${{ github.workspace }}/config/.ci-tls/key.pem
+          TLS_CERT_PATH=${{ github.workspace }}/config/.ci-tls/cert.pem
+          EOF
+
       - name: Install dependencies
         run: npm ci
 
