@@ -2,7 +2,7 @@
   "name": "mywebgame",
   "version": "1.0.0",
   "description": "",
-  "license": "ISC",
+  "license": "AGPL-3.0-only",
   "author": "iconquestion",
   "type": "commonjs",
   "main": "src/index.js",
