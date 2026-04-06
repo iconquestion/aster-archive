@@ -32,7 +32,9 @@ https://www.iconquestion.com/
 
 `101-solutions.md` 题解文档，描述每一关的设计理念和详细解题步骤。
 
-`construction.md` 架构说明，专门负责描述整体架构、请求流和部署关系。
+`construction.md` 架构说明，专门负责描述网站整体系统架构。
+
+详细结构说明，请参阅 [construction.md](./construction.md)
 
 ## 仓库用途
 
