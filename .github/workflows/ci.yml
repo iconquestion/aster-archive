@@ -29,6 +29,7 @@ jobs:
       - name: Prepare CI environment
         run: |
           mkdir -p config/.ci-tls
+          mkdir -p public/12-d1q7m4z8pv
           openssl req \
             -x509 \
             -newkey rsa:2048 \
@@ -37,6 +38,7 @@ jobs:
             -out config/.ci-tls/cert.pem \
             -days 7 \
             -subj "/CN=localhost"
+          printf '4242\n' > public/12-d1q7m4z8pv/password.xdxdxdxd
           cat <<EOF > config/.env
           HTTP_PORT=8080
           HTTPS_PORT=8443
