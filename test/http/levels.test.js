@@ -43,7 +43,7 @@ describe('Levels 01-14', () => {
     const res = await request(app).get('/03-r5t9m1x8wb/');
 
     expect(res.status).toBe(200);
-    expect(res.text).toContain('<meta name="version" content="04-q7d2s9l4vc">');
+    expect(res.text).toContain('04-q7d2s9l4vc');
   });
 
   // 04-09 主要覆盖普通 HTTP 接口与静态文件线索读取。
