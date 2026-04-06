@@ -1,96 +1,96 @@
-# Security Policy
+# 安全策略
 
-## Scope
+## 范围
 
-This repository contains the source code and content for `Aster Archive`, a Web-based puzzle game. Because the project itself includes intentionally misleading clues, hidden paths, and challenge logic, not every unusual behavior should be treated as a security vulnerability.
+这个仓库包含 `Aster Archive` 的源码与内容，而 `Aster Archive` 本身又是一个以网页细节、接口行为和协议特性为题面素材的 Web 解谜游戏。因此，并不是所有“看起来奇怪”的行为都属于安全漏洞。
 
-This document is only about issues that affect the real safety, integrity, or availability of the project, the server, or its users.
+这份文档所说的安全问题，只指那些会影响项目真实安全性、服务器完整性、部署环境、可用性，或真实用户数据与运行环境的问题。
 
-## What Counts as a Security Issue
+## 哪些情况算安全问题
 
-Please report issues such as:
+欢迎报告以下类型的问题：
 
-- Remote code execution or command injection
-- Directory traversal outside intended challenge scope
-- Unauthorized access to server files, credentials, logs, or deployment secrets
-- Access to unrelated private data stored on the server
-- Authentication or authorization flaws that affect site administration or infrastructure
-- SSRF, unsafe proxy behavior, or internal service exposure beyond intended challenge design
-- Denial of service issues that can significantly disrupt normal availability
-- Vulnerabilities in deployment or runtime configuration that impact the real host environment
-- Dependency vulnerabilities that create meaningful risk in the actual deployed project
+- 远程代码执行或命令注入
+- 超出关卡设计边界的目录遍历
+- 未授权访问服务器文件、日志、凭据或部署密钥
+- 读取与游戏无关的私有数据
+- 影响站点管理面、部署环境或基础设施的鉴权/授权缺陷
+- 超出设计预期的 SSRF、代理滥用或内网服务暴露
+- 能显著影响站点可用性的拒绝服务问题
+- 对真实主机环境有影响的部署或运行时配置漏洞
+- 在当前实际部署中构成明显风险的依赖漏洞
 
-## What Usually Does Not Count
+## 哪些情况通常不算安全问题
 
-The following usually do not count as security vulnerabilities by themselves:
+以下情况通常不视为安全漏洞本身：
 
-- Intended puzzle solutions
-- Hidden flags, misleading comments, or challenge backdoors that are part of level design
-- Discovering the next level through normal reverse engineering of the game
-- Accessing challenge endpoints in ways that are explicitly part of gameplay
-- Weaknesses that exist only inside a level’s intended puzzle boundary
-- Content mistakes, broken clues, or logic bugs that affect puzzle quality rather than real security
-- Issues that only affect your own local fork or custom deployment
+- 关卡的正常解法
+- 属于题目设计一部分的隐藏线索、误导信息或后门式提示
+- 通过正常逆向或观察得到下一关入口
+- 以题面明确允许的方式访问挑战接口
+- 只存在于关卡内部玩法边界中的“弱点”
+- 影响题目质量但不影响真实安全性的内容错误、提示错误或逻辑瑕疵
+- 只影响你自己的本地 fork 或自定义部署的问题
 
-If you are unsure whether something is an intended puzzle mechanic or a real vulnerability, it is still fine to ask.
+如果你不确定某个现象究竟是题面机制，还是实际漏洞，仍然欢迎先联系确认。
 
-## Reporting
+## 如何报告
 
-Please report security issues privately.
+安全问题请尽量私下报告。
 
-Preferred contact:
+首选联系方式：
 
-- Email: `mojavenight@qq.com`
+- 邮箱：`mojavenight@qq.com`
 
-If the issue is clearly sensitive, please do not open a public GitHub Issue first.
+如果问题明显涉及敏感信息、真实基础设施风险或未公开漏洞，请不要先公开提交 GitHub Issue。
 
-When reporting, please include:
+报告时建议尽量包含以下信息：
 
-- A clear description of the problem
-- Steps to reproduce
-- Affected URL, route, file, or component
-- Impact assessment
-- Proof of concept if available
-- Suggested fix, if you have one
+- 问题描述
+- 复现步骤
+- 受影响的 URL、路由、文件或组件
+- 影响范围与风险判断
+- PoC 或关键证据
+- 如果有的话，你建议的修复方向
 
-## Response Expectations
+## 响应与处理
 
-This is a personally maintained project, so response time is best-effort rather than guaranteed.
+这是一个个人维护项目，因此响应时间只能尽量保证，无法承诺固定 SLA。
 
-In general, valid reports will be handled in this order:
+一般会按以下优先级处理有效报告：
 
-- Issues that affect the real server or private data
-- Issues that allow abuse of infrastructure or availability
-- Issues that affect normal users
-- Lower-risk implementation flaws
+- 会影响真实服务器、部署环境或私有数据的问题
+- 会被用来滥用基础设施或明显影响可用性的问题
+- 会影响正常用户的安全问题
+- 风险较低的实现缺陷
 
-If a report is accepted as a real security issue, I will try to verify it, fix it, and deploy an update as reasonably quickly as possible.
+如果某个报告被确认属于真实安全问题，我会尽量完成确认、修复与部署，并在合适的范围内同步处理进度。
 
-## Disclosure
+## 披露原则
 
-Please avoid public disclosure until the issue has been confirmed and a fix or mitigation has had reasonable time to land.
+在问题确认并获得合理修复时间之前，请尽量不要公开披露。
 
-Because this project is also a puzzle game, premature public disclosure may do two kinds of harm at once:
+这是一个解谜项目，过早公开细节通常会带来两类问题：
 
-- create real operational risk
-- unintentionally spoil challenge content
+- 造成真实的运行或运维风险
+- 意外破坏仍在游玩的玩家体验
 
-Responsible disclosure is appreciated.
+负责任地披露问题，会非常有帮助。
 
-## Safe Harbor
+## 安全研究边界
 
-If you act in good faith, avoid harming users or infrastructure, avoid accessing unrelated private data, and report the issue responsibly, I will treat your research as helpful security work.
+如果你出于善意开展研究，不破坏服务，不读取无关私有数据，不影响其他用户，并以负责任的方式报告问题，我会将其视为善意的安全研究。
 
-Please do not:
+请不要进行以下行为：
 
-- exfiltrate unnecessary data
-- damage, delete, or alter data
-- intentionally degrade service availability
-- pivot into unrelated systems
-- publicly dump secrets or private findings before coordination
+- 提取与验证问题无关的数据
+- 删除、篡改或破坏数据
+- 故意影响服务可用性
+- 进一步横向探索与本项目无关的系统
+- 在未协调前公开泄露密钥、敏感信息或完整细节
 
-## Notes About This Project
+## 与本项目相关的特别说明
 
-`Aster Archive` intentionally includes challenge mechanics involving HTTP behavior, APIs, headers, protocols, and other Web details. Some behaviors that would be alarming in a normal site may be deliberate inside a level.
+`Aster Archive` 有意把 HTTP 行为、接口设计、请求头、协议细节等做成关卡的一部分。因此，在普通网站里看起来异常的某些行为，在这里可能恰好是有意设计的玩法。
 
-That said, deliberate game design does not extend to the real host environment, deployment secrets, unrelated files, or infrastructure outside intended gameplay boundaries. Those remain out of scope for the game and in scope for security reporting.
+但这种“有意设计”只适用于游戏边界之内，并不扩展到真实主机环境、部署凭据、无关文件、无关服务或项目外部基础设施。凡是超出玩法边界、影响真实环境的内容，都属于安全问题讨论范围。
