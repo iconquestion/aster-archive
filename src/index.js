@@ -71,6 +71,11 @@ const TLS_CERT_PATH = requireExistingPathEnv("TLS_CERT_PATH");
 const LEVEL08_DIR = requireExistingPathEnv("LEVEL08_DIR");
 const BOOTSTRAP_DIST_DIR = requireExistingPathEnv("BOOTSTRAP_DIST_DIR");
 const HTTP2_TARGET_PATH = "/api/21";
+const HTTP2_ANALYTICS_FILE_PATH = path.join(__dirname, "../public/js/21.analytics.js");
+
+if (!fs.existsSync(HTTP2_ANALYTICS_FILE_PATH)) {
+    throw new Error(`Required HTTP/2 analytics file does not exist: ${HTTP2_ANALYTICS_FILE_PATH}`);
+}
 
 // TLS 配置在启动阶段同步读取。
 // 如果证书文件不可用，应在服务监听前直接失败，而不是带着不完整状态继续运行。
@@ -78,6 +83,7 @@ const tlsOptions = {
     key: fs.readFileSync(TLS_KEY_PATH),
     cert: fs.readFileSync(TLS_CERT_PATH)
 };
+const http2AnalyticsFile = fs.readFileSync(HTTP2_ANALYTICS_FILE_PATH);
 
 const http_server = http.createServer(app);
 const https_server = https.createServer(tlsOptions, app);
@@ -120,6 +126,16 @@ const logger = winston.createLogger({
         new winston.transports.Console(),
     ],
 });
+
+function safeStreamRespond(stream, headers, body) {
+    if (stream.destroyed || stream.closed) {
+        return false;
+    }
+
+    stream.respond(headers);
+    stream.end(body);
+    return true;
+}
 
 // 基础中间件
 // 统一处理表单、JSON、Cookie，以及站点级别的跨域响应头。
@@ -172,7 +188,7 @@ app.use(
 
 // 健康检查接口
 // 供部署层或巡检脚本确认服务进程是否正常响应。
-app.get("/api/status", (req, res) => {
+app.get("/api/status", (_req, res) => {
     res.status(200).json({ message: "ok" });
 });
 
@@ -211,64 +227,57 @@ http2_server.on("stream", (stream, headers) => {
         // 仅处理 21 关本体与其依赖的脚本资源。
         if (requestPath !== HTTP2_TARGET_PATH && requestPath !== "/api/analytics.js") {
             const body = JSON.stringify({ error: "not found" });
-
-            stream.respond({
+            safeStreamRespond(stream, {
                 [http2.constants.HTTP2_HEADER_STATUS]: 404,
                 "content-type": "application/json; charset=utf-8",
                 "content-length": Buffer.byteLength(body)
-            });
-            stream.end(body);
+            }, body);
             return;
         }
 
         // 当前仅允许 GET，请求方法不匹配时直接返回 405。
         if (method !== "GET") {
             const body = JSON.stringify({ error: "method not allowed" });
-
-            stream.respond({
+            safeStreamRespond(stream, {
                 [http2.constants.HTTP2_HEADER_STATUS]: 405,
                 "content-type": "application/json; charset=utf-8",
                 "content-length": Buffer.byteLength(body)
-            });
-            stream.end(body);
+            }, body);
             return;
         }
 
         if (requestPath === HTTP2_TARGET_PATH) {
             // 主关卡响应：先发送 103 Early Hints，再在随机延迟后返回正式结果。
-            stream.additionalHeaders({
-                [http2.constants.HTTP2_HEADER_STATUS]: 103,
-                link: "<analytics.js>; rel=preload; as=script"
-            });
+            if (!stream.destroyed && !stream.closed) {
+                stream.additionalHeaders({
+                    [http2.constants.HTTP2_HEADER_STATUS]: 103,
+                    link: "<analytics.js>; rel=preload; as=script"
+                });
+            }
 
-            const rand_time = Math.floor(Math.random() * 2000);
+            const randTime = Math.floor(Math.random() * 2000);
             setTimeout(() => {
                 const body = JSON.stringify({
-                    message: "你终于跑完了一圈！用时:" + rand_time + "ms"
+                    message: "你终于跑完了一圈！用时:" + randTime + "ms"
                 });
 
-                stream.respond({
+                safeStreamRespond(stream, {
                     [http2.constants.HTTP2_HEADER_STATUS]: 200,
                     "content-type": "application/json; charset=utf-8",
                     "content-length": Buffer.byteLength(body),
                     "Access-Control-Allow-Origin": APP_ORIGIN,
                     "Access-Control-Allow-Methods": "GET",
                     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
-                });
-                stream.end(body);
+                }, body);
 
-            }, rand_time);
+            }, randTime);
         } else {
             // 为 HTTP/2 关卡提供配套脚本资源。
-            const filePath = path.join(__dirname, "../public/js/21.analytics.js");
-            const fileContent = fs.readFileSync(filePath);
-
-            stream.respond({
+            safeStreamRespond(stream, {
                 [http2.constants.HTTP2_HEADER_STATUS]: 200,
                 "content-type": "application/javascript; charset=utf-8",
-                "content-length": Buffer.byteLength(fileContent),
-            });
-            stream.end(fileContent);
+                "content-length": Buffer.byteLength(http2AnalyticsFile),
+            }, http2AnalyticsFile);
         }
 
     } catch (err) {
@@ -277,19 +286,18 @@ http2_server.on("stream", (stream, headers) => {
 
         const body = JSON.stringify({ error: "internal server error" });
 
-        stream.respond({
+        safeStreamRespond(stream, {
             [http2.constants.HTTP2_HEADER_STATUS]: 500,
             "content-type": "application/json; charset=utf-8",
             "content-length": Buffer.byteLength(body)
-        });
-        stream.end(body);
+        }, body);
     }
 });
 
 // Express 全局错误处理
 // 统一记录未捕获的路由异常，并向客户端返回通用错误响应。
-app.use((err, req, res, next) => {
-    logger.error(err);
+app.use((err, _req, res, _next) => {
+    logger.error(err.stack || err);
     res.status(500).json({ error: "internal server error" });
 });
 
