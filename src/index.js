@@ -72,10 +72,18 @@ const HTTP2_PORT = requireIntegerEnv("HTTP2_PORT");
 const APP_ORIGIN = requireEnv("APP_ORIGIN");
 const TLS_KEY_PATH = requireExistingPathEnv("TLS_KEY_PATH");
 const TLS_CERT_PATH = requireExistingPathEnv("TLS_CERT_PATH");
-const LEVEL08_DIR = requireExistingPathEnv("LEVEL08_DIR");
-const BOOTSTRAP_DIST_DIR = requireExistingPathEnv("BOOTSTRAP_DIST_DIR");
 const HTTP2_TARGET_PATH = "/api/21";
 const HTTP2_ANALYTICS_FILE_PATH = path.join(__dirname, "../public/js/21.analytics.js");
+const LEVEL08_DIR = path.join(__dirname, "../public/08-c2x8m5q9nv");
+const BOOTSTRAP_DIST_DIR = path.join(__dirname, "../node_modules/bootstrap/dist");
+
+if (!fs.existsSync(LEVEL08_DIR)) {
+    throw new Error(`Required level 08 directory does not exist: ${LEVEL08_DIR}`);
+}
+
+if (!fs.existsSync(BOOTSTRAP_DIST_DIR)) {
+    throw new Error(`Required Bootstrap dist directory does not exist: ${BOOTSTRAP_DIST_DIR}`);
+}
 
 if (!fs.existsSync(HTTP2_ANALYTICS_FILE_PATH)) {
     throw new Error(`Required HTTP/2 analytics file does not exist: ${HTTP2_ANALYTICS_FILE_PATH}`);
