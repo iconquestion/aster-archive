@@ -19,6 +19,10 @@ function requireEnv(name) {
 // 读取必填整数配置；仅接受可解析的整数值。
 function requireIntegerEnv(name) {
     const value = requireEnv(name);
+    if (!/^-?\d+$/.test(value)) {
+        throw new Error(`Environment variable ${name} must be an integer, received: ${value}`);
+    }
+
     const parsed = Number.parseInt(value, 10);
 
     if (!Number.isInteger(parsed)) {
@@ -555,6 +559,7 @@ async function run() {
 
                 for (let start = 80; start <= 143; start += 16) {
                     const end = start + 15;
+                    const expectedEnd = Math.min(end, 137);
                     const res = await httpRequest({
                         route: "/api/18",
                         headers: {
@@ -568,6 +573,17 @@ async function run() {
                         end,
                         body: res.bodyJson || res.bodyText,
                     });
+                    assert(
+                        res.headers["content-range"] === `bytes ${start}-${expectedEnd}/138`,
+                        "Unexpected Content-Range header",
+                        { start, end, headers: res.headers }
+                    );
+                    assert(
+                        typeof res.headers["content-type"] === "string" && res.headers["content-type"].includes("application/json"),
+                        "Expected JSON content type for puzzle range response",
+                        res.headers
+                    );
+                    assert(res.headers["x-puzzle-range-format"] === "json", "Missing puzzle range format hint", res.headers);
 
                     chunks.push(res.bodyJson.message);
                 }

@@ -67,6 +67,10 @@ router.get("/", (req, res) => {
 
     const chunk = FULL_TEXT.substring(start, end + 1);
 
+    res.set("Content-Range", `bytes ${start}-${end}/${total}`);
+    res.set("Content-Type", "application/json; charset=utf-8");
+    res.set("X-Puzzle-Range-Format", "json");
+
     return res.status(206).json({
         message: chunk,
     });

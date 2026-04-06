@@ -37,6 +37,10 @@ function requireEnv(name) {
 // 读取必填整数配置；仅接受可解析的整数值。
 function requireIntegerEnv(name) {
     const value = requireEnv(name);
+    if (!/^-?\d+$/.test(value)) {
+        throw new Error(`Environment variable ${name} must be an integer, received: ${value}`);
+    }
+
     const parsed = Number.parseInt(value, 10);
 
     if (!Number.isInteger(parsed)) {
