@@ -127,3 +127,39 @@ Node 提供的 API 结构统一为：
 `/api/07/login/`
 
 某些关卡可能有迫于无奈而不遵循此规则的设计，但大部分关卡均遵循此设计。
+
+## 构建项目
+
+### 初始化项目
+
+将项目 Clone 到本地
+
+```bash
+git clone https://github.com/iconquestion/aster-archive.git
+```
+
+安装 npm 依赖
+
+```bash
+npm install
+```
+
+添加一个自动生成密码的 cron 任务（12关），参考配置如下
+
+```bash
+crontab -e
+
+0 0 * * * shuf -i 0-9999 -n 1 > /var/www/www.iconquestion.com/public/12-d1q7m4z8pv/password.xdxdxdxd
+```
+
+### 启动项目
+
+```bash
+npm start
+```
+
+### 测试项目
+
+```bash
+npm test
+```
