@@ -76,11 +76,7 @@ async function createStartedTestServers() {
         httpsPort,
         http2Port,
         close: async () => {
-            await Promise.all([
-                closeServer(servers.httpServer),
-                closeServer(servers.httpsServer),
-                closeServer(servers.http2Server),
-            ]);
+            await servers.stop();
         },
     };
 }
@@ -106,24 +102,6 @@ function listenOnRandomPort(server) {
         server.once("error", onError);
         server.once("listening", onListening);
         server.listen(0, "127.0.0.1");
-    });
-}
-
-function closeServer(server) {
-    return new Promise((resolve, reject) => {
-        if (!server.listening) {
-            resolve();
-            return;
-        }
-
-        server.close((err) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-
-            resolve();
-        });
     });
 }
 

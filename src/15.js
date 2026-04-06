@@ -270,7 +270,32 @@ function handleUpgrade(req, socket, head, logger = console) {
     });
 }
 
+function close(timeoutMs = 1000) {
+    for (const client of challengeWss.clients) {
+        if (client.readyState === client.OPEN || client.readyState === client.CLOSING) {
+            client.close(1001, "server-shutdown");
+            setTimeout(() => {
+                if (client.readyState !== client.CLOSED) {
+                    client.terminate();
+                }
+            }, timeoutMs).unref();
+        }
+    }
+
+    return new Promise((resolve, reject) => {
+        challengeWss.close((err) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            resolve();
+        });
+    });
+}
+
 module.exports = {
     router,
     handleUpgrade,
+    close,
 };

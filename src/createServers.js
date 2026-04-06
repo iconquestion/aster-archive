@@ -5,8 +5,6 @@ const http2 = require("http2");
 const path = require("path");
 const { requireExistingPath } = require("./config");
 
-let processHandlersRegistered = false;
-
 // server 层通用的 HTTP/2 安全响应封装，避免对已关闭 stream 重复写入。
 function safeStreamRespond(stream, headers, body) {
     if (stream.destroyed || stream.closed) {
@@ -37,6 +35,14 @@ function createServers({ app, level15, config, logger }) {
     const http2Server = http2.createSecureServer({
         ...tlsOptions,
         allowHTTP1: false
+    });
+    const http2Sessions = new Set();
+
+    http2Server.on("session", (session) => {
+        http2Sessions.add(session);
+        session.on("close", () => {
+            http2Sessions.delete(session);
+        });
     });
 
     // WebSocket upgrade 不经过 Express 路由栈，需要在底层 server 显式转发。
@@ -134,8 +140,6 @@ function createServers({ app, level15, config, logger }) {
         socket.destroy();
     });
 
-    registerProcessHandlers(logger);
-
     function start() {
         // 各协议分别监听，便于后续测试按需选择启动或关闭。
         httpServer.listen(config.httpPort, () => {
@@ -153,9 +157,10 @@ function createServers({ app, level15, config, logger }) {
 
     async function stop() {
         await Promise.all([
-            closeServer(httpServer),
-            closeServer(httpsServer),
-            closeServer(http2Server),
+            closeHttpServer(httpServer),
+            closeHttpServer(httpsServer),
+            closeHttp2Server(http2Server, http2Sessions),
+            level15.close(),
         ]);
     }
 
@@ -170,6 +175,11 @@ function createServers({ app, level15, config, logger }) {
 
 function closeServer(server) {
     return new Promise((resolve, reject) => {
+        if (!server.listening) {
+            resolve();
+            return;
+        }
+
         server.close((err) => {
             if (err) {
                 reject(err);
@@ -181,23 +191,32 @@ function closeServer(server) {
     });
 }
 
-module.exports = {
-    createServers,
-};
+async function closeHttpServer(server) {
+    await closeServer(server);
 
-// 进程级异常监听只注册一次，避免测试环境多次装配 server 时产生重复监听器。
-function registerProcessHandlers(logger) {
-    if (processHandlersRegistered) {
-        return;
+    if (typeof server.closeIdleConnections === "function") {
+        server.closeIdleConnections();
     }
 
-    process.on("uncaughtException", (err) => {
-        logger.error(`uncaughtException: ${err.stack || err}`);
-    });
-
-    process.on("unhandledRejection", (reason) => {
-        logger.error(`unhandledRejection: ${reason && reason.stack ? reason.stack : reason}`);
-    });
-
-    processHandlersRegistered = true;
+    if (typeof server.closeAllConnections === "function") {
+        server.closeAllConnections();
+    }
 }
+
+async function closeHttp2Server(server, sessions) {
+    for (const session of sessions) {
+        session.close();
+        setTimeout(() => {
+            if (!session.closed && !session.destroyed) {
+                session.destroy();
+            }
+        }, 1000).unref();
+    }
+
+    await closeServer(server);
+}
+
+module.exports = {
+    createServers,
+    closeServer,
+};
