@@ -55,7 +55,7 @@ https://www.iconquestion.com/
 详情请参阅：
 
 - [LICENSE](./LICENSE)
-- [LICENSE-CONTENT](./LICENSE-CONTENT)
+- [LICENSE-CC-BY-NC-SA-4.0](./LICENSE-CC-BY-NC-SA-4.0)
 
 ## 补充说明
 

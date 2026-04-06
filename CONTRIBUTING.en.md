@@ -134,7 +134,7 @@ By contributing, you agree that your contribution may be distributed under the r
 For details, see:
 
 - [LICENSE](./LICENSE)
-- [LICENSE-CONTENT](./LICENSE-CONTENT)
+- [LICENSE-CC-BY-NC-SA-4.0](./LICENSE-CC-BY-NC-SA-4.0)
 
 If your contribution contains both code and creative content, please assume that each part will fall under the repository’s current dual-licensing structure.
 

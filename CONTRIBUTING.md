@@ -134,7 +134,7 @@ npm test
 详细说明请查看：
 
 - [LICENSE](./LICENSE)
-- [LICENSE-CONTENT](./LICENSE-CONTENT)
+- [LICENSE-CC-BY-NC-SA-4.0](./LICENSE-CC-BY-NC-SA-4.0)
 
 如果你的贡献同时包含代码和创作性内容，请默认接受它们会分别落在仓库当前的双重授权框架内。
 
