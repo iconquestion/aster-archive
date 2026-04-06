@@ -108,11 +108,41 @@ Express 应用承担以下职责：
 
 ### 日志
 
-Node 层使用 Winston 记录日志，日志目录为 `logs/`，包括：
+Node 层使用 Winston 记录日志，日志目录为 `logs/`。
 
-- `logs/info.log`
+当前日志能力包括：
 
-- `logs/error.log`
+- 控制台输出，便于本地开发和容器日志收集
+
+- 按级别拆分日志文件
+
+- 日志轮转
+
+默认会生成以下文件模式：
+
+- `logs/info-%DATE%.log`
+
+- `logs/error-%DATE%.log`
+
+默认轮转策略为：
+
+- 按天轮转，日期格式为 `YYYY-MM-DD`
+
+- 单文件大小上限为 `20m`
+
+- 保留 `14d` 历史日志
+
+- 旧日志自动压缩
+
+日志轮转相关参数可通过 `config/.env` 中的环境变量覆盖：
+
+- `LOG_ROTATE_DATE_PATTERN`
+
+- `LOG_ROTATE_MAX_FILES`
+
+- `LOG_ROTATE_MAX_SIZE`
+
+- `LOG_ROTATE_ZIPPED_ARCHIVE`
 
 ### API 结构
 
@@ -196,3 +226,39 @@ npm start
 ```bash
 npm test
 ```
+
+项目当前使用 Jest 作为主测试框架，并配合 Supertest 覆盖 HTTP 接口行为。
+
+测试结构大致分为：
+
+- `test/http/`：验证普通 HTTP 接口和状态接口
+
+- `test/protocol/`：验证 WebSocket upgrade、HTTPS Trailer、HTTP/2 等协议能力
+
+- `test/helpers/`：统一装配测试运行时、静默 logger 与随机端口 server
+
+- `test/index.test.js`、`test/logger.test.js`：验证入口层与日志初始化等基础行为
+
+测试辅助代码会统一复用 `src/config.js` 的配置读取逻辑，避免线上启动与测试环境出现两套配置解析方式。
+
+其中协议类测试会绑定随机本地端口，避免测试之间因固定端口冲突而互相影响。
+
+### 持续集成与代码风格
+
+项目已接入 GitHub Actions，CI 配置位于 `/.github/workflows/ci.yml`。
+
+当前持续集成主要执行：
+
+- 安装依赖
+
+- 准备 `config/.env`
+
+- 准备测试所需的每日密码文件
+
+- 运行 `npm test`
+
+代码风格方面，项目已接入 Prettier，可使用以下命令：
+
+- `npm run format`
+
+- `npm run format:check`
