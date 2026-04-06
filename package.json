@@ -7,7 +7,8 @@
   "type": "commonjs",
   "main": "src/index.js",
   "scripts": {
-    "test": "node test/test.js",
+    "test": "jest --runInBand",
+    "oldtest": "node test/test.js",
     "start": "node src/index.js"
   },
   "dependencies": {
