@@ -1,21 +1,14 @@
 # Solutions
 
-本文件基于当前项目代码整理，不只描述“表面提示”，还会说明每一关的真实考点、当前实现和可复现的解法。
+本文档为关卡题解，说明每一关的当前实现、解法和设计目标。
 
-总规则可参考 `public/00-letsstart/index.html`：
+## 01
 
-- 每一关的答案其实就是下一关的 URL 路径。
-- 一般格式是 `{下一关编号}-{10位随机串}`。
-- 需要和后端交互时，接口基本都在 `/api/{当前关卡编号}` 下。
+### 设计目标
 
-另外有几关存在“题面设计意图”和“当前代码真实实现”不完全一致的情况，下面会单独指出。
+让玩家学习查看页面源代码。
 
-### 01
-
-真实意图：
-让玩家先学会看页面源码，而不是只看页面渲染结果。
-
-详细解法：
+### 解题步骤
 
 1. 打开 `01-k3f9x2m7qd/index.html` 的源码。
 2. 在 HTML 注释里可以直接看到：
@@ -24,16 +17,17 @@
 <!-- 02-v8n2c4z1pa -->
 ```
 
-答案：
+### 答案
 
 `02-v8n2c4z1pa`
 
-### 02
+## 02
 
-真实意图：
-让玩家意识到“资源文件本身也可能藏信息”，不要只盯着 HTML。
+### 设计目标
 
-详细解法：
+让玩家学习查看引用的资源文件内容。
+
+### 解题步骤
 
 1. 这一关 HTML 里引用了 `/css/02.css`。
 2. 打开这个 CSS 文件：
@@ -44,18 +38,19 @@
 }
 ```
 
-3. `font-family` 里被夹带了一段看起来像关卡路径的字符串。
+3. `font-family` 里夹带了flag。
 
-答案：
+### 答案
 
 `03-r5t9m1x8wb`
 
-### 03
+## 03
 
-真实意图：
-让玩家检查 `<head>` 区域中的元数据。
+### 设计目标
 
-详细解法：
+让玩家学习查看 `<head>` 区域中的元数据。
+
+### 解题步骤
 
 1. 打开 `public/03-r5t9m1x8wb/index.html`。
 2. 在 `<head>` 里可以看到：
@@ -64,67 +59,58 @@
 <meta name="version" content="04-q7d2s9l4vc">
 ```
 
-答案：
+### 答案
 
 `04-q7d2s9l4vc`
 
-### 04
+## 04
 
-真实意图：
-让玩家开始观察 HTTP 响应头，而不是只看响应体。
+### 设计目标
 
-真实实现：
+让玩家学习观察 HTTP 响应头。
+
+### 实现方式
+
 后端在 `src/04.js` 中对 `GET /api/04` 设置了自定义响应头 `X-Archive-Next`。
 
-详细解法：
-
-1. 页面按钮实际请求的是 `/api/04`。
-2. 直接查看响应头即可，不需要猜。
-
-接口：
+### 解题步骤
+1. 点击页面按钮，请求 `/api/04`。
+2. 使用浏览器开发人员工具或第三方工具查看响应头。
 
 `GET https://www.iconquestion.com/api/04`
 
-关键响应：
+响应头（关键部分）：
 
 ```http
 X-Archive-Next: 05-x1p8z3n6kf
 Content-Type: application/json; charset=utf-8
 ```
 
-响应体：
-
-```json
-{"message":"hello, world!"}
-```
-
-答案：
+### 答案
 
 `05-x1p8z3n6kf`
 
-### 05
+## 05
 
-真实意图：
-让玩家区分 HTTP Method。门不是看你“说了什么”，而是看你“怎么说”。
+### 设计目标
 
-真实实现：
+让玩家学习使用不同的 HTTP Method。
+
+### 实现方式
+
 前端按钮默认调用的是 `fetch("/api/05")`，也就是 `GET`。但后端在 `src/05.js` 中把真正答案放在 `POST /api/05`。
 
-详细解法：
+### 解题步骤
 
-1. 打开页面源码，能看到按钮绑定的是：
+1. 查看JS代码
 
 ```js
 get_json_response("knock", "responseMsg", "/api/05");
 ```
 
-2. `get_json_response` 默认不传 `fetch_attrs`，所以这是一个 `GET` 请求。
-3. 去看后端 `src/05.js`：
-   - `GET /api/05` 返回 `"YOU SHALL NOT PASS!!!"`
-   - `POST /api/05` 才返回下一关路径
-4. 因此需要手动发送 `POST` 请求。
+`get_json_response` 默认不传 `fetch_attrs`，所以这是一个 `GET` 请求。
 
-完整 API：
+2. 将 HTTP Method 改为 `POST` ，再次发送。
 
 `https://www.iconquestion.com/api/05`
 
@@ -161,37 +147,29 @@ curl -X POST https://www.iconquestion.com/api/05
 {"message":"Welcome back, my master. \nThe password is 06-m4v7q2c9ta."}
 ```
 
-答案：
+### 答案
 
 `06-m4v7q2c9ta`
 
-### 06
+## 06
 
-真实意图：
-让玩家学会修改查询参数，而不是完全相信前端给的默认值。
+### 设计目标
 
-真实实现：
-前端固定请求 `/api/06?level=guest`，但后端 `src/06.js` 只要看到 `level=admin` 就返回下一关线索。
+让玩家学习猜测和修改query查询参数，而不是完全相信前端给的默认值，培养探索思维。
 
-详细解法：
+### 实现方式
 
-1. 页面按钮绑定的是：
+前端固定请求 `/api/06?level=guest`，后端 `src/06.js` 根据 query 参数 `level` 返回不同的响应。
+
+### 解题步骤
+
+1. 查看JS代码
 
 ```js
 get_json_response("getmyidcard", "result", "/api/06?level=guest");
 ```
 
-2. 去看后端：
-
-```js
-message: level == "admin"
-    ? "Your identity: admin. \nYour office is located at No.z9k3d6w1rx, 7th floor."
-    : "Your identity: guest. ..."
-```
-
-3. 所以把 query 参数从 `guest` 改成 `admin` 即可。
-
-接口：
+2. 把 query 参数从 `guest` 改成 `admin` ，重新发送请求。
 
 `GET https://www.iconquestion.com/api/06?level=admin`
 
@@ -201,189 +179,216 @@ message: level == "admin"
 {"message":"Your identity: admin. \nYour office is located at No.z9k3d6w1rx, 7th floor."}
 ```
 
-答案：
+### 答案
 
 `07-z9k3d6w1rx`
 
-### 07
+## 07
 
-真实意图：
-鼓励玩家不要只点页面上已经给出的三个位置，而是主动尝试其他位置。
+### 设计目标
 
-真实实现：
-当前实现中，只要请求一个页面上未提供的位置，后端默认分支就会返回一段提示语，提示你还有“管理办公室”这个方向可以尝试；当你进一步请求 `visit_admin_office` 时，才会拿到下一关线索。
+让玩家学习进一步探索页面中未给出的其他信息。
 
-详细解法：
+### 实现方式
 
-1. 页面上只提供了三个按钮：
+当前实现中，只要请求一个页面上未提供的位置，后端默认分支就会返回一段提示语，提示你还有"管理办公室"这个方向可以尝试；当你进一步请求 `visit_admin_office` 时，才会拿到下一关线索。
+
+### 解题步骤
+
+1. 查看页面和页面源码。
+
+   页面上只提供了三个按钮：
+
    - `visit_grand_reading_hall`
    - `visit_archive_room`
    - `visit_exhibit_corridor`
-2. 页面源码里还有一句注释：
 
-```js
-// 更多区域正在开发中...
-```
+   页面源码里还有一句注释：
 
-3. 因此这一步的关键不是只看现有按钮，而是自己手动尝试其他 `location` 参数。例如先请求一个不存在的位置：
+   ```js
+   // 更多区域正在开发中...
+   ```
 
-接口：
+   因此这一步的关键不是只看现有按钮，而是自己手动尝试其他 `location` 参数，例如请求一个其他的任意位置。
 
-`GET https://www.iconquestion.com/api/07?location=test`
+2. 尝试修改 location ，请求一个其他的位置。
 
-返回：
+   返回：
 
-```json
-{"message":"很抱歉，该区域当前不对外开放。建议您前往其他区域参观，以获取更多关于档案馆的公开信息。\n以下是推荐的区域：主览大厅, 公共档案区, 展示长廊，管理办公室"}
-```
+   ```json
+   {"message":"很抱歉，该区域当前不对外开放。建议您前往其他区域参观，以获取更多关于档案馆的公开信息。\n以下是推荐的区域：主览大厅, 公共档案区, 展示长廊，管理办公室"}
+   ```
 
-4. 这个响应已经明确把“管理办公室”作为新的可尝试方向暴露出来了。
-5. 再去请求与之对应的隐藏参数。后端 `src/07.js` 中对应分支是：
+   这个响应已经明确把"管理办公室"作为新的可尝试方向暴露出来了。
 
-```js
-case "visit_admin_office": {
-    responseMsg = "...最上面的文件是有关08房间c2x8m5q9nv档案的展出规划资料。";
-}
-```
+3. 尝试请求"管理办公室"与之对应的 query 参数。玩家需要进行一定的猜测。
 
-6. 于是继续手动请求：
+   后端 `src/07.js` 中对应分支是：
 
-接口：
+   ```js
+   case "visit_admin_office": {
+      responseMsg = "...";
+   }
+   ```
 
-`GET https://www.iconquestion.com/api/07?location=visit_admin_office`
+   `GET https://www.iconquestion.com/api/07?location=visit_admin_office`
 
-响应：
+   响应：
 
-```json
-{"message":"这里曾经是档案的管理办公室，陈列着早已泛黄的旧文件和木制桌椅。最上面的文件是有关08房间c2x8m5q9nv档案的展出规划资料。"}
-```
+   ```json
+   {"message":"这里曾经是档案的管理办公室，陈列着早已泛黄的旧文件和木制桌椅。最上面的文件是有关08房间c2x8m5q9nv档案的展出规划资料。"}
+   ```
 
-答案：
+### 答案
 
 `08-c2x8m5q9nv`
 
-### 08
+## 08
 
-真实意图：
-考 `robots.txt`、目录索引和文件遍历思路。
+### 设计目标
 
-真实实现：
+让玩家学习查看 `robots.txt` 并利用其中的信息挖掘隐藏目录。
 
-- 页面暗示“每一关都可以视作独立网站根目录”。
+### 实现方式
+
+- 页面暗示"每一关都可以视作独立网站根目录"。
 - 根目录下有 `robots.txt`。
 - 服务器在 `src/index.js` 中对 `/08-c2x8m5q9nv/` 开了目录索引。
 
-详细解法：
+### 解题步骤
 
-1. 先访问：
+1. 访问 robots.txt。
 
-`https://www.iconquestion.com/08-c2x8m5q9nv/robots.txt`
+   `https://www.iconquestion.com/08-c2x8m5q9nv/robots.txt`
 
-内容是：
+   内容是：
 
-```txt
-User-agent: *
-Disallow: /exhibition
-Disallow: /infra
-Disallow: /reading_room
-Disallow: /stack
-Disallow: /staff
-```
+   ```txt
+   User-agent: *
+   Disallow: /exhibition
+   Disallow: /infra
+   Disallow: /reading_room
+   Disallow: /stack
+   Disallow: /staff
+   ```
 
-2. 其中最值得继续看的是 `/stack`。
-3. 因为这一关目录启用了索引，可以继续浏览目录，最终会找到：
+   其中最值得继续看的是 `/stack`。
 
-`/08-c2x8m5q9nv/stack/restricted/914/2013-12-31.txt`
+   因为这一关目录启用了索引，可以继续浏览目录，最终会找到：
 
-4. 文件末尾写着：
+   `/08-c2x8m5q9nv/stack/restricted/914/2013-12-31.txt`
 
-```txt
-请立即前往档案馆医务室，并告知值班医师你已“接触09-t7p1z4k8ds”。
-```
+2. 遍历目录，寻找线索。
 
-答案：
+   在`/08-c2x8m5q9nv/stack/restricted/914/2013-12-31.txt`，文件末尾写着：
+
+   ```txt
+   请立即前往档案馆医务室，并告知值班医师你已"接触09-t7p1z4k8ds"。
+   ```
+
+### 答案
 
 `09-t7p1z4k8ds`
 
-### 09
+## 09
 
-真实意图：
-考版本回退、静态资源命名规律和“旧版本里可能还留着线索”。
+### 设计目标
 
-真实实现：
+让玩家学习根据静态资源的命名规律，主动尝试旧版本文件，从历史版本中寻找线索。
+
+### 实现方式
+
 页面加载的是 `/js/09.countdown.v2.js`，但真正线索在 `/js/09.countdown.v1.js` 的注释里。
 
-详细解法：
+### 解题步骤
 
-1. 页面中引用的是：
+1. 查看页面源码。
 
-```html
-<script src="/js/09.countdown.v2.js"></script>
-```
+   不难发现下面的内容：
 
-2. 根据版本号很自然可以猜测旧版本 `v1` 仍存在。
-3. 打开：
+   ```html
+   <script src="/js/09.countdown.v2.js"></script>
+   ```
 
-`https://www.iconquestion.com/js/09.countdown.v1.js`
+   根据版本号很自然可以猜测旧版本 `v1` 的存在。
 
-4. 在许可证注释中有一行被故意替换：
+2. 尝试访问 v1 版本的 JS 文件。
 
-```txt
-provides the Work (and each Contributor provides its 10-w3n9c6v2mq)
-```
+   `https://www.iconquestion.com/js/09.countdown.v1.js`
 
-答案：
+   在许可证注释中有一行被故意替换：
+
+   ```txt
+   provides the Work (and each Contributor provides its 10-w3n9c6v2mq)
+   ```
+
+### 答案
 
 `10-w3n9c6v2mq`
 
-### 10
+## 10
 
-真实意图：
-考阅读残缺 JavaScript、还原真实逻辑，以及把排序结果拼成答案。
+### 设计目标
 
-真实实现：
-虽然页面正文描述成“按日期一键排序”，但脚本故意被损坏了一部分。只要把缺失逻辑补全，就能得到下一关。
+让玩家学习阅读残缺的 JavaScript 代码，补全逻辑并根据程序运行规则还原答案。
 
-详细解法：
+### 实现方式
 
-1. 页面中每张“照片”都有一个 DOM id 和一个日期。
-2. 已给出的代码说明真实逻辑是：
+虽然页面正文描述成"按日期一键排序"，但脚本故意被损坏了一部分。只要把缺失逻辑补全，就能得到下一关。
+
+### 解题步骤
+
+1. 查看页面源码，可以发现每张"照片"都对应一个 DOM id 和一个日期。
+
+2. 结合现有代码推断真实逻辑。
+
    - 对日期字符串做 `hashDate`
+
    - 再通过 `hashToChar` 映射成一个字符
+
    - 把 `{ date, ch }` 放进数组
+
    - 最后按日期排序，而不是按原始 DOM 顺序
+
    - 排序后把字符拼起来
-3. 页面残缺代码补全后，等价逻辑如下：
 
-```js
-result.push({
-  date: rawDate,
-  ch: ch
-});
+3. 将页面中的残缺代码补全。
 
-const flag = result
-  .sort((a, b) => new Date(a.date) - new Date(b.date))
-  .map(x => x.ch)
-  .join("");
+   将页面中的残缺代码补全后，等价逻辑如下：
 
-console.log("FLAG:", "11-" + flag);
-```
+   ```js
+   result.push({
+   date: rawDate,
+   ch: ch
+   });
 
-4. 按当前页面数据计算，排序后的字符序列是：
+   const flag = result
+   .sort((a, b) => new Date(a.date) - new Date(b.date))
+   .map(x => x.ch)
+   .join("");
 
-`zcwl17ouoa`
+   console.log("FLAG:", "11-" + flag);
+   ```
 
-答案：
+4. 运行脚本。
+
+   最终结果就是：
+
+   `11-zcwl17ouoa`
+
+### 答案
 
 `11-zcwl17ouoa`
 
-### 11
+## 11
 
-真实意图：
-考多层编码/变换，配合 CyberChef 或类似工具解码。
+### 设计目标
 
-真实实现：
-页面里给了一长串“社会主义核心价值观编码”文本。按作者原本给出的 PoC 处理即可。
+让玩家学习处理多层编码与文本变换，并借助现成工具按顺序还原原始内容。
+
+### 实现方式
+
+页面里给了一长串"社会主义核心价值观编码"文本。当前实现对应的解法就是按既定的解码链路依次处理。
 
 PoC:
 
@@ -391,699 +396,619 @@ https://sym233.github.io/core-values-encoder/
 
 https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',true,false)ROT13(true,true,false,13)Reverse('Character')&input=NjE1NzRkMzQ2MjU0NTIzNjRlMzI1MTc4NjM1MzMwNzk0ZDUzMzE2ZDY0NDczNTM1NjM3NzNkM2Q
 
-详细解法：
+### 解题步骤
 
-1. 先把页面展示的“核心价值观编码”还原为一串十六进制文本。
-2. 再按上面的 PoC 链路处理：
+1. 先把页面展示的"核心价值观编码"还原为一串十六进制文本。
+
+2. 再按上面的 PoC 链路继续处理。
+
+   由于玩家无法拿到 PoC，需要凭借经验进行猜测和尝试，故此关具有一定难度。但本站鼓励玩家使用 LLM 等其他方式进行解谜，而非硬核技术攻关。
+
    - From Hex
    - From Base64
    - ROT13
    - Reverse
-3. 按该 PoC，最终结果为：
 
-`flags-12-d1q7m4z8pv`
+   得到的最终结果是：
+   `flags-12-d1q7m4z8pv`
 
-答案：
+### 答案
 
 `12-d1q7m4z8pv`
 
-### 12
+## 12
 
-真实意图：
-考隐藏入口、暴力破解、Cookie 会话和受保护接口。
+### 设计目标
 
-真实实现：
+让玩家学习发现隐藏入口、爆破简单口令，并在拿到会话后继续访问受保护接口。
 
-- 隐藏管理入口需要在“搭载最新 AI 系统!”那行点击 5 次解锁。
-- 后端接口在 `src/12.js`。
+### 实现方式
+
+- 隐藏管理入口需要在"搭载最新 AI 系统!"那行点击 5 次解锁。
+
 - 登录成功会下发一个名为 `bibilabu` 的 Cookie。
-- 查询房间信息必须带 Cookie，且 `room_id=13`。
 
-详细解法：
+- 查询房间信息必须带 Cookie，且 `room_id=13`。13 意为下一关的编号。
 
-1. 页面里的隐藏逻辑：
-   - 点击“搭载最新 AI 系统!” 5 次后，`adminEntryUnlocked = true`
-   - 才会显示“管理员入口”
-2. 登录接口是：
+### 解题步骤
 
-`POST https://www.iconquestion.com/api/12/login`
+1. 查看页面里的隐藏逻辑。
 
-表单参数：
+   点击"搭载最新 AI 系统!" 5 次后，`adminEntryUnlocked = true`，才会显示"管理员入口"。
 
-```txt
-username=admin
-password=四位数字密码
-```
+2. 显示入口后，找到登录接口。
 
-3. 题面设计想让玩家暴力破解每日四位密码。
-4. 其原理是服务端每天会生成一个新的四位数字密码。对应机制如下：
+   `POST https://www.iconquestion.com/api/12/login`
 
-```cron
-0 0 * * * shuf -i 0-9999 -n 1 > /var/www/www.iconquestion.com/public/12-d1q7m4z8pv/password.xdxdxdxd
-```
+   表单参数：
 
-也就是每天 00:00 重新随机生成一个 `0000-9999` 范围内的四位数密码并写入密码文件，因此这一关的设计思路就是对管理员密码进行四位数爆破。
+   ```txt
+   username=admin
+   password={四位数字密码}
+   ```
 
-5. 正确登录后服务器会返回：
+   这一关的关键是不要被"管理员登录"吓住，因为题目真正想让玩家尝试的是四位数爆破。
 
-```json
-{"message":"登录成功"}
-```
+3. 查看当前实现中的密码生成机制。
 
-同时设置 Cookie，例如：
+   ```cron
+   0 0 * * * shuf -i 0-9999 -n 1 > /var/www/www.iconquestion.com/public/12-d1q7m4z8pv/password.xdxdxdxd
+   ```
 
-```http
-Set-Cookie: bibilabu=<当日四位密码>; Path=/api/12/get_room_info; HttpOnly; ...
-```
+   也就是每天 00:00 重新随机生成一个 `0000-9999` 范围内的四位数密码并写入密码文件，因此这一关的设计思路就是对管理员密码进行四位数爆破。
 
-6. 然后继续请求：
+4. 观察爆破出正确密码后的返回结果。
 
-`GET https://www.iconquestion.com/api/12/get_room_info?room_id=13`
+   ```json
+   {"message":"登录成功"}
+   ```
 
-并携带刚才的 Cookie。
+   同时设置 Cookie，例如：
 
-7. 正确响应：
+   ```http
+   Set-Cookie: bibilabu=<当日四位密码>; Path=/api/12/get_room_info; HttpOnly; ...
+   ```
 
-```json
-{"message":"13-k9c3x6n2tw"}
-```
+5. 继续请求受保护接口。
 
-答案：
+   `GET https://www.iconquestion.com/api/12/get_room_info?room_id=13`
+
+   并携带刚才的 Cookie。
+
+6. 查看正确响应。
+
+   ```json
+   {"message":"13-k9c3x6n2tw"}
+   ```
+
+### 答案
 
 `13-k9c3x6n2tw`
 
-### 13
+## 13
 
-真实意图：
-考 `sitemap.xml` 和站点里未链接的隐藏页面。
+### 设计目标
 
-真实实现：
-主页只给了 `gallery/` 入口，但 `sitemap.xml` 中还列出了一个隐藏的草稿页。
+让玩家学习查看 `sitemap.xml`，并从站点中未直接链接的页面里继续挖掘线索。
 
-详细解法：
+### 实现方式
 
-1. 访问：
+主页只给了 `gallery/` 入口，但 `sitemap.xml` 中还列出了一个没有在页面中直接暴露的草稿页。
 
-`https://www.iconquestion.com/13-k9c3x6n2tw/sitemap.xml`
+### 解题步骤
 
-2. 在里面能看到一个不寻常的条目：
+1. 访问 `sitemap.xml`。
 
-`/13-k9c3x6n2tw/gallery/__draft__k9a2`
+   `https://www.iconquestion.com/13-k9c3x6n2tw/sitemap.xml`
 
-3. 打开这个页面，HTML 注释中写着：
+2. 在里面寻找不寻常的条目。
 
-```txt
-好像是14-p5v8d1q7mz
-```
+   `/13-k9c3x6n2tw/gallery/__draft__k9a2`
 
-答案：
+3. 打开这个隐藏页面并查看 HTML 注释。
+
+   ```txt
+   好像是14-p5v8d1q7mz
+   ```
+
+### 答案
 
 `14-p5v8d1q7mz`
 
-### 14
+## 14
 
-真实意图：
-题面想表达“不要被表单迷惑，真正入口不是常规 form 提交，而是另一种认证方式”。
+### 设计目标
 
-真实实现：
-当前 `src/14.js` 并没有返回 `WWW-Authenticate` 头，也没有真正走浏览器弹窗式 Basic Auth 挑战；它只是要求你手动带上 `Authorization: Basic ...` 头。
+让玩家学习除了在 body 内放置认证信息（如 application/x-www-form-urlencoded ）之外的其他认证方式。不要被页面表单迷惑，而是去猜测观察后端真正要求的认证方式。
 
-详细解法：
+### 实现方式
 
-1. 页面里的 form 是障眼法，而且输入框还是 `disabled`。
-2. 后端真正逻辑：
-   - 只接受 `POST /api/14/login`
-   - 必须有 `Authorization: Basic ...`
-   - 用户名必须是 `admin`
-   - 密码必须和用户名相同，也就是 `admin`
-3. 所以等价凭据是：
+页面上给了一个不能正常输入的表单，但接口响应里又明显在暗示这并不是普通表单提交，而是另一种认证方式。
 
-`admin:admin`
+### 解题步骤
 
-4. Base64 后是：
+1. 观察页面中的 form 和对应的 API。
 
-`YWRtaW46YWRtaW4=`
+   页面里的 form 是障眼法，而且输入框还是 `disabled`。
 
-5. 请求示例：
+2. 尝试提交一次表单，查看响应。
 
-```http
-POST /api/14/login HTTP/1.1
-Host: www.iconquestion.com
-Authorization: Basic YWRtaW46YWRtaW4=
-Content-Length: 0
-```
+   由于认证方法不匹配，响应并不会带来真正的进展，说明题目的关键不在于正常填写表单。
 
-或：
+3. 改为尝试 Basic Auth。
 
-```bash
-curl -X POST \
-  -H 'Authorization: Basic YWRtaW46YWRtaW4=' \
-  https://www.iconquestion.com/api/14/login
-```
+   这一关明显在引导玩家去尝试表单之外的认证方式，根据响应中提供的被混淆的头部 `W3-xxthxxtixxtx` ，最常见、也最符合题目语境的就是 WWW-Authentication Basic Auth。
 
-响应：
+4. 用 WWW-Authentication Basic Auth 尝试发送一次请求。
 
-```json
-{"message":"Welcome, admin! The password for the next room is 15-x2m9k4c6ra."}
-```
+   ```http
+   POST /api/14/login HTTP/1.1
+   Host: www.iconquestion.com
+   Authorization: Basic YWRtaW46YWRtaW4=
+   Content-Length: 0
+   ```
 
-答案：
+   或：
+
+   ```bash
+   curl -X POST \
+     -H 'Authorization: Basic YWRtaW46YWRtaW4=' \
+     https://www.iconquestion.com/api/14/login
+   ```
+
+   后端逻辑给出了非常明显的用户名和密码提示，玩家可以轻易猜测凭据。
+
+   凭据正确的响应：
+
+   ```json
+   {"message":"Welcome, admin! The password for the next room is 15-x2m9k4c6ra."}
+   ```
+
+### 答案
 
 `15-x2m9k4c6ra`
 
-### 15
+## 15
 
-真实意图：
-考 WebSocket 连接、双向交互和根据服务端反馈推进状态。
+### 设计目标
 
-真实实现：
+让玩家学习 WebSocket 相关知识，并根据服务端的交互反馈一步步推进状态。
 
-- WebSocket 地址是 `/api/15/challenge`
-- 先发 `{"action":"init"}` 初始化
-- 再发 `{"action":"move","direction":"..."}` 移动
-- 到达终点后服务端直接返回 `flag`
+### 实现方式
 
-详细解法：
+页面不是普通的一次性 HTTP 提交，而是要求玩家建立 WebSocket 连接，并在交互过程中根据反馈不断调整动作。
 
-1. 页面前端已经把地址写死：
+为了降低难度，页面中已经设计好了 WebSocket 相关代码，玩家只需要进行操作即可。
 
-```js
-const wsUrl = `${wsProtocol}//${location.host}/api/15/challenge`;
-```
+### 解题步骤
 
-2. 建立连接后，服务端先发：
+如只希望通关，则玩家只需按照常规逻辑进行游玩，不需要任何前后端知识。
 
-```json
-{"message":"WebSocket connected. Please send { action: 'init' }"}
-```
+唯一的难点在于，网页并未提供 GUI 游戏显示界面，玩家需要使用其他方法记忆当前状态。
 
-3. 发送初始化：
+为了控制难度，迷宫生成大小固定 5x5，玩家可以轻易通关。
 
-```json
-{"action":"init"}
-```
+如果希望深入探究 WebSocket 知识，或者假定网页未给出任何现成的 WebSocket 代码，则玩家需要按照下面的步骤进行分析解题。
 
-4. 服务端返回地图尺寸：
+1. 先查看页面前端写死的地址，并尝试建立 WS 连接。
 
-```json
-{"x":5,"y":5}
-```
+   ```js
+   const wsUrl = `${wsProtocol}//${location.host}/api/15/challenge`;
+   ```
 
-5. 之后不断发送移动指令，例如：
+2. 建立连接后，先观察服务端返回的提示消息。
 
-```json
-{"action":"move","direction":"up"}
-{"action":"move","direction":"right"}
-```
+   ```json
+   {"message":"WebSocket connected. Please send { action: 'init' }"}
+   ```
 
-6. 普通响应：
+3. 按提示先发送初始化消息。
+
+   ```json
+   {"action":"init"}
+   ```
+
+4. 服务器返回地图尺寸。
+
+   ```json
+   {"x":5,"y":5}
+   ```
+
+5. 之后开始发送移动指令。
+
+   ```json
+   {"action":"move","direction":"up"}
+   {"action":"move","direction":"right"}
+   ```
+
+6. 每次发送移动指令后，观察普通响应中的状态反馈。
+
    - 撞墙：`{"wall":1,"win":false}`
    - 走通：`{"wall":0,"win":false}`
-7. 到达终点时：
 
-```json
-{"wall":0,"win":true,"flag":"16-7kq2m9x4bz","maze":[...]}
-```
+7. 到达终点后，查看服务端返回内容。
 
-说明：
+   ```json
+   {"wall":0,"win":true,"flag":"16-7kq2m9x4bz","maze":[...]}
+   ```
 
-- 代码里其实已经把迷宫完整保存在服务端内存。
-- 当前 `createGameState()` 固定生成的是 `5x5` 迷宫，不是注释里写的随机大迷宫。
-- 实战上可以手工走，也可以写脚本根据撞墙结果 DFS/BFS。
+这一关的关键是理解服务端会根据移动结果持续反馈状态。拿到地图尺寸后，可以手工试探，也可以按撞墙反馈逐步搜索可行路径，直到到达终点。
 
-答案：
+### 答案
 
 `16-7kq2m9x4bz`
 
-### 16
+## 16
 
-真实意图：
-原设计想考 HTTP/3 和时间点查询。
+### 设计目标
 
-真实实现：
-当前代码并没有真正校验底层协议是否为 HTTP/3，只是检查请求头里有没有：
+让玩家学习根据接口分支条件修改请求参数和请求头，而不是只按页面默认方式访问接口。
 
-```http
-X-Forwarded-Http3: h3
-```
+### 实现方式
 
-而且变量 `h3` 最终并没有参与分支判断。也就是说，这一关只要：
+页面和题面明显同时在提示两件事：一是关注 HTTP/3，二是关注时间点。也就是说，这一关的思路就是同时从请求头和 query 参数两边入手。
 
-- `timepoint > 当前年份`
-- 并且最好带上 `X-Forwarded-Http3: h3`
+### 解题步骤
 
-就能拿到答案。
+1. 先根据题面提示，尝试给请求加上和 HTTP/3 相关的请求头。
 
-详细解法：
+   ```http
+   X-Forwarded-Http3: h3
+   ```
 
-1. 后端 `src/16.js` 先读 `timepoint`。
-2. 如果 `timepoint <= currentYear`，返回“在遥远的过去...”。
-3. 如果是未来年份，就直接返回包含下一关路径的消息。
-4. 当前测试代码使用的是 `2077`。
+2. 再修改时间点参数。
 
-接口：
+   如果传入当前年份或过去年份，接口只会返回类似"在遥远的过去..."的提示，这说明真正的方向是把 `timepoint` 改成未来年份。
 
-`GET https://www.iconquestion.com/api/16?timepoint=2077`
+3. 尝试传入一个明显属于未来的年份。
 
-建议加请求头：
+   `GET https://www.iconquestion.com/api/16?timepoint=2077`
 
-```http
-X-Forwarded-Http3: h3
-```
+4. 查看响应内容。
 
-响应：
+   ```json
+   {"message":"Welcome to 2077 Cyberpunk! 17-c8v1n5r2ya 由于HTTP/3支持原因 未找到合适的solution 本关日后将重新设计 您可以跳过"}
+   ```
 
-```json
-{"message":"Welcome to 2077 Cyberpunk! 17-c8v1n5r2ya 由于HTTP/3支持原因 未找到合适的solution 本关日后将重新设计 您可以跳过"}
-```
-
-答案：
+### 答案
 
 `17-c8v1n5r2ya`
 
-### 17
+## 17
 
-真实意图：
-考 HTTP Trailer。真正的信息不在响应头，也不在响应体最后字段里，而在 Trailer。
+### 设计目标
 
-真实实现：
-`src/17.js` 明确设置了：
+让玩家学习观察 HTTP Trailer，理解有些信息既不在普通响应头里，也不在响应体里。
 
-```http
-Trailer: X-Never-Be-Apart
-Transfer-Encoding: chunked
-```
+### 实现方式
+题目真正的线索不在页面正文里，也不在普通响应体里，而是在响应完成时额外追加的 Trailer 中。
 
-然后在响应结束前追加：
+### 解题步骤
 
-```http
-X-Never-Be-Apart: the-end-is-not-the-end...my-dear-18-p3t7w0j6kd...
-```
+1. 先确认页面实际请求的地址。
 
-详细解法：
+   `https://www.iconquestion.com:8443/api/17`
 
-1. 页面请求的是：
+   注意这里是 `8443`。
 
-`https://www.iconquestion.com:8443/api/17`
+2. 先查看普通响应头。
 
-注意这里是 `8443`。
+   ```http
+   Trailer: X-Never-Be-Apart
+   ```
 
-2. 先看普通响应头，会看到：
+   这说明真正的重要信息会在响应结束前以 Trailer 的形式追加，而不是放在常规响应头中。
 
-```http
-Trailer: X-Never-Be-Apart
-```
+3. 再查看响应体本身。
 
-3. 继续读取 Trailer，才能看到真正答案。
+   ```json
+   {"message":"在这个世界上，有些东西是无法用言语表达的。就像这封信一样，它承载着无尽的情感和回忆......"}
+   ```
 
-响应体本身只是：
+4. 继续读取 Trailer。
 
-```json
-{"message":"在这个世界上，有些东西是无法用言语表达的。就像这封信一样，它承载着无尽的情感和回忆......"}
-```
+   ```http
+   X-Never-Be-Apart: the-end-is-not-the-end...my-dear-18-p3t7w0j6kd...
+   ```
 
-真正关键的 Trailer：
-
-```http
-X-Never-Be-Apart: the-end-is-not-the-end...my-dear-18-p3t7w0j6kd...
-```
-
-答案：
+### 答案
 
 `18-p3t7w0j6kd`
 
-### 18
+## 18
 
-真实意图：
-考 `Range` 请求和分片重组。
+### 设计目标
 
-真实实现：
+让玩家学习使用 `Range` 请求，并把多次分片返回的内容重新拼接起来。
 
-- 不带 `Range` 头时，只会返回提示语。
-- 带了 `Range` 后，后端从一整段长字符串里切片返回。
-- 每次最多只能取 16 个字符。
+### 实现方式
 
-详细解法：
+不带 `Range` 请求头时，接口只会返回一句提示；而一旦使用 `Range`，就可以按字节范围分段读取隐藏内容。
 
-1. 直接请求 `/api/18` 只会得到：
+### 解题步骤
 
-```json
-{"message":"What's the dog doing? :P"}
-```
+1. 先直接请求 `/api/18`。
 
-2. 观察响应头可以看到：
+   ```json
+   {"message":"What's the dog doing? :P"}
+   ```
 
-```http
-Accept-Ranges: bytes
-```
+2. 再观察响应头。
 
-3. 查看 `src/18.js` 可知完整文本是：
+   ```http
+   Accept-Ranges: bytes
+   ```
 
-```txt
-Iamalonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongbreaddonoteat19-h9m4q2z8xcpleasepleasepleasepleasepleaseplease
-```
+   这说明接口支持按字节范围读取隐藏内容。
 
-4. 但单次请求范围长度不能超过 16，所以要分片取。
-5. 例如直接围绕答案附近取：
+3. 尝试读取一段。
 
-```http
-GET /api/18 HTTP/1.1
-Host: www.iconquestion.com
-Range: bytes=80-95
-```
+   如果读取的一段长度过大，则后端会提示：
 
-响应：
+   ```json
+   {"message":"Too greedy..."}
+   ```
 
-```json
-{"message":"ddonoteat19-h9m4"}
-```
+   那么我们每次只能取一小段，所以需要分片请求。
 
-6. 再继续取下一段：
+4. 继续尝试读取，直到读取到有效信息。
 
-```http
-Range: bytes=96-111
-```
+   ```http
+   GET /api/18 HTTP/1.1
+   Host: www.iconquestion.com
+   Range: bytes=80-95
+   ```
 
-响应：
+   响应：
 
-```json
-{"message":"q2z8xcpleaseplea"}
-```
+   ```json
+   {"message":"ddonoteat19-h9m4"}
+   ```
 
-7. 把两段拼起来，已经能恢复：
+5. 再继续请求下一段。
+
+   ```http
+   Range: bytes=96-111
+   ```
+
+   响应：
+
+   ```json
+   {"message":"q2z8xcpleaseplea"}
+   ```
+
+6. 把两段中的有效内容拼起来。
+
+   `19-h9m4q2z8xc`
+
+### 答案
 
 `19-h9m4q2z8xc`
 
-说明：
+## 19
 
-- 测试代码里是从 `80` 到 `143` 按每 16 字符连续抓取，再整体拼接。
-- 实战里只要能覆盖答案所在区间即可。
+### 设计目标
 
-答案：
+让玩家学习观察"页面实际显示效果"和"源码原文"之间的差异，并根据自定义字体的映射关系做逆推。
 
-`19-h9m4q2z8xc`
+### 实现方式
 
-### 19
+页面引用了一套自定义字体，而正文又选用了公开可查的诗歌文本，因此这一关真正要做的是把页面显示效果和原文逐字符对照。
 
-真实意图：
-考“自定义字体映射”而不是普通源码查找。页面里最后那句 `Your dearest ...` 不是直接可读的明文，而是经过了字体层的字母替换；玩家需要做逆映射。
+### 解题步骤
 
-真实实现：
+1. 打开这一关的页面源码并查看正文末尾。
 
-- `public/19-h9m4q2z8xc/index.html` 通过 `@font-face` 加载了 `/fonts/19.ttf`。
-- 题面正文使用的是一首公开可查的诗：`Sonnet 18 — William Shakespeare`。
-- 页面源码里的字符序列和浏览器最终显示出来的字符不是一回事，原因正是这套自定义字体把英文字母和数字重新做了映射。
+   ```html
+   <p>Your dearest zjqo-20-h2w8s5d9yg.</p>
+   ```
 
-详细解法：
+   这一关不能只看源码，还要把"源码中的明文诗句"和"页面上使用 `/fonts/19.ttf` 后的实际显示效果"逐字符对照起来。
+   
+   由于整首诗原文是公开文本，只要观察几组对应字符，就能推出这套字体做的是"字符替换"。
 
-1. 打开 `public/19-h9m4q2z8xc/index.html`，可以看到正文 HTML 实际写的是标准的《Sonnet 18》原文，以及最后一句：
+2. 将 `Your dearest` 后面那串字符按同样规则逆映射。
 
-```html
-<p>Your dearest zjqo-20-h2w8s5d9yg.</p>
-```
+   ```txt
+   flag-20-x2k8t5m9qw
+   ```
 
-2. 这一关的关键不是只看源码，而是把“源码中的明文诗句”和“页面上使用 `/fonts/19.ttf` 后的实际显示效果”逐字符对照起来。
-3. 因为整首诗的原文是公开文本，所以只要观察几组对应字符，就能推出这套字体做的是“字符替换”而不是别的花样。
-4. 将 `Your dearest` 后面那串字符按同样规则逆映射，可得到：
+   题面里的 `Hint: Attention is all you need.` 指的就是要仔细观察页面显示和源码文本之间的差异。
 
-```txt
-flag-20-x2k8t5m9qw
-```
+### 答案
 
-5. 这串结果前半部分 `flag-20-` 是提示性前缀，真正下一关的 URL 路径是后半段对应的：
+`20-x2k8t5m9qw`
 
-```txt
-20-x2k8t5m9qw
-```
+## 20
 
-说明：
+### 设计目标
 
-- 题面里的 `Hint: Attention is all you need.` 指的就是“仔细观察页面显示和源码文本之间的差异”。
-- 如果直接去看字体源文件 `public/fonts/19.sfd`，也能验证这关确实基于自定义字体映射。
+让玩家学习根据接口返回的反馈信息逐步缩小范围，并通过反复试探确定正确答案。
 
-答案：
+### 实现方式
 
-- 逆映射得到的完整结果：`flag-20-x2k8t5m9qw`
-- 下一关路径：`20-x2k8t5m9qw`
+- 页面会向 `POST /api/20` 发送 JSON：
 
-### 20
+  ```json
+  {"guess":"..."}
+  ```
 
-真实意图：
-把“猜 flag”做成一个 Wordle 风格的反馈接口。玩家每次提交一个候选串，后端返回：
+- 每次提交后，接口都会返回和 Wordle 类似的反馈。
 
-- 位置和字符都正确的数量 `exact`
-- 字符存在但位置不对的数量 `partial`
+### 解题步骤
 
-真实实现：
+1. 查看页面可知这是一个纯输入型题目，真正的交互发生在接口 `/api/20`。
 
-- 页面 `public/20-x2k8t5m9qw/index.html` 会向 `POST /api/20` 发送 JSON：
+   页面会返回两类反馈：
 
-```json
-{"guess":"..."}
-```
+   - 位置和字符都正确的数量 `exact`
 
-- 后端逻辑在 `src/20.js`。
-- 当前代码直接把正确答案硬编码成了：
+   - 字符存在但位置不对的数量 `partial`
 
-```js
-const CORRECT_FLAG = "t8d0v9c2c4";
-```
+2. 利用这些反馈不断调整猜测。
 
-详细解法：
+   通过持续试探，可以逐步把正确字符串收敛到：
 
-1. 查看页面源码可知这是一个纯前端输入框，真正判题逻辑在后端接口 `/api/20`。
-2. 打开 `src/20.js`，可以直接看到：
+   ```txt
+   t8d0v9c2c4
+   ```
 
-```js
-const CORRECT_FLAG = "t8d0v9c2c4";
-```
+3. 然后向接口提交这个结果。
 
-3. 因此只要向接口提交：
+   ```json
+   {"guess":"t8d0v9c2c4"}
+   ```
 
-```json
-{"guess":"t8d0v9c2c4"}
-```
+4. 查看成功响应。
 
-4. 就会得到成功响应：
+   ```json
+   {"message":"猜对了！下一关是 t8d0v9c2c4","exact":10,"partial":0,"isCorrect":true}
+   ```
 
-```json
-{"message":"猜对了！下一关是 t8d0v9c2c4","exact":10,"partial":0,"isCorrect":true}
-```
-
-5. 按总规则，下一关 URL 路径就是：
-
-```txt
-21-t8d0v9c2c4
-```
-
-补充说明：
-
-- 如果不看源码，单从玩法上做，这关也确实可以按 Wordle 思路不断试探，因为接口每次都会返回 `exact` 和 `partial`。
-- 但基于当前项目代码整理题解时，最直接、最可靠的做法就是阅读 `src/20.js`。
-
-答案：
+### 答案
 
 `21-t8d0v9c2c4`
 
-### 21
+## 21
 
-真实意图：
-这关表面上写着“需要使用 HTTP/2 的特性来完成”，这其实不是烟雾弹，而是在认真提示你去关注 HTTP/2 时代开始支持的 `103 Early Hints` 一类能力。结合当前实现来看，真正考的是：
+### 设计目标
 
-- 观察 HTTP/2 响应里的 `103 Early Hints`
-- 顺着服务端主动暴露出来的资源继续看
-- 理解“Time Is Money”指的是：如果能更早拿到资源提示、提前开始加载，就能节省等待时间
+让玩家学习观察 HTTP/2 中的 `103 Early Hints`，并顺着服务端提前暴露出的资源继续挖掘线索。
 
-也就是说，这关并不是在误导你去看 HTTP/2；相反，HTTP/2 和题名都在指向同一个核心思路：利用 `103` 让客户端更早知道后续资源，从而“省时间”。
+### 实现方式
 
-真实实现：
+- 页面会请求 `https://www.iconquestion.com:9443/api/21`。
 
-- `public/21-t8d0v9c2c4/index.html` 会请求 `https://www.iconquestion.com:9443/api/21`。
-- 9443 端口不是普通 Express 路由，而是 `src/index.js` 里单独开的 HTTP/2 服务。
-- 当请求 `/api/21` 时，后端会先发一个 `103 Early Hints`，内容是：
+- 当请求 `/api/21` 时，服务端会先发一个 `103 Early Hints`，内容是：
 
-```http
-Link: <analytics.js>; rel=preload; as=script
-```
+  ```http
+  Link: <analytics.js>; rel=preload; as=script
+  ```
 
-- 随后才在一个 `0-2000ms` 的随机延迟后返回“你跑完了一圈，用时 xxx ms”。
-- 同一个 HTTP/2 服务还额外提供了 `/api/analytics.js`，它实际返回的文件是 `public/js/21.analytics.js`。
+- 随后才在一个 `0-2000ms` 的随机延迟后返回"你跑完了一圈，用时 xxx ms"。
 
-详细解法：
+- 同一个服务还额外提供了 `/api/analytics.js`。
 
-1. 打开 `src/index.js` 中的 HTTP/2 部分，可以看到 `/api/21` 的处理逻辑先调用了：
+### 解题步骤
 
-```js
-stream.additionalHeaders({
-    [http2.constants.HTTP2_HEADER_STATUS]: 103,
-    link: "<analytics.js>; rel=preload; as=script"
-});
-```
+1. 先请求：
 
-2. 这里最重要的信息不是最终那个“用时多少毫秒”的正文，而是这个提前发出的 `103` 提示。它的意义正是让客户端在主响应完成前，就先知道还有一个脚本资源 `analytics.js` 值得预加载。
-3. 紧接着看下面的分支可以发现，这里的 `analytics.js` 不是站点通用的 `/js/analytics.js`，而是这个 HTTP/2 服务专门提供的：
+   `https://www.iconquestion.com:9443/api/21`
 
-```txt
-GET https://www.iconquestion.com:9443/api/analytics.js
-```
+   这一步最重要的信息不是最终那个"用时多少毫秒"的正文，而是提前发出的 `103 Early Hints`。它告诉客户端还有一个脚本资源 `analytics.js` 值得优先加载。
 
-4. 继续看对应文件 `public/js/21.analytics.js`，内容是：
+2. 顺着这个提示继续请求 `analytics.js`。
 
-```js
-script.src = "https://www.googletagmanager.com/gtag/js?id=22-j4l4a7u8n2";
-gtag('config', '22-j4l4a7u8n2');
-```
+   ```txt
+   GET https://www.iconquestion.com:9443/api/analytics.js
+   ```
 
-5. 其中 `22-j4l4a7u8n2` 明显就是符合全站规则的下一关路径。
+3. 查看返回的脚本内容。
 
-为什么这才是“实际意图”：
+   ```js
+   script.src = "https://www.googletagmanager.com/gtag/js?id=22-j4l4a7u8n2";
+   gtag('config', '22-j4l4a7u8n2');
+   ```
 
-- `/api/21` 主体响应只是随机返回一个耗时数字，没有任何可用于推出答案的信息。
-- 这关提到 HTTP/2 并不是误导，因为 `103 Early Hints` 正是这一思路下的关键特性，题目明确希望你注意到“主响应之前还能先给提示”这件事。
-- 题名 `Time Is Money` 也不是单纯的文学包装，它对应的是 `103` 的实际价值：让浏览器提前加载后续资源，减少等待时间。
-- 因此真正有价值的是服务端通过 `103 Early Hints` 主动暴露出来的后续资源，而不是去纠结随机耗时本身。
+4. 从脚本内容中提取下一关路径 `22-j4l4a7u8n2`。
 
-答案：
+### 答案
 
 `22-j4l4a7u8n2`
 
-### 22
+## 22
 
-真实意图：
-这关前端的提示是“国际人，国际化(话)”，核心意思就是让你去关注请求的语言协商信息，也就是 `Accept-Language`。页面本身只是点击按钮请求 `/api/22`，真正的线索藏在服务端依据请求语言返回的不同文案里。
+### 设计目标
 
-真实实现：
+让玩家学习观察语言协商相关的请求头，并通过修改 `Accept-Language` 触发不同的服务端分支。
 
-- `public/22-j4l4a7u8n2/index.html` 点击按钮后会调用：
+### 实现方式
 
-```txt
-GET /api/22
-```
+- 页面点击按钮后会调用：
 
-- 后端逻辑在 `src/22.js`。
-- 这个接口会读取请求头里的 `Accept-Language`，取第一个语言标签：
+  ```txt
+  GET /api/22
+  ```
 
-```js
-const acceptLanguage = req.get("accept-language");
-const [firstLang = ""] = acceptLanguage.split(",");
-const [langTag = ""] = firstLang.split(";");
-return langTag;
-```
+- 页面上的提示"国际人，国际化(话)"，明显在引导玩家从语言环境入手。
 
-- 如果这个语言标签里包含 `en`，就返回英文介绍；否则返回中文介绍：
+### 解题步骤
 
-```js
-if (lang.includes("en")) {
-    return res.json({
-        message: "... 23-f6y5v4v0k0 ..."
-    });
-}
-```
+1. 查看页面交互，确认按钮实际请求的是 `/api/22`，且没有额外参数。
 
-详细解法：
+   题面中的"国际化(话)"提示，说明关键在请求头里的语言环境。
 
-1. 先看前端 `public/22-j4l4a7u8n2/index.html`，可以确认按钮实际请求的是 `/api/22`，没有额外参数，说明关键一定在请求头或服务端分支逻辑。
-2. 再看 `src/22.js`，可以发现它明确读取了 `Accept-Language`，并按第一个语言标签决定返回中文还是英文。
-3. 因此只要把请求头改成英文环境，例如：
+2. 把请求头改成英文环境。
 
-```http
-Accept-Language: en-US,en;q=0.9
-```
+   ```http
+   Accept-Language: en-US,en;q=0.9
+   ```
 
-4. 服务端就会走英文分支，返回一段英文介绍。该介绍中有一句：
+3. 查看英文分支返回的介绍文本。
 
-```txt
-... provides multilingual service at 23-f6y5v4v0k0 hours ...
-```
+   ```txt
+   ... provides multilingual service at 23-f6y5v4v0k0 hours ...
+   ```
 
-5. 其中 `23-f6y5v4v0k0` 明显就是下一关路径。
+4. 从返回文本中提取下一关路径 `23-f6y5v4v0k0`。
 
-为什么这才是“实际意图”：
-
-- 页面上的“国际化(话)”提示，本质上就是在提醒你从语言环境入手。
-- 前端没有任何输入框，也没有别的可操作项，说明解题点不是“提交内容”，而是“改变请求上下文”。
-- 服务端的确按照 `Accept-Language` 走不同分支，所以这关考的是最基础的语言协商/国际化思路。
-- 下一关线索不是作为独立字段返回，而是直接夹在英文介绍文本里，因此只看默认中文响应是拿不到答案的。
-
-答案：
+### 答案
 
 `23-f6y5v4v0k0`
 
-### 23
+## 23
 
-真实意图：
-这一关把“前端反调试”和“混淆后的解密逻辑”结合在一起。题面本身不给出下一关路径，而是要求玩家想办法读取并执行页面里那段被混淆过的 JavaScript，从中恢复真正的解谜函数。
+### 设计目标
 
-真实实现：
+让玩家学习绕过前端反调试干扰，并在页面恢复正常执行后直接从 `localStorage` 中获取结果。
 
-- 页面位于 `public/23-f6y5v4v0k0/index.html`
-- 使用了几种低门槛前端反调试手段：
+### 实现方式
+
+- 页面使用了几种低门槛前端反调试手段：
+
   - 阻止 `F12`、`Ctrl/Cmd + Shift + I/J/C`、`Ctrl/Cmd + U`
+
   - 阻止右键菜单
+
   - 通过 `window.outerWidth/outerHeight` 与 `innerWidth/innerHeight` 的差值检测 DevTools 停靠
+
   - 通过对象 getter 配合控制台输出做探针检测
-- 一旦判断开发者工具已打开，页面会在控制台持续输出完整警告文案，显示从 `10` 到 `1` 的倒计时，然后强制刷新页面
-- 页面脚本后半段额外内嵌了一段已经混淆过的代码。该代码定义了：
-  - `persistPuzzleKey()`：向 `localStorage` 写入谜题密钥
-  - `buildFinalFlag()`：读取密钥，并通过循环 XOR 还原最终 flag
-- 当前实现里，混淆代码本身已经直接写在页面内，并没有自动执行这两个函数。
 
-详细解法：
+- 一旦判断开发者工具已打开，页面会在控制台持续输出完整警告文案，显示从 `10` 到 `1` 的倒计时，然后强制刷新页面，并且立即清空 localStorage。
 
-1. 这一关的关键已经不是“页面显示了什么”，而是“页面脚本里藏了什么”。
-2. 由于页面会拦截常见的 DevTools 快捷键和右键菜单，而且一旦检测到开发者工具已打开，就会在控制台开始输出类似下面的倒计时警告，并在 10 秒后刷新页面：
+- 页面脚本在正常执行一段时间后，会把解密结果写入 `localStorage["top_secret"]`。
 
-```txt
-[Security Office] 检测到开发者工具已打开（...），界面将在 10 秒后强制刷新。
-[Security Office] 检测到开发者工具已打开（...），界面将在 9 秒后强制刷新。
-[Security Office] 检测到开发者工具已打开（...），界面将在 8 秒后强制刷新。
-...
-```
+### 解题步骤
 
-3. 因此直接在浏览器里硬开调试并不是最舒服的做法。更直接的方式是查看站点源码或本地项目文件里的：
+1. 先观察页面中的前端反调试行为。
 
-`public/23-f6y5v4v0k0/index.html`
+   ```txt
+   [Security Office] 检测到开发者工具已打开（...），界面将在 10 秒后强制刷新。
+   [Security Office] 检测到开发者工具已打开（...），界面将在 9 秒后强制刷新。
+   [Security Office] 检测到开发者工具已打开（...），界面将在 8 秒后强制刷新。
+   ...
+   ```
 
-4. 在这个文件的 `<script>` 后半段，可以看到一整段混淆后的代码。虽然变量名被打乱了，但恢复后实际逻辑很简单，本质上就是：
-   - 预置 `puzzleStorageKey`
-   - 预置密钥 `n2w0`
-   - 预置十六进制编码串 `085e16574300431d000000000d0b1b011a0a`
-   - 提供 `persistPuzzleKey()` 和 `buildFinalFlag()`
-5. 如果你不想手工阅读混淆代码，也可以把这段代码交给在线 JS 解混淆工具处理。当前测试中，下面这个网站可以正确把函数解出来，而且解出来的函数可以直接使用：
+   这说明如果直接打开开发者工具，页面会先把本地存储清空，因此需要先绕过这段前端限制。
 
-https://www.sojson.com/jsjiemi.html
+2. 在本地临时屏蔽这段反调试代码后，再重新加载页面。
 
-6. 无论是手工阅读，还是解混淆后再看，最终你都会发现解法分两步：
-   - 先执行：
+   更推荐的做法不是直接硬逆向整段混淆脚本，而是先把这些会拦截快捷键、检测 DevTools、清空 `localStorage` 的逻辑本地替换掉，让页面继续正常执行。
 
-```js
-persistPuzzleKey()
-```
+3. 等待页面完成原本的异步写入后，查看 `localStorage`。
 
-   - 再执行：
+   从注释内容可以确认，页面会把结果写入：
 
-```js
-buildFinalFlag()
-```
+   ```txt
+   localStorage["top_secret"]
+   ```
 
-7. 其中 `persistPuzzleKey()` 会把密钥写入：
+4. 读取其中的值。
 
-```txt
-localStorage["archive_key_24"] = "n2w0"
-```
+   ```txt
+   flag-24-n2w0c9l1t8
+   ```
 
-8. `buildFinalFlag()` 则会读取这个密钥，并用它对十六进制编码串做循环 XOR，最终还原出：
-
-```txt
-flag-24-n2w0c9l1t8
-```
-
-9. 按本站总规则，真正下一关 URL 路径取 `flag-` 后面的部分，因此答案是：
-
-```txt
-24-n2w0c9l1t8
-```
-
-答案：
+### 答案
 
 `24-n2w0c9l1t8`
