@@ -41,7 +41,7 @@
 `public/` 存放首页、起始页、各关卡页面，以及脚本、字体、样式等静态资源。  
 `src/` 存放 Node/Express 服务入口和各个需要后端能力的关卡实现。  
 `test/` 用于验证关键后端关卡是否仍然符合预期。  
-文档部分目前主要有 [construction.md](/var/www/www.iconquestion.com/construction.md) 和 [101-solutions.md](/var/www/www.iconquestion.com/101-solutions.md)。
+文档部分目前主要有 [construction.md](./construction.md) 和 [101-solutions.md](./101-solutions.md)。
 
 其中，`construction.md` 专门负责描述整体架构、请求流和部署关系；README 这里只做概要说明，不再重复展开。
 
@@ -56,7 +56,7 @@
 
 项目基于 Node.js，使用 Express 处理静态资源和部分 API。线上采用 Nginx + Node 的方式部署，少数依赖特殊协议能力的关卡会使用额外端口。
 
-更完整的架构说明、端口设计、Nginx 转发关系与特殊关卡处理方式，请查看 [construction.md](/var/www/www.iconquestion.com/construction.md)。
+更完整的架构说明、端口设计、Nginx 转发关系与特殊关卡处理方式，请查看 [construction.md](./construction.md)。
 
 如果只看本地最基础的启动方式，可以使用：
 
@@ -74,8 +74,8 @@ npm start
 
 详细说明见：
 
-- [LICENSE](/var/www/www.iconquestion.com/LICENSE)
-- [LICENSE-CONTENT](/var/www/www.iconquestion.com/LICENSE-CONTENT)
+- [LICENSE](./LICENSE)
+- [LICENSE-CONTENT](./LICENSE-CONTENT)
 
 ## 作者与联系方式
 

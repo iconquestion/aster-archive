@@ -68,7 +68,7 @@ Node 服务端代码目录。
 
 ### 入口服务
 
-项目入口为 [src/index.js](/var/www/www.iconquestion.com/src/index.js)。
+项目入口为 [src/index.js](./src/index.js)。
 
 Node 进程同时启动三类服务：
 
@@ -262,7 +262,7 @@ Nginx 主要负责四件事：
 
 ## 测试策略与架构关系
 
-测试文件为 [test/test.js](/var/www/www.iconquestion.com/test/test.js)。
+测试文件为 [test/test.js](./test/test.js)。
 
 整体原则是：
 

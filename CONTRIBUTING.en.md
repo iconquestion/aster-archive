@@ -133,8 +133,8 @@ By contributing, you agree that your contribution may be distributed under the r
 
 For details, see:
 
-- [LICENSE](/var/www/www.iconquestion.com/LICENSE)
-- [LICENSE-CONTENT](/var/www/www.iconquestion.com/LICENSE-CONTENT)
+- [LICENSE](./LICENSE)
+- [LICENSE-CONTENT](./LICENSE-CONTENT)
 
 If your contribution contains both code and creative content, please assume that each part will fall under the repository’s current dual-licensing structure.
 
