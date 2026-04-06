@@ -179,12 +179,19 @@ async function getChalk() {
 // 先执行配置检查，再按顺序运行各关卡测试，并在末尾汇总结果。
 async function run() {
     const chalk = await getChalk();
-    const colorStatus = (status) => (status === "PASSED" ? chalk.green(status) : chalk.red(status));
+    const colorStatus = (status) => {
+        if (status === "PASSED") return chalk.green(status);
+        if (status === "SKIPPED") return chalk.yellow(status);
+        return chalk.red(status);
+    };
     const printResult = (item) => {
         const routes = Array.isArray(item.route) ? item.route : [item.route];
         console.log(`[${item.level}] ${colorStatus(item.status)}`);
         for (const route of routes) {
             console.log(`  ${route}`);
+        }
+        if (item.status === "SKIPPED" && item.note) {
+            console.log(chalk.yellow(`  Note: ${item.note}`));
         }
         if (item.status === "FAILED") {
             console.error(chalk.red(`  Error: ${item.error.message}`));
@@ -205,6 +212,54 @@ async function run() {
             // 失败条件：`.env` 缺失、变量为空、端口非法，或依赖文件不存在。
             run: async () => {
                 testConfig = loadTestConfig();
+            },
+        },
+        // 测试方法：请求 01 关静态页，检查 HTML 注释中隐藏的下一关路径。
+        // 成功条件：返回 200，且正文包含 `<!-- 02-v8n2c4z1pa -->`。
+        // 失败条件：请求失败、状态码不是 200，或 HTML 注释中缺少下一关线索。
+        {
+            level: "01",
+            route: ["GET /01-k3f9x2m7qd/"],
+            run: async () => {
+                const res = await httpRequest({ route: "/01-k3f9x2m7qd/" });
+                assert(res.status === 200, "Expected status 200", res);
+                assert(
+                    typeof res.bodyText === "string" && res.bodyText.includes("<!-- 02-v8n2c4z1pa -->"),
+                    "HTML comment does not include 02 clue",
+                    res.bodyText
+                );
+            },
+        },
+        // 测试方法：直接请求 02 关使用的 CSS 文件，验证样式声明中夹带的下一关线索。
+        // 成功条件：返回 200，且 `font-family` 声明中包含 `03-r5t9m1x8wb`。
+        // 失败条件：请求失败、状态码不是 200，或 CSS 内容未包含下一关路径。
+        {
+            level: "02",
+            route: ["GET /css/02.css"],
+            run: async () => {
+                const res = await httpRequest({ route: "/css/02.css" });
+                assert(res.status === 200, "Expected status 200", res);
+                assert(
+                    typeof res.bodyText === "string" && res.bodyText.includes("03-r5t9m1x8wb"),
+                    "CSS does not include 03 clue",
+                    res.bodyText
+                );
+            },
+        },
+        // 测试方法：请求 03 关静态页，检查 `<head>` 中的版本元数据是否暴露下一关线索。
+        // 成功条件：返回 200，且存在 `<meta name="version" content="04-q7d2s9l4vc">`。
+        // 失败条件：请求失败、状态码不是 200，或页面元数据缺失/错误。
+        {
+            level: "03",
+            route: ["GET /03-r5t9m1x8wb/"],
+            run: async () => {
+                const res = await httpRequest({ route: "/03-r5t9m1x8wb/" });
+                assert(res.status === 200, "Expected status 200", res);
+                assert(
+                    typeof res.bodyText === "string" && res.bodyText.includes('<meta name="version" content="04-q7d2s9l4vc">'),
+                    "Meta version tag does not include 04 clue",
+                    res.bodyText
+                );
             },
         },
         // 测试方法：向 `/api/04` 发起 GET 请求，检查响应头中的下一关线索。
@@ -275,6 +330,62 @@ async function run() {
                 );
             },
         },
+        // 测试方法：先读取 08 关目录下的 `robots.txt`，确认其中暴露 `/stack` 目录，再直接请求深层文本文件验证 09 关线索。
+        // 成功条件：`robots.txt` 返回 200 且包含 `/stack`；深层文本文件返回 200 且正文包含 `09-t7p1z4k8ds`。
+        // 失败条件：任一请求失败、状态码不正确、`robots.txt` 未暴露关键目录，或深层文本中未出现下一关路径。
+        {
+            level: "08",
+            route: ["GET /08-c2x8m5q9nv/robots.txt", "GET /08-c2x8m5q9nv/stack/restricted/914/2013-12-31.txt"],
+            run: async () => {
+                const robotsRes = await httpRequest({ route: "/08-c2x8m5q9nv/robots.txt" });
+                assert(robotsRes.status === 200, "Expected robots.txt status 200", robotsRes);
+                assert(
+                    typeof robotsRes.bodyText === "string" && robotsRes.bodyText.includes("/stack"),
+                    "robots.txt does not expose /stack",
+                    robotsRes.bodyText
+                );
+
+                const noteRes = await httpRequest({ route: "/08-c2x8m5q9nv/stack/restricted/914/2013-12-31.txt" });
+                assert(noteRes.status === 200, "Expected archive note status 200", noteRes);
+                assert(
+                    typeof noteRes.bodyText === "string" && noteRes.bodyText.includes("09-t7p1z4k8ds"),
+                    "Restricted archive note does not include 09 clue",
+                    noteRes.bodyText
+                );
+            },
+        },
+        // 测试方法：请求倒计时脚本的旧版本文件，验证许可证注释中是否保留了 10 关线索。
+        // 成功条件：返回 200，且脚本文本包含 `10-w3n9c6v2mq`。
+        // 失败条件：请求失败、状态码不是 200，或旧版脚本未包含下一关路径。
+        {
+            level: "09",
+            route: ["GET /js/09.countdown.v1.js"],
+            run: async () => {
+                const res = await httpRequest({ route: "/js/09.countdown.v1.js" });
+                assert(res.status === 200, "Expected status 200", res);
+                assert(
+                    typeof res.bodyText === "string" && res.bodyText.includes("10-w3n9c6v2mq"),
+                    "Legacy countdown script does not include 10 clue",
+                    res.bodyText
+                );
+            },
+        },
+        // 占位符：10 关涉及页面脚本补全与结果推导，当前不纳入自动测试，仅在报告中显式标记为跳过。
+        {
+            level: "10",
+            route: ["SKIPPED /10-w3n9c6v2mq/"],
+            skip: true,
+            note: "Algorithm reconstruction challenge intentionally skipped.",
+            run: async () => { },
+        },
+        // 占位符：11 关涉及多层编码链路解码，当前不纳入自动测试，仅在报告中显式标记为跳过。
+        {
+            level: "11",
+            route: ["SKIPPED /11-zcwl17ouoa/"],
+            skip: true,
+            note: "Multi-step decoding challenge intentionally skipped.",
+            run: async () => { },
+        },
         // 测试方法：先读取每日密码文件并调用 `/api/12/login` 获取认证 Cookie，再在同一测试块内携带该 Cookie 请求 `/api/12/get_room_info?room_id=13`。
         // 成功条件：登录请求返回 200 且消息为 `登录成功`，同时返回 `bibilabu=` 开头的 Cookie；房间信息请求返回 200 且消息精确等于 `13-k9c3x6n2tw`。
         // 失败条件：密码文件读取失败、登录或房间请求失败、状态码不正确、未拿到预期 Cookie，或房间信息与预期不一致。
@@ -318,6 +429,30 @@ async function run() {
                     roomRes.bodyJson && roomRes.bodyJson.message === "13-k9c3x6n2tw",
                     "Unexpected room info response",
                     roomRes.bodyJson || roomRes.bodyText
+                );
+            },
+        },
+        // 测试方法：先请求 `sitemap.xml`，确认隐藏草稿页已被列出，再访问草稿页并检查 HTML 注释中的下一关线索。
+        // 成功条件：`sitemap.xml` 返回 200 且包含 `gallery/__draft__k9a2`；草稿页返回 200 且正文包含 `14-p5v8d1q7mz`。
+        // 失败条件：任一请求失败、状态码不正确、站点地图未列出隐藏页，或草稿页注释中缺少下一关路径。
+        {
+            level: "13",
+            route: ["GET /13-k9c3x6n2tw/sitemap.xml", "GET /13-k9c3x6n2tw/gallery/__draft__k9a2.html"],
+            run: async () => {
+                const sitemapRes = await httpRequest({ route: "/13-k9c3x6n2tw/sitemap.xml" });
+                assert(sitemapRes.status === 200, "Expected sitemap status 200", sitemapRes);
+                assert(
+                    typeof sitemapRes.bodyText === "string" && sitemapRes.bodyText.includes("gallery/__draft__k9a2"),
+                    "Sitemap does not list hidden draft page",
+                    sitemapRes.bodyText
+                );
+
+                const draftRes = await httpRequest({ route: "/13-k9c3x6n2tw/gallery/__draft__k9a2.html" });
+                assert(draftRes.status === 200, "Expected draft page status 200", draftRes);
+                assert(
+                    typeof draftRes.bodyText === "string" && draftRes.bodyText.includes("14-p5v8d1q7mz"),
+                    "Draft page does not include 14 clue",
+                    draftRes.bodyText
                 );
             },
         },
@@ -445,6 +580,14 @@ async function run() {
                 );
             },
         },
+        // 占位符：19 关依赖字体映射与视觉对照，当前不纳入自动测试，仅在报告中显式标记为跳过。
+        {
+            level: "19",
+            route: ["SKIPPED /19-h9m4q2z8xc/"],
+            skip: true,
+            note: "Font mapping / visual comparison challenge intentionally skipped.",
+            run: async () => { },
+        },
         // 测试方法：在同一测试块内先向 `/api/20` 提交正确猜测，再提交空 JSON，分别验证猜中逻辑和空输入校验。
         // 成功条件：正确猜测返回 200，`isCorrect === true`，`exact === 10`，且消息中包含 `t8d0v9c2c4`；空输入返回 400，且消息精确等于 `请输入要猜测的 flag。`。
         // 失败条件：任一请求失败、状态码不正确、正确猜测未命中，或空输入未被正确拦截。
@@ -494,6 +637,14 @@ async function run() {
                 );
             },
         },
+        // 占位符：21 关依赖 HTTP/2 103 Early Hints，当前测试框架不处理该协议分支，仅在报告中显式标记为跳过。
+        {
+            level: "21",
+            route: ["SKIPPED /api/21"],
+            skip: true,
+            note: "HTTP/2 Early Hints challenge intentionally skipped.",
+            run: async () => { },
+        },
         // 测试方法：在同一测试块内分别以英文请求头和默认请求访问 `/api/22`，验证服务端语言协商分支。
         // 成功条件：英文分支返回 200 且消息中包含 `23-f6y5v4v0k0`；默认分支返回 200，消息包含 `国际宾客厅`，且不包含 `23-f6y5v4v0k0`。
         // 失败条件：任一请求失败、状态码不正确、英文分支未返回线索，或默认分支返回内容错误/泄露线索。
@@ -529,6 +680,38 @@ async function run() {
                 );
             },
         },
+        // 占位符：23 关依赖浏览器环境、反调试逻辑与 localStorage 行为，当前不纳入自动测试，仅在报告中显式标记为跳过。
+        {
+            level: "23",
+            route: ["SKIPPED /23-f6y5v4v0k0/"],
+            skip: true,
+            note: "Browser anti-debug / localStorage challenge intentionally skipped.",
+            run: async () => { },
+        },
+        // 测试方法：直接请求 24 关目录下的静态 `feed.xml`，验证 RSS 文件存在且包含人工投递记录中的下一关线索。
+        // 成功条件：返回 200，响应正文包含 `25-v5f2b5h0e9`。
+        // 失败条件：请求失败、状态码不是 200，RSS 文件缺失，或正文中未出现flag。
+        {
+            level: "24",
+            route: ["GET /24-n2w0c9l1t8/feed.xml"],
+            run: async () => {
+                const res = await httpRequest({ route: "/24-n2w0c9l1t8/feed.xml" });
+                assert(res.status === 200, "Expected status 200", res);
+                assert(
+                    typeof res.bodyText === "string" && res.bodyText.includes("25-v5f2b5h0e9"),
+                    "RSS feed does not include next level clue",
+                    res.bodyText
+                );
+            },
+        },
+        // 占位符：25 关当前为空终点页，暂无可执行测试逻辑，仅在报告中显式标记为跳过。
+        {
+            level: "25",
+            route: ["SKIPPED /25-v5f2b5h0e9/"],
+            skip: true,
+            note: "Empty terminal page intentionally skipped.",
+            run: async () => { },
+        },
     ];
 
     try {
@@ -536,12 +719,15 @@ async function run() {
             const result = {
                 level: routeCase.level,
                 route: routeCase.route,
-                status: "PASSED",
+                status: routeCase.skip ? "SKIPPED" : "PASSED",
                 error: null,
+                note: routeCase.note || null,
             };
 
             try {
-                await routeCase.run();
+                if (!routeCase.skip) {
+                    await routeCase.run();
+                }
             } catch (err) {
                 result.status = "FAILED";
                 result.error = {
@@ -580,20 +766,21 @@ async function run() {
     };
 
     // 仅汇总本次实际运行到的关卡测试结果。
-    const orderedLevels = ["04", "05", "06", "07", "12", "14", "15", "16", "17", "18", "20", "22"];
+    const orderedLevels = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"];
     const levelSummary = orderedLevels
         .filter((level) => levelMap.has(level))
         .map((level) => {
             const tests = levelMap.get(level) || [];
-            const passed = tests.length > 0 && tests.every((t) => t.status === "PASSED");
+            const allSkipped = tests.length > 0 && tests.every((t) => t.status === "SKIPPED");
+            const passed = tests.length > 0 && tests.every((t) => t.status === "PASSED" || t.status === "SKIPPED");
             return {
                 level,
-                status: passed ? "PASSED" : "FAILED",
+                status: allSkipped ? "SKIPPED" : passed ? "PASSED" : "FAILED",
                 tests,
             };
         });
 
-    const overallPassed = configSummary.status === "PASSED" && levelSummary.every((x) => x.status === "PASSED");
+    const overallPassed = configSummary.status === "PASSED" && levelSummary.every((x) => x.status === "PASSED" || x.status === "SKIPPED");
 
     console.log(chalk.cyan("\n=== CONFIG CHECK ==="));
     console.log(`Config: ${colorStatus(configSummary.status)}`);
