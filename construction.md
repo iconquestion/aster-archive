@@ -132,17 +132,51 @@ Node 提供的 API 结构统一为：
 
 ### 初始化项目
 
-将项目 Clone 到本地
+#### 将项目 Clone 到本地
 
 ```bash
 git clone https://github.com/iconquestion/aster-archive.git
 ```
 
-安装 npm 依赖
+#### 安装 npm 依赖
 
 ```bash
 npm install
 ```
+
+#### 环境变量配置
+
+应用启动与测试都会固定读取 `config/.env`，因此可以先复制 `config` 下的 `.env.example`：
+
+```bash
+cd config
+cp .env.example .env
+```
+
+然后按实际部署环境修改以下变量：
+
+- `HTTP_PORT`：Node HTTP 服务端口，默认占位值为 `8080`
+
+- `HTTPS_PORT`：Node HTTPS 服务端口，默认占位值为 `8443`
+
+- `HTTP2_PORT`：独立 HTTP/2 服务端口，默认占位值为 `9443`
+
+- `APP_ORIGIN`：站点对外访问源地址，同时用于基础 CORS 校验与测试脚本，例如 `https://localhost:8443`
+
+- `TLS_KEY_PATH`：TLS 私钥文件绝对路径，例如 `/absolute/path/to/tls/key.pem`
+
+- `TLS_CERT_PATH`：TLS 证书文件绝对路径，例如 `/absolute/path/to/tls/cert.pem`
+
+注意：
+
+- `src/index.js` 与 `test/test.js` 会在启动时严格校验这些变量，缺失、空值、格式错误或路径不存在都会直接报错退出
+
+- `APP_ORIGIN` 应与实际访问入口保持一致，否则部分跨域响应和测试会失败
+
+- `TLS_KEY_PATH`、`TLS_CERT_PATH` 都要求指向启动时已经存在的路径
+
+
+#### 特殊关卡配置
 
 添加一个自动生成密码的 cron 任务（12关），参考配置如下
 
