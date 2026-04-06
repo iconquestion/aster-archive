@@ -180,14 +180,26 @@ async function getChalk() {
 async function run() {
     const chalk = await getChalk();
     const colorStatus = (status) => (status === "PASSED" ? chalk.green(status) : chalk.red(status));
+    const printResult = (item) => {
+        const routes = Array.isArray(item.route) ? item.route : [item.route];
+        console.log(`[${item.level}] ${colorStatus(item.status)}`);
+        for (const route of routes) {
+            console.log(`  ${route}`);
+        }
+        if (item.status === "FAILED") {
+            console.error(chalk.red(`  Error: ${item.error.message}`));
+            if (item.error.stack) {
+                console.error(chalk.red(`  Stack: ${item.error.stack}`));
+            }
+        }
+    };
 
     const routeResults = [];
-    let authCookie = "";
 
     const routeCases = [
         {
             level: "CONFIG",
-            route: "Load test env",
+            route: ["Load test env"],
             // 测试方法：加载 `.env`，并校验测试依赖的关键配置与本地文件是否存在且格式合法。
             // 成功条件：环境变量读取成功，必填项不为空，端口可解析，密码文件存在。
             // 失败条件：`.env` 缺失、变量为空、端口非法，或依赖文件不存在。
@@ -200,38 +212,34 @@ async function run() {
         // 失败条件：请求失败、状态码不是 200，或响应头缺失/值错误。
         {
             level: "04",
-            route: "GET /api/04",
+            route: ["GET /api/04"],
             run: async () => {
                 const res = await httpRequest({ route: "/api/04" });
                 assert(res.status === 200, "Expected status 200", res);
                 assert(res.headers["x-archive-next"] === "05-x1p8z3n6kf", "Missing or wrong X-Archive-Next header", res.headers);
             },
         },
-        // 测试方法：向 `/api/05` 发起 GET 请求，验证默认访问路径只返回阻拦提示。
-        // 成功条件：返回 200，且响应消息精确等于 `YOU SHALL NOT PASS!!!`。
-        // 失败条件：请求失败、状态码不是 200，或响应消息与预期不一致。
+        // 测试方法：在同一测试块内分别向 `/api/05` 发起 GET 和 POST 请求，验证方法差异对应的两种题面行为。
+        // 成功条件：GET 返回 200 且消息精确等于 `YOU SHALL NOT PASS!!!`；POST 返回 200 且消息中包含 `06-m4v7q2c9ta`。
+        // 失败条件：任一请求失败、状态码不正确，或 GET/POST 任一分支的响应内容不符合预期。
         {
             level: "05",
-            route: "GET /api/05",
+            route: ["GET /api/05", "POST /api/05"],
             run: async () => {
-                const res = await httpRequest({ route: "/api/05" });
-                assert(res.status === 200, "Expected status 200", res);
-                assert(res.bodyJson && res.bodyJson.message === "YOU SHALL NOT PASS!!!", "Unexpected response message", res.bodyJson || res.bodyText);
-            },
-        },
-        // 测试方法：向 `/api/05` 发起 POST 请求，验证正确方法可以获得下一关线索。
-        // 成功条件：返回 200，且响应消息中包含 `06-m4v7q2c9ta`。
-        // 失败条件：请求失败、状态码不是 200，或响应中未包含下一关线索。
-        {
-            level: "05",
-            route: "POST /api/05",
-            run: async () => {
-                const res = await httpRequest({ method: "POST", route: "/api/05" });
-                assert(res.status === 200, "Expected status 200", res);
+                const getRes = await httpRequest({ route: "/api/05" });
+                assert(getRes.status === 200, "Expected GET status 200", getRes);
                 assert(
-                    res.bodyJson && typeof res.bodyJson.message === "string" && res.bodyJson.message.includes("06-m4v7q2c9ta"),
-                    "Response does not include next level clue",
-                    res.bodyJson || res.bodyText
+                    getRes.bodyJson && getRes.bodyJson.message === "YOU SHALL NOT PASS!!!",
+                    "Unexpected GET response message",
+                    getRes.bodyJson || getRes.bodyText
+                );
+
+                const postRes = await httpRequest({ method: "POST", route: "/api/05" });
+                assert(postRes.status === 200, "Expected POST status 200", postRes);
+                assert(
+                    postRes.bodyJson && typeof postRes.bodyJson.message === "string" && postRes.bodyJson.message.includes("06-m4v7q2c9ta"),
+                    "POST response does not include next level clue",
+                    postRes.bodyJson || postRes.bodyText
                 );
             },
         },
@@ -240,7 +248,7 @@ async function run() {
         // 失败条件：请求失败、状态码不是 200，或响应未识别管理员身份。
         {
             level: "06",
-            route: "GET /api/06?level=admin",
+            route: ["GET /api/06?level=admin"],
             run: async () => {
                 const res = await httpRequest({ route: "/api/06?level=admin" });
                 assert(res.status === 200, "Expected status 200", res);
@@ -256,7 +264,7 @@ async function run() {
         // 失败条件：请求失败、状态码不是 200，或响应中未包含 08 关标识。
         {
             level: "07",
-            route: "GET /api/07?location=visit_admin_office",
+            route: ["GET /api/07?location=visit_admin_office"],
             run: async () => {
                 const res = await httpRequest({ route: "/api/07?location=visit_admin_office" });
                 assert(res.status === 200, "Expected status 200", res);
@@ -267,12 +275,12 @@ async function run() {
                 );
             },
         },
-        // 测试方法：读取每日密码文件后，向 `/api/12/login` 提交表单登录，并检查返回的 Cookie。
-        // 成功条件：返回 200，响应消息为 `登录成功`，且存在 `bibilabu=` 开头的认证 Cookie。
-        // 失败条件：密码文件读取失败、请求失败、状态码不是 200、登录消息不符，或未返回预期 Cookie。
+        // 测试方法：先读取每日密码文件并调用 `/api/12/login` 获取认证 Cookie，再在同一测试块内携带该 Cookie 请求 `/api/12/get_room_info?room_id=13`。
+        // 成功条件：登录请求返回 200 且消息为 `登录成功`，同时返回 `bibilabu=` 开头的 Cookie；房间信息请求返回 200 且消息精确等于 `13-k9c3x6n2tw`。
+        // 失败条件：密码文件读取失败、登录或房间请求失败、状态码不正确、未拿到预期 Cookie，或房间信息与预期不一致。
         {
             level: "12",
-            route: "POST /api/12/login",
+            route: ["POST /api/12/login", "GET /api/12/get_room_info?room_id=13"],
             run: async () => {
                 const dailyPassword = fs.readFileSync(testConfig.passwordFilePath, "utf8").trim();
                 const formData = new URLSearchParams({
@@ -296,29 +304,20 @@ async function run() {
                 const setCookie = res.headers["set-cookie"];
                 assert(Array.isArray(setCookie) && setCookie.length > 0, "Expected Set-Cookie header", res.headers);
 
-                authCookie = setCookie[0].split(";")[0];
+                const authCookie = setCookie[0].split(";")[0];
                 assert(authCookie.startsWith("bibilabu="), "Unexpected cookie name", { authCookie, setCookie });
-            },
-        },
-        // 测试方法：携带上一条测试拿到的认证 Cookie，请求 `/api/12/get_room_info?room_id=13`。
-        // 成功条件：返回 200，且响应消息精确等于 `13-k9c3x6n2tw`。
-        // 失败条件：前置登录未产生 Cookie、请求失败、状态码不是 200，或房间信息不符合预期。
-        {
-            level: "12",
-            route: "GET /api/12/get_room_info?room_id=13",
-            run: async () => {
-                assert(authCookie, "Missing auth cookie from /12/login");
-                const res = await httpRequest({
+
+                const roomRes = await httpRequest({
                     route: "/api/12/get_room_info?room_id=13",
                     headers: {
                         Cookie: authCookie,
                     },
                 });
-                assert(res.status === 200, "Expected status 200", res);
+                assert(roomRes.status === 200, "Expected room info status 200", roomRes);
                 assert(
-                    res.bodyJson && res.bodyJson.message === "13-k9c3x6n2tw",
+                    roomRes.bodyJson && roomRes.bodyJson.message === "13-k9c3x6n2tw",
                     "Unexpected room info response",
-                    res.bodyJson || res.bodyText
+                    roomRes.bodyJson || roomRes.bodyText
                 );
             },
         },
@@ -327,7 +326,7 @@ async function run() {
         // 失败条件：请求失败、状态码不是 200，或响应中未包含下一关线索。
         {
             level: "14",
-            route: "POST /api/14/login",
+            route: ["POST /api/14/login"],
             run: async () => {
                 const basicToken = Buffer.from("admin:admin").toString("base64");
                 const res = await httpRequest({
@@ -350,7 +349,7 @@ async function run() {
         // 失败条件：连接失败、超时、消息不是合法 JSON，或首条消息内容不符合预期。
         {
             level: "15",
-            route: "WS /api/15/challenge",
+            route: ["WS /api/15/challenge"],
             run: async () => {
                 const payload = await testWebSocket("/api/15/challenge");
                 assert(
@@ -365,7 +364,7 @@ async function run() {
         // 失败条件：请求失败、状态码不是 200，或响应中未包含 17 关线索。
         {
             level: "16",
-            route: "GET /api/16?timepoint=2077",
+            route: ["GET /api/16?timepoint=2077"],
             run: async () => {
                 const res = await httpRequest({
                     route: "/api/16?timepoint=2077",
@@ -387,7 +386,7 @@ async function run() {
         // 失败条件：请求失败、状态码不是 200、缺少 Trailer 声明头，或最终 Trailer 中未包含下一关线索。
         {
             level: "17",
-            route: "GET /api/17",
+            route: ["GET /api/17"],
             run: async () => {
                 const res = await httpRequest({
                     route: "/api/17",
@@ -403,7 +402,6 @@ async function run() {
                 );
 
                 const trailerValue = res.trailers && res.trailers["x-never-be-apart"];
-                console.log("trailerValue: " + trailerValue);
                 assert(
                     typeof trailerValue === "string" && trailerValue.includes("18-p3t7w0j6kd"),
                     "Missing 18 clue in trailer",
@@ -416,7 +414,7 @@ async function run() {
         // 失败条件：任一分块请求失败、状态码不是 206、分块内容异常，或最终重组结果不含下一关线索。
         {
             level: "18",
-            route: "GET /api/18 (range chunks)",
+            route: ["GET /api/18 (range chunks)"],
             run: async () => {
                 const chunks = [];
 
@@ -447,6 +445,90 @@ async function run() {
                 );
             },
         },
+        // 测试方法：在同一测试块内先向 `/api/20` 提交正确猜测，再提交空 JSON，分别验证猜中逻辑和空输入校验。
+        // 成功条件：正确猜测返回 200，`isCorrect === true`，`exact === 10`，且消息中包含 `t8d0v9c2c4`；空输入返回 400，且消息精确等于 `请输入要猜测的 flag。`。
+        // 失败条件：任一请求失败、状态码不正确、正确猜测未命中，或空输入未被正确拦截。
+        {
+            level: "20",
+            route: ["POST /api/20 (correct guess)", "POST /api/20 (empty guess)"],
+            run: async () => {
+                const requestBody = JSON.stringify({
+                    guess: "t8d0v9c2c4",
+                });
+
+                const res = await httpRequest({
+                    method: "POST",
+                    route: "/api/20",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Content-Length": Buffer.byteLength(requestBody),
+                    },
+                    body: requestBody,
+                });
+
+                assert(res.status === 200, "Expected status 200", res);
+                assert(res.bodyJson && res.bodyJson.isCorrect === true, "Expected correct guess result", res.bodyJson || res.bodyText);
+                assert(res.bodyJson && res.bodyJson.exact === 10, "Expected exact match count to be 10", res.bodyJson || res.bodyText);
+                assert(
+                    res.bodyJson && typeof res.bodyJson.message === "string" && res.bodyJson.message.includes("t8d0v9c2c4"),
+                    "Response does not include next level clue",
+                    res.bodyJson || res.bodyText
+                );
+
+                const emptyRequestBody = JSON.stringify({});
+                const emptyRes = await httpRequest({
+                    method: "POST",
+                    route: "/api/20",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Content-Length": Buffer.byteLength(emptyRequestBody),
+                    },
+                    body: emptyRequestBody,
+                });
+
+                assert(emptyRes.status === 400, "Expected empty guess status 400", emptyRes);
+                assert(
+                    emptyRes.bodyJson && emptyRes.bodyJson.message === "请输入要猜测的 flag。",
+                    "Unexpected validation message",
+                    emptyRes.bodyJson || emptyRes.bodyText
+                );
+            },
+        },
+        // 测试方法：在同一测试块内分别以英文请求头和默认请求访问 `/api/22`，验证服务端语言协商分支。
+        // 成功条件：英文分支返回 200 且消息中包含 `23-f6y5v4v0k0`；默认分支返回 200，消息包含 `国际宾客厅`，且不包含 `23-f6y5v4v0k0`。
+        // 失败条件：任一请求失败、状态码不正确、英文分支未返回线索，或默认分支返回内容错误/泄露线索。
+        {
+            level: "22",
+            route: ["GET /api/22 (english branch)", "GET /api/22 (default chinese branch)"],
+            run: async () => {
+                const englishRes = await httpRequest({
+                    route: "/api/22",
+                    headers: {
+                        "Accept-Language": "en-US,en;q=0.9",
+                    },
+                });
+
+                assert(englishRes.status === 200, "Expected English branch status 200", englishRes);
+                assert(
+                    englishRes.bodyJson && typeof englishRes.bodyJson.message === "string" && englishRes.bodyJson.message.includes("23-f6y5v4v0k0"),
+                    "English branch does not include 23 clue",
+                    englishRes.bodyJson || englishRes.bodyText
+                );
+
+                const defaultRes = await httpRequest({ route: "/api/22" });
+                assert(defaultRes.status === 200, "Expected default branch status 200", defaultRes);
+                assert(
+                    defaultRes.bodyJson && typeof defaultRes.bodyJson.message === "string" && defaultRes.bodyJson.message.includes("国际宾客厅"),
+                    "Default branch did not return expected Chinese content",
+                    defaultRes.bodyJson || defaultRes.bodyText
+                );
+                assert(
+                    defaultRes.bodyJson && typeof defaultRes.bodyJson.message === "string" && !defaultRes.bodyJson.message.includes("23-f6y5v4v0k0"),
+                    "Default branch should not expose 23 clue",
+                    defaultRes.bodyJson || defaultRes.bodyText
+                );
+            },
+        },
     ];
 
     try {
@@ -469,6 +551,7 @@ async function run() {
             }
 
             routeResults.push(result);
+            printResult(result);
 
             // 配置检查失败时，不再继续执行依赖环境配置的后续关卡测试。
             if (routeCase.level === "CONFIG" && result.status === "FAILED") {
@@ -497,31 +580,20 @@ async function run() {
     };
 
     // 仅汇总本次实际运行到的关卡测试结果。
-    const orderedLevels = ["04", "05", "06", "07", "12", "14", "15", "16", "17", "18"];
+    const orderedLevels = ["04", "05", "06", "07", "12", "14", "15", "16", "17", "18", "20", "22"];
     const levelSummary = orderedLevels
         .filter((level) => levelMap.has(level))
         .map((level) => {
-        const tests = levelMap.get(level) || [];
-        const passed = tests.length > 0 && tests.every((t) => t.status === "PASSED");
-        return {
-            level,
-            status: passed ? "PASSED" : "FAILED",
-            tests,
-        };
+            const tests = levelMap.get(level) || [];
+            const passed = tests.length > 0 && tests.every((t) => t.status === "PASSED");
+            return {
+                level,
+                status: passed ? "PASSED" : "FAILED",
+                tests,
+            };
         });
 
     const overallPassed = configSummary.status === "PASSED" && levelSummary.every((x) => x.status === "PASSED");
-
-    console.log(chalk.cyan("=== ROUTE RESULTS ==="));
-    for (const item of routeResults) {
-        console.log(`[${item.level}] ${item.route}: ${colorStatus(item.status)}`);
-        if (item.status === "FAILED") {
-            console.error(chalk.red(`  Error: ${item.error.message}`));
-            if (item.error.stack) {
-                console.error(chalk.red(`  Stack: ${item.error.stack}`));
-            }
-        }
-    }
 
     console.log(chalk.cyan("\n=== CONFIG CHECK ==="));
     console.log(`Config: ${colorStatus(configSummary.status)}`);
