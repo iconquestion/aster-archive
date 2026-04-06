@@ -9,7 +9,13 @@ function main({
   exit = (code) => processRef.exit(code),
 } = {}) {
   const config = loadConfig();
-  const logger = createLogger(config.logsDir);
+  const logger = createLogger({
+    logsDir: config.logsDir,
+    logRotateDatePattern: config.logRotateDatePattern,
+    logRotateMaxFiles: config.logRotateMaxFiles,
+    logRotateMaxSize: config.logRotateMaxSize,
+    logRotateZippedArchive: config.logRotateZippedArchive,
+  });
   const { app, level15 } = createApp({
     appOrigin: config.appOrigin,
     logger,

@@ -51,6 +51,38 @@ function requireExistingPath(filePath, label) {
   return filePath;
 }
 
+function optionalEnv(name, defaultValue) {
+  const value = process.env[name];
+
+  if (typeof value !== 'string' || value.trim() === '') {
+    return defaultValue;
+  }
+
+  return value.trim();
+}
+
+function optionalBooleanEnv(name, defaultValue) {
+  const value = process.env[name];
+
+  if (typeof value !== 'string' || value.trim() === '') {
+    return defaultValue;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === 'true') {
+    return true;
+  }
+
+  if (normalized === 'false') {
+    return false;
+  }
+
+  throw new Error(
+    `Environment variable ${name} must be true or false, received: ${value}`
+  );
+}
+
 function loadConfig() {
   // 统一从项目内的 config/.env 加载运行配置，避免入口与测试各自维护一套解析逻辑。
   const envPath = path.join(__dirname, '../config/.env');
@@ -72,6 +104,13 @@ function loadConfig() {
     tlsCertPath: requireExistingPathEnv('TLS_CERT_PATH'),
     http2TargetPath: '/api/21',
     logsDir: path.join(__dirname, '../logs'),
+    logRotateDatePattern: optionalEnv('LOG_ROTATE_DATE_PATTERN', 'YYYY-MM-DD'),
+    logRotateMaxFiles: optionalEnv('LOG_ROTATE_MAX_FILES', '14d'),
+    logRotateMaxSize: optionalEnv('LOG_ROTATE_MAX_SIZE', '20m'),
+    logRotateZippedArchive: optionalBooleanEnv(
+      'LOG_ROTATE_ZIPPED_ARCHIVE',
+      true
+    ),
   };
 
   return config;
@@ -83,4 +122,6 @@ module.exports = {
   requireIntegerEnv,
   requireExistingPathEnv,
   requireExistingPath,
+  optionalEnv,
+  optionalBooleanEnv,
 };

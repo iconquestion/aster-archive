@@ -1,9 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
+const DailyRotateFile = require('winston-daily-rotate-file');
 
 // 日志初始化收口到独立模块，便于入口与测试复用同一套 logger 配置。
-function createLogger(logsDir) {
+function createLogger({
+  logsDir,
+  logRotateDatePattern = 'YYYY-MM-DD',
+  logRotateMaxFiles = '14d',
+  logRotateMaxSize = '20m',
+  logRotateZippedArchive = true,
+}) {
   if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
   }
@@ -20,16 +27,26 @@ function createLogger(logsDir) {
     level: 'info',
     format: logFormat,
     transports: [
-      new winston.transports.File({
-        filename: path.join(logsDir, 'info.log'),
+      new DailyRotateFile({
+        dirname: logsDir,
+        filename: 'info-%DATE%.log',
         level: 'info',
+        datePattern: logRotateDatePattern,
+        maxFiles: logRotateMaxFiles,
+        maxSize: logRotateMaxSize,
+        zippedArchive: logRotateZippedArchive,
         format: winston.format((info) => {
           return info.level === 'info' ? info : false;
         })(),
       }),
-      new winston.transports.File({
-        filename: path.join(logsDir, 'error.log'),
+      new DailyRotateFile({
+        dirname: logsDir,
+        filename: 'error-%DATE%.log',
         level: 'error',
+        datePattern: logRotateDatePattern,
+        maxFiles: logRotateMaxFiles,
+        maxSize: logRotateMaxSize,
+        zippedArchive: logRotateZippedArchive,
       }),
       new winston.transports.Console(),
     ],
