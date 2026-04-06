@@ -38,9 +38,9 @@
 
 安全问题请尽量私下报告。
 
-首选联系方式：
+首选报告方式：
 
-- 邮箱：`mojavenight@qq.com`
+通过 Github Repo 中的 Security 板块进行提交。
 
 如果问题明显涉及敏感信息、真实基础设施风险或未公开漏洞，请不要先公开提交 GitHub Issue。
 
