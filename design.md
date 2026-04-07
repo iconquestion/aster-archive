@@ -207,7 +207,9 @@
 常见写法：
 
 ```html
-<ol class="ps-3 mb-0">...</ol>
+<ol class="ps-3 mb-0">
+  ...
+</ol>
 ```
 
 依据：
@@ -220,9 +222,7 @@
 像 10 关这样的大块列表内容，会外包一层 `.list-surface`：
 
 ```html
-<div id="photos" class="list-surface">
-  ...
-</div>
+<div id="photos" class="list-surface">...</div>
 ```
 
 依据：
