@@ -5,6 +5,9 @@
   "license": "AGPL-3.0-only",
   "author": "iconquestion",
   "type": "commonjs",
+  "engines": {
+    "node": "24.14.0"
+  },
   "main": "src/index.js",
   "scripts": {
     "test": "jest --runInBand --coverage",

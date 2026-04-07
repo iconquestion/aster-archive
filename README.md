@@ -42,7 +42,9 @@ https://www.iconquestion.com/
 
 ## 仓库构建
 
-请参阅 [construction.md](./construction.md)
+推荐使用 `Node.js 24.14.0` 进行本地开发与测试。
+
+详细构建说明和方法，请参阅 [construction.md](./construction.md)
 
 ## License
 
