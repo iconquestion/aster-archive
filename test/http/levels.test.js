@@ -4,6 +4,7 @@ const {
   getDailyPassword,
   getTestRuntime,
 } = require('../helpers/createTestApp');
+const { constants: level25Constants } = require('../../src/25');
 
 describe('Config', () => {
   test('loads env and required local fixtures', () => {
@@ -230,5 +231,83 @@ describe('Levels 16-25', () => {
     expect(res.text).toContain('25-v5f2b5h0e9');
   });
 
-  test.skip('25 skips the empty terminal page', () => {});
+  test('25 serves the terminal page and the scoped service worker asset', async () => {
+    const pageRes = await request(app).get('/25-v5f2b5h0e9/');
+    const swRes = await request(app).get('/25-v5f2b5h0e9/sw.js');
+
+    expect(pageRes.status).toBe(200);
+    expect(pageRes.text).toContain('Operations Recovery Terminal');
+    expect(pageRes.text).toContain("navigator.serviceWorker.register('./sw.js'");
+
+    expect(swRes.status).toBe(200);
+    expect(swRes.text).toContain("const CACHE_NAME = 'level-25-terminal-v1'");
+  });
+
+  test('25 stores per-session state behind a shared admin/admin login', async () => {
+    const agentA = request.agent(app);
+    const agentB = request.agent(app);
+
+    const loginA = await agentA.post('/api/25/login').send({
+      username: 'admin',
+      password: 'admin',
+    });
+    const loginB = await agentB.post('/api/25/login').send({
+      username: 'admin',
+      password: 'admin',
+    });
+
+    expect(loginA.status).toBe(200);
+    expect(loginA.headers['set-cookie'][0]).toContain(
+      `${level25Constants.SESSION_COOKIE_NAME}=`
+    );
+    expect(loginB.status).toBe(200);
+
+    await agentA.post('/api/25/commit').send({
+      new_value: 'edge-node-7',
+    });
+    await agentB.post('/api/25/commit').send({
+      new_value: 'edge-node-8',
+    });
+
+    const stateA = await agentA.get('/api/25/state');
+    const stateB = await agentB.get('/api/25/state');
+
+    expect(stateA.status).toBe(200);
+    expect(stateA.body.field).toBe(level25Constants.DEFAULT_FIELD);
+    expect(stateA.body.current_value).toBe('edge-node-7');
+
+    expect(stateB.status).toBe(200);
+    expect(stateB.body.current_value).toBe('edge-node-8');
+  });
+
+  test('25 recovery overwrites the stored value with the snapshot payload', async () => {
+    const agent = request.agent(app);
+
+    await agent.post('/api/25/login').send({
+      username: 'admin',
+      password: 'admin',
+    });
+
+    const templateRes = await agent.get('/api/25/snapshot-template');
+
+    expect(templateRes.status).toBe(200);
+    expect(templateRes.body.snapshot_id).toBe(level25Constants.NEXT_LEVEL_FLAG);
+
+    const recoverRes = await agent.post('/api/25/recover').send({
+      field: level25Constants.DEFAULT_FIELD,
+      old_value: level25Constants.DEFAULT_VALUE,
+      new_value: 'edge-node-9',
+      modified_at: '2026-04-07T12:34:56.000Z',
+      snapshot_id: level25Constants.NEXT_LEVEL_FLAG,
+    });
+
+    expect(recoverRes.status).toBe(200);
+    expect(recoverRes.body.snapshot_id).toBe(level25Constants.NEXT_LEVEL_FLAG);
+    expect(recoverRes.body.current_value).toBe('edge-node-9');
+
+    const stateRes = await agent.get('/api/25/state');
+
+    expect(stateRes.status).toBe(200);
+    expect(stateRes.body.current_value).toBe('edge-node-9');
+  });
 });

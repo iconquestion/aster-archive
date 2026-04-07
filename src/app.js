@@ -79,6 +79,7 @@ function createApp({ appOrigin, logger }) {
   app.use('/api/18', require('./18'));
   app.use('/api/20', require('./20'));
   app.use('/api/22', require('./22'));
+  app.use('/api/25', require('./25'));
 
   // 15 关同时依赖普通 HTTP 路由和后续 server 层的 WebSocket upgrade。
   const level15 = require('./15');

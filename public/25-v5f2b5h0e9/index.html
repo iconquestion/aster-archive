@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>25 - 运维恢复终端</title>
+    <style>
+      :root {
+        --bg: #07131d;
+        --panel: rgba(7, 20, 30, 0.92);
+        --panel-strong: rgba(10, 27, 39, 0.98);
+        --ink: #dceff7;
+        --muted: #86a6b5;
+        --accent: #53d2b8;
+        --warning: #ffd166;
+        --danger: #ff6b6b;
+        --grid: rgba(83, 210, 184, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family:
+          'IBM Plex Mono', 'Fira Code', 'Source Code Pro', monospace;
+        color: var(--ink);
+        background:
+          linear-gradient(135deg, rgba(83, 210, 184, 0.06), transparent 36%),
+          radial-gradient(circle at top, rgba(255, 209, 102, 0.1), transparent 35%),
+          var(--bg);
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 32px 32px;
+        pointer-events: none;
+      }
+
+      main {
+        width: min(980px, calc(100vw - 32px));
+        margin: 32px auto;
+        position: relative;
+        z-index: 1;
+      }
+
+      .frame,
+      .modal-card {
+        border: 1px solid rgba(134, 166, 181, 0.22);
+        background: var(--panel);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
+      }
+
+      .frame {
+        border-radius: 24px;
+        overflow: hidden;
+      }
+
+      .hero {
+        padding: 24px 28px 16px;
+        border-bottom: 1px solid rgba(134, 166, 181, 0.14);
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 4vw, 2.8rem);
+        letter-spacing: 0.04em;
+      }
+
+      .hero p,
+      .hero li {
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .badge-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+
+      .badge {
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(134, 166, 181, 0.18);
+        background: rgba(255, 255, 255, 0.03);
+        font-size: 0.9rem;
+      }
+
+      .badge strong {
+        color: var(--accent);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+      }
+
+      .sidebar,
+      .terminal {
+        padding: 24px 28px 28px;
+      }
+
+      .sidebar {
+        border-right: 1px solid rgba(134, 166, 181, 0.14);
+        background: rgba(255, 255, 255, 0.015);
+      }
+
+      .panel-title {
+        margin: 0 0 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.88rem;
+        color: var(--warning);
+      }
+
+      .status-box,
+      .snapshot-box {
+        margin-top: 14px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid rgba(134, 166, 181, 0.12);
+      }
+
+      .status-box p,
+      .snapshot-box p,
+      .snapshot-box pre,
+      .meta-list div,
+      label,
+      .help {
+        margin: 0;
+        line-height: 1.65;
+      }
+
+      .meta-list {
+        display: grid;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .meta-list strong,
+      .status-box strong {
+        color: var(--ink);
+      }
+
+      .terminal form {
+        display: grid;
+        gap: 18px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      input,
+      button {
+        font: inherit;
+      }
+
+      input {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid rgba(134, 166, 181, 0.22);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--ink);
+      }
+
+      input:disabled,
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 12px 16px;
+        border-radius: 14px;
+        border: none;
+        cursor: pointer;
+        transition:
+          transform 120ms ease,
+          opacity 120ms ease;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      .primary {
+        background: linear-gradient(120deg, var(--accent), #3ca4d8);
+        color: #021318;
+        font-weight: 700;
+      }
+
+      .secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--ink);
+      }
+
+      .danger {
+        background: rgba(255, 107, 107, 0.14);
+        color: #ffd7d7;
+        border: 1px solid rgba(255, 107, 107, 0.3);
+      }
+
+      .message {
+        min-height: 24px;
+        color: var(--muted);
+      }
+
+      .message.error {
+        color: #ffd7d7;
+      }
+
+      .message.success {
+        color: var(--accent);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(3, 8, 12, 0.72);
+        z-index: 3;
+      }
+
+      .modal-card {
+        width: min(720px, 100%);
+        border-radius: 22px;
+        padding: 24px;
+        background: var(--panel-strong);
+      }
+
+      .modal-card h2 {
+        margin-top: 0;
+      }
+
+      .snapshot-box pre {
+        margin-top: 12px;
+        padding: 14px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.32);
+        overflow: auto;
+        color: #d8fff4;
+      }
+
+      details {
+        margin-top: 16px;
+        color: var(--muted);
+      }
+
+      summary {
+        cursor: pointer;
+      }
+
+      @media (max-width: 820px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          border-right: 0;
+          border-bottom: 1px solid rgba(134, 166, 181, 0.14);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <section class="frame">
+        <header class="hero">
+          <h1>25 - 运维恢复终端</h1>
+          <p>
+            这里是一台档案中继控制终端。网络不稳定时，系统会自动保护尚未提交的改动，
+            并在准备恢复快照期间暂时锁定控制台。
+          </p>
+          <div class="badge-row">
+            <span class="badge">凭据：<strong>admin / admin</strong></span>
+            <span class="badge">策略：<strong>最后写入获胜</strong></span>
+            <span class="badge" id="connectivityBadge">链路：<strong>检测中...</strong></span>
+          </div>
+        </header>
+
+        <div class="layout">
+          <aside class="sidebar">
+            <h2 class="panel-title">终端状态</h2>
+            <div class="meta-list">
+              <div><strong>字段：</strong> <span id="fieldName">relay_target</span></div>
+              <div><strong>当前值：</strong> <span id="currentValue">未知</span></div>
+              <div><strong>最后更新：</strong> <span id="updatedAt">未知</span></div>
+            </div>
+
+            <div class="status-box">
+              <p><strong>运行提示</strong></p>
+              <p id="statusText">
+                请先登录，查看当前的中继目标并提交新的配置。
+              </p>
+            </div>
+
+            <details>
+              <summary>Hint</summary>
+              <p class="help">
+                一台稳定的终端，即使在提交过程中突然断开连接，也应该妥善保留你尚未提交的改动。
+              </p>
+            </details>
+          </aside>
+
+          <section class="terminal">
+            <form id="loginForm">
+              <h2 class="panel-title">管理员入口</h2>
+              <div class="field">
+                <label for="username">用户名</label>
+                <input id="username" name="username" autocomplete="username" value="admin" />
+              </div>
+              <div class="field">
+                <label for="password">密码</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  value="admin"
+                />
+              </div>
+              <div class="actions">
+                <button class="primary" type="submit">登录</button>
+              </div>
+            </form>
+
+            <form id="terminalForm" class="hidden">
+              <h2 class="panel-title">中继配置</h2>
+              <div class="field">
+                <label for="relayTarget">relay_target</label>
+                <input id="relayTarget" name="relay_target" spellcheck="false" />
+              </div>
+              <p class="help">
+                正常提交时只会上送新的目标值。进入恢复流程后，系统会在重新连通时一并回放修改前后的值。
+              </p>
+              <div class="actions">
+                <button class="primary" id="applyBtn" type="submit">
+                  应用更改
+                </button>
+                <button class="secondary" id="refreshBtn" type="button">
+                  刷新状态
+                </button>
+              </div>
+            </form>
+
+            <p class="message" id="message"></p>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal hidden" id="offlineModal" aria-live="polite">
+      <div class="modal-card">
+        <h2>连接已断开</h2>
+        <p>
+          为了保护尚未提交的改动，当前控制项已被临时锁定。系统会在后台持续尝试恢复连接，
+          直到能够重新回放刚才保存的快照。
+        </p>
+        <div class="snapshot-box">
+          <p><strong>恢复快照已保存到本地。</strong></p>
+          <p>快照编号：<span id="snapshotId">等待生成</span></p>
+          <pre id="snapshotJson">{}</pre>
+        </div>
+        <div class="actions" style="margin-top: 16px">
+          <button class="secondary" id="retryNowBtn" type="button">
+            立即重试
+          </button>
+          <button class="danger" id="dismissBtn" type="button" disabled>
+            等待恢复连接
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = '/api/25';
+      const SNAPSHOT_KEY = 'level-25-terminal-snapshot';
+      const FIELD_NAME = 'relay_target';
+
+      const state = {
+        currentValue: '',
+        updatedAt: '',
+        pendingSnapshot: null,
+        snapshotFlag: '',
+        retryTimer: null,
+        isLocked: false,
+        isLoggedIn: false,
+      };
+
+      const elements = {
+        loginForm: document.getElementById('loginForm'),
+        terminalForm: document.getElementById('terminalForm'),
+        username: document.getElementById('username'),
+        password: document.getElementById('password'),
+        relayTarget: document.getElementById('relayTarget'),
+        applyBtn: document.getElementById('applyBtn'),
+        refreshBtn: document.getElementById('refreshBtn'),
+        message: document.getElementById('message'),
+        fieldName: document.getElementById('fieldName'),
+        currentValue: document.getElementById('currentValue'),
+        updatedAt: document.getElementById('updatedAt'),
+        statusText: document.getElementById('statusText'),
+        connectivityBadge: document.getElementById('connectivityBadge'),
+        offlineModal: document.getElementById('offlineModal'),
+        snapshotId: document.getElementById('snapshotId'),
+        snapshotJson: document.getElementById('snapshotJson'),
+        retryNowBtn: document.getElementById('retryNowBtn'),
+        dismissBtn: document.getElementById('dismissBtn'),
+      };
+
+      function setMessage(text, kind = '') {
+        elements.message.textContent = text;
+        elements.message.className = kind ? `message ${kind}` : 'message';
+      }
+
+      function setStatus(text) {
+        elements.statusText.textContent = text;
+      }
+
+      function setConnectivityBadge() {
+        elements.connectivityBadge.innerHTML = navigator.onLine
+          ? '链路：<strong>在线</strong>'
+          : '链路：<strong>离线</strong>';
+      }
+
+      function formatTime(iso) {
+        if (!iso) {
+          return '未知';
+        }
+
+        const date = new Date(iso);
+        if (Number.isNaN(date.getTime())) {
+          return iso;
+        }
+
+        return date.toLocaleString();
+      }
+
+      function readSnapshot() {
+        try {
+          const raw = localStorage.getItem(SNAPSHOT_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (_err) {
+          return null;
+        }
+      }
+
+      function persistSnapshot(snapshot) {
+        localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot, null, 2));
+        state.pendingSnapshot = snapshot;
+        renderSnapshot(snapshot);
+      }
+
+      function clearSnapshot() {
+        localStorage.removeItem(SNAPSHOT_KEY);
+        state.pendingSnapshot = null;
+        renderSnapshot(null);
+      }
+
+      function renderSnapshot(snapshot) {
+        if (!snapshot) {
+          elements.snapshotId.textContent = '无';
+          elements.snapshotJson.textContent = '{}';
+          return;
+        }
+
+        elements.snapshotId.textContent = snapshot.snapshot_id;
+        elements.snapshotJson.textContent = JSON.stringify(snapshot, null, 2);
+      }
+
+      function showLogin() {
+        state.isLoggedIn = false;
+        elements.loginForm.classList.remove('hidden');
+        elements.terminalForm.classList.add('hidden');
+      }
+
+      function showTerminal() {
+        state.isLoggedIn = true;
+        elements.loginForm.classList.add('hidden');
+        elements.terminalForm.classList.remove('hidden');
+      }
+
+      function applyState(payload) {
+        state.currentValue = payload.current_value;
+        state.updatedAt = payload.updated_at;
+        elements.fieldName.textContent = payload.field || FIELD_NAME;
+        elements.currentValue.textContent = payload.current_value;
+        elements.updatedAt.textContent = formatTime(payload.updated_at);
+
+        if (!state.pendingSnapshot) {
+          elements.relayTarget.value = payload.current_value;
+        }
+      }
+
+      function setControlsDisabled(disabled) {
+        state.isLocked = disabled;
+        elements.relayTarget.disabled = disabled;
+        elements.applyBtn.disabled = disabled;
+        elements.refreshBtn.disabled = disabled;
+      }
+
+      function enterOfflineProtection(snapshot) {
+        persistSnapshot(snapshot);
+        setControlsDisabled(true);
+        elements.dismissBtn.disabled = true;
+        elements.offlineModal.classList.remove('hidden');
+        setMessage('终端正在等待链路恢复，尚未提交的改动已被锁定。', 'error');
+        setStatus('离线保护已启动。连接恢复后，终端会自动回放你最后一次未提交的修改。');
+        scheduleRecovery();
+      }
+
+      function leaveOfflineProtection(successMessage) {
+        elements.offlineModal.classList.add('hidden');
+        elements.dismissBtn.disabled = false;
+        setControlsDisabled(false);
+        if (state.retryTimer) {
+          clearInterval(state.retryTimer);
+          state.retryTimer = null;
+        }
+
+        if (successMessage) {
+          setMessage(successMessage, 'success');
+          setStatus('连接已恢复，控制项重新解锁。');
+        }
+      }
+
+      function buildSnapshot(newValue) {
+        return {
+          snapshot_id: state.snapshotFlag || '快照编号不可用',
+          field: FIELD_NAME,
+          old_value: state.currentValue || DEFAULT_RELAY_VALUE,
+          new_value: newValue || state.currentValue || DEFAULT_RELAY_VALUE,
+          modified_at: new Date().toISOString(),
+        };
+      }
+
+      const DEFAULT_RELAY_VALUE = 'edge-node-1';
+
+      async function fetchSnapshotTemplate() {
+        const res = await fetch(`${API_BASE}/snapshot-template`, {
+          credentials: 'same-origin',
+        });
+
+        if (!res.ok) {
+          throw new Error('获取快照模板失败。');
+        }
+
+        const payload = await res.json();
+        state.snapshotFlag = payload.snapshot_id;
+      }
+
+      async function fetchState() {
+        const res = await fetch(`${API_BASE}/state`, {
+          credentials: 'same-origin',
+        });
+
+        if (res.status === 401) {
+          showLogin();
+          setStatus('当前会话不存在，请重新登录以加载终端状态。');
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error('加载终端状态失败。');
+        }
+
+        const payload = await res.json();
+        await fetchSnapshotTemplate();
+        showTerminal();
+        applyState(payload);
+        setMessage('终端状态已加载。', 'success');
+        setStatus('当前连接正常。你可以修改 relay_target 并提交新的值。');
+      }
+
+      async function login(event) {
+        event.preventDefault();
+        setMessage('正在登录...');
+
+        const res = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            username: elements.username.value,
+            password: elements.password.value,
+          }),
+        });
+
+        const payload = await res.json();
+
+        if (!res.ok) {
+          setMessage(payload.message || '登录失败。', 'error');
+          return;
+        }
+
+        await fetchSnapshotTemplate();
+        showTerminal();
+        applyState(payload);
+        clearSnapshot();
+        setControlsDisabled(false);
+        leaveOfflineProtection();
+        setMessage('登录成功，终端已解锁。', 'success');
+        setStatus('当前连接正常。你可以修改 relay_target 并提交新的值。');
+      }
+
+      async function commitChanges(event) {
+        event.preventDefault();
+        const newValue = elements.relayTarget.value.trim();
+
+        if (!newValue) {
+          setMessage('relay_target 不能为空。', 'error');
+          return;
+        }
+
+        setMessage('正在提交更改...');
+
+        try {
+          const res = await fetch(`${API_BASE}/commit`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+              new_value: newValue,
+            }),
+          });
+
+          if (res.status === 401) {
+            showLogin();
+            setMessage('会话已失效，请重新登录。', 'error');
+            return;
+          }
+
+          const payload = await res.json();
+
+          if (!res.ok) {
+            setMessage(payload.message || '提交失败。', 'error');
+            return;
+          }
+
+          clearSnapshot();
+          applyState(payload);
+          leaveOfflineProtection('配置已成功应用到当前节点。');
+        } catch (_err) {
+          const snapshot = buildSnapshot(newValue);
+          enterOfflineProtection(snapshot);
+        }
+      }
+
+      async function recoverSnapshot() {
+        if (!state.pendingSnapshot || !navigator.onLine) {
+          return;
+        }
+
+        setStatus('检测到链路恢复，正在回放受保护的快照...');
+
+        try {
+          const res = await fetch(`${API_BASE}/recover`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(state.pendingSnapshot),
+          });
+
+          if (res.status === 401) {
+            clearSnapshot();
+            showLogin();
+            setControlsDisabled(false);
+            elements.offlineModal.classList.add('hidden');
+            setMessage('恢复之前会话已失效，请重新登录。', 'error');
+            return;
+          }
+
+          const payload = await res.json();
+
+          if (!res.ok) {
+            throw new Error(payload.message || '恢复失败。');
+          }
+
+          clearSnapshot();
+          applyState(payload);
+          leaveOfflineProtection(`已根据快照 ${payload.snapshot_id} 完成恢复。`);
+        } catch (_err) {
+          setMessage('恢复仍在等待稳定链路...', 'error');
+        }
+      }
+
+      function scheduleRecovery() {
+        if (state.retryTimer) {
+          return;
+        }
+
+        state.retryTimer = setInterval(() => {
+          void recoverSnapshot();
+        }, 3000);
+      }
+
+      async function restoreSession() {
+        state.pendingSnapshot = readSnapshot();
+        renderSnapshot(state.pendingSnapshot);
+
+        try {
+          await fetchState();
+        } catch (_err) {
+          if (state.pendingSnapshot) {
+            showTerminal();
+            applyState({
+              field: state.pendingSnapshot.field,
+              current_value: state.pendingSnapshot.old_value,
+              updated_at: state.pendingSnapshot.modified_at,
+            });
+            elements.relayTarget.value = state.pendingSnapshot.new_value;
+            enterOfflineProtection(state.pendingSnapshot);
+            return;
+          }
+
+          showLogin();
+          setMessage('暂时无法获取终端状态，请在链路恢复后重试。', 'error');
+        }
+
+        if (state.pendingSnapshot) {
+          elements.relayTarget.value = state.pendingSnapshot.new_value;
+          enterOfflineProtection(state.pendingSnapshot);
+          void recoverSnapshot();
+        }
+      }
+
+      function handleOffline() {
+        setConnectivityBadge();
+
+        if (!state.isLoggedIn || state.pendingSnapshot) {
+          return;
+        }
+
+        const snapshot = buildSnapshot(elements.relayTarget.value.trim());
+        enterOfflineProtection(snapshot);
+      }
+
+      function handleOnline() {
+        setConnectivityBadge();
+
+        if (state.pendingSnapshot) {
+          void recoverSnapshot();
+          return;
+        }
+
+        setControlsDisabled(false);
+        setMessage('链路已恢复。', 'success');
+        setStatus('当前连接正常，终端控制项可以继续使用。');
+      }
+
+      async function registerServiceWorker() {
+        if (!('serviceWorker' in navigator)) {
+          return;
+        }
+
+        try {
+          await navigator.serviceWorker.register('./sw.js', { scope: './' });
+        } catch (_err) {
+          // 注册失败不应阻断主流程；这关重点是离线保护体验本身。
+        }
+      }
+
+      elements.loginForm.addEventListener('submit', (event) => {
+        void login(event);
+      });
+      elements.terminalForm.addEventListener('submit', (event) => {
+        void commitChanges(event);
+      });
+      elements.refreshBtn.addEventListener('click', () => {
+        void fetchState();
+      });
+      elements.retryNowBtn.addEventListener('click', () => {
+        void recoverSnapshot();
+      });
+      window.addEventListener('offline', handleOffline);
+      window.addEventListener('online', handleOnline);
+
+      setConnectivityBadge();
+      void registerServiceWorker();
+      void restoreSession();
+    </script>
+    <script src="/js/analytics.js"></script>
+  </body>
+</html>

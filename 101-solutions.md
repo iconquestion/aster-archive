@@ -1091,3 +1091,62 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 ### 答案
 
 `25-v5f2b5h0e9`
+
+## 25
+
+### 设计目标
+
+让玩家认识 Service Worker 在现代 Web 中的作用，并学会在断网场景下观察页面内的离线保护逻辑、`localStorage` 快照和恢复提交流程。
+
+### 实现方式
+
+- 页面 `public/25-v5f2b5h0e9/index.html` 是一个运维终端。
+- 前端会注册当前目录下的 `sw.js`，保证断网后本关页面仍能继续打开。
+- 后端接口在 `src/25.js` 中实现，玩家使用固定账号 `admin:admin` 登录。
+- 登录成功后，后端会下发一个会话级 cookie，并用这个 cookie 对应一个独立 JSON 状态文件，因此不同玩家虽然共用账号，但状态互不干扰。
+- 正常提交时，前端只提交新的 `relay_target`；断网或提交失败时，前端会把未提交更改序列化到 `localStorage`，并弹出一条离线保护提示。
+- 这份本地快照里包含一个 `snapshot_id`，它就是下一关答案。
+
+### 解题步骤
+
+1. 打开本关页面并使用固定账号登录：
+
+   - username: `admin`
+   - password: `admin`
+
+2. 登录后会进入运维终端，可以看到当前配置值，并可以编辑 `relay_target`。
+
+3. 这一关的关键不在正常提交，而在“断网时系统如何保护未提交内容”。
+
+   页面提示中已经暗示：
+
+   > This terminal protects pending edits during unstable network conditions.
+
+4. 打开开发者工具，将网络切换为 `Offline`，然后尝试提交修改。
+
+5. 提交失败后，页面不会跳转，而是直接弹出一个离线保护提示框，并显示：
+
+   - `Connection lost`
+   - `Recovery snapshot saved locally.`
+   - `Snapshot ID: ...`
+
+6. 这个 `Snapshot ID` 就是下一关答案。  
+   如果想进一步验证，也可以打开浏览器开发者工具中的 `Application -> Local Storage`，查看键：
+
+   `level-25-terminal-snapshot`
+
+   其中保存的是一份 JSON 快照，例如：
+
+   ```json
+   {
+     "snapshot_id": "26-h7m2q9x4pl",
+     "field": "relay_target",
+     "old_value": "edge-node-1",
+     "new_value": "edge-node-7",
+     "modified_at": "2026-04-07T12:34:56.000Z"
+   }
+   ```
+
+### 答案
+
+`26-h7m2q9x4pl`
