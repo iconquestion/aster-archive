@@ -60,6 +60,15 @@ https://www.iconquestion.com/
 - `npm run format`
 - `npm run format:check`
 
+为避免提交后才在 CI 中发现格式问题，仓库现在包含一个版本控制下的 Git `pre-commit` hook：
+
+- 首次执行 `npm install` 后，会自动启用 `.githooks/pre-commit`
+- 每次 `git commit` 前，会对本次暂存的常见文本文件自动执行 Prettier，并重新加入暂存区
+
+如果你已经在本地安装过依赖，但 hook 还没启用，也可以手动执行一次：
+
+- `npm run prepare`
+
 ## License
 
 本项目采用分离授权方式。

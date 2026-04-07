@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+if [ ! -x "./node_modules/.bin/prettier" ]; then
+  echo "Prettier is not installed. Run npm install before committing."
+  exit 1
+fi
+
+mapfile -d '' files < <(
+  git diff --cached --name-only --diff-filter=ACMR -z -- \
+    '*.js' '*.cjs' '*.mjs' \
+    '*.json' '*.md' '*.html' '*.css' '*.scss' \
+    '*.yml' '*.yaml'
+)
+
+if [ "${#files[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+echo "Formatting staged files with Prettier..."
+./node_modules/.bin/prettier --write "${files[@]}"
+git add -- "${files[@]}"

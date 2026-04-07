@@ -10,6 +10,7 @@
   },
   "main": "src/index.js",
   "scripts": {
+    "prepare": "bash scripts/setup-git-hooks.sh",
     "test": "jest --runInBand --coverage",
     "oldtest": "node test/test.js",
     "start": "node src/index.js",
