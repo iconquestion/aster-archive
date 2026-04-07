@@ -24,12 +24,15 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family:
-          'IBM Plex Mono', 'Fira Code', 'Source Code Pro', monospace;
+        font-family: 'IBM Plex Mono', 'Fira Code', 'Source Code Pro', monospace;
         color: var(--ink);
         background:
           linear-gradient(135deg, rgba(83, 210, 184, 0.06), transparent 36%),
-          radial-gradient(circle at top, rgba(255, 209, 102, 0.1), transparent 35%),
+          radial-gradient(
+            circle at top,
+            rgba(255, 209, 102, 0.1),
+            transparent 35%
+          ),
           var(--bg);
       }
 
@@ -302,7 +305,9 @@
           <div class="badge-row">
             <span class="badge">凭据：<strong>admin / admin</strong></span>
             <span class="badge">策略：<strong>最后写入获胜</strong></span>
-            <span class="badge" id="connectivityBadge">链路：<strong>检测中...</strong></span>
+            <span class="badge" id="connectivityBadge"
+              >链路：<strong>检测中...</strong></span
+            >
           </div>
         </header>
 
@@ -310,9 +315,15 @@
           <aside class="sidebar">
             <h2 class="panel-title">终端状态</h2>
             <div class="meta-list">
-              <div><strong>字段：</strong> <span id="fieldName">relay_target</span></div>
-              <div><strong>当前值：</strong> <span id="currentValue">未知</span></div>
-              <div><strong>最后更新：</strong> <span id="updatedAt">未知</span></div>
+              <div>
+                <strong>字段：</strong> <span id="fieldName">relay_target</span>
+              </div>
+              <div>
+                <strong>当前值：</strong> <span id="currentValue">未知</span>
+              </div>
+              <div>
+                <strong>最后更新：</strong> <span id="updatedAt">未知</span>
+              </div>
             </div>
 
             <div class="status-box">
@@ -335,7 +346,12 @@
               <h2 class="panel-title">管理员入口</h2>
               <div class="field">
                 <label for="username">用户名</label>
-                <input id="username" name="username" autocomplete="username" value="admin" />
+                <input
+                  id="username"
+                  name="username"
+                  autocomplete="username"
+                  value="admin"
+                />
               </div>
               <div class="field">
                 <label for="password">密码</label>
@@ -356,7 +372,11 @@
               <h2 class="panel-title">中继配置</h2>
               <div class="field">
                 <label for="relayTarget">relay_target</label>
-                <input id="relayTarget" name="relay_target" spellcheck="false" />
+                <input
+                  id="relayTarget"
+                  name="relay_target"
+                  spellcheck="false"
+                />
               </div>
               <p class="help">
                 正常提交时只会上送新的目标值。进入恢复流程后，系统会在重新连通时一并回放修改前后的值。
@@ -533,7 +553,9 @@
         elements.dismissBtn.disabled = true;
         elements.offlineModal.classList.remove('hidden');
         setMessage('终端正在等待链路恢复，尚未提交的改动已被锁定。', 'error');
-        setStatus('离线保护已启动。连接恢复后，终端会自动回放你最后一次未提交的修改。');
+        setStatus(
+          '离线保护已启动。连接恢复后，终端会自动回放你最后一次未提交的修改。'
+        );
         scheduleRecovery();
       }
 
@@ -712,7 +734,9 @@
 
           clearSnapshot();
           applyState(payload);
-          leaveOfflineProtection(`已根据快照 ${payload.snapshot_id} 完成恢复。`);
+          leaveOfflineProtection(
+            `已根据快照 ${payload.snapshot_id} 完成恢复。`
+          );
         } catch (_err) {
           setMessage('恢复仍在等待稳定链路...', 'error');
         }

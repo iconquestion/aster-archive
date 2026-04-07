@@ -237,7 +237,9 @@ describe('Levels 16-25', () => {
 
     expect(pageRes.status).toBe(200);
     expect(pageRes.text).toContain('运维恢复终端');
-    expect(pageRes.text).toContain("navigator.serviceWorker.register('./sw.js'");
+    expect(pageRes.text).toContain(
+      "navigator.serviceWorker.register('./sw.js'"
+    );
 
     expect(swRes.status).toBe(200);
     expect(swRes.text).toContain("const CACHE_NAME = 'level-25-terminal-v1'");

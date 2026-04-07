@@ -1,10 +1,7 @@
 /* global URL, caches, fetch, self */
 const CACHE_NAME = 'level-25-terminal-v1';
 const LEVEL_PREFIX = '/25-v5f2b5h0e9/';
-const CORE_ASSETS = [
-  `${LEVEL_PREFIX}`,
-  `${LEVEL_PREFIX}index.html`,
-];
+const CORE_ASSETS = [`${LEVEL_PREFIX}`, `${LEVEL_PREFIX}index.html`];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -54,7 +51,9 @@ self.addEventListener('fetch', (event) => {
         }
 
         const cloned = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+        caches
+          .open(CACHE_NAME)
+          .then((cache) => cache.put(event.request, cloned));
         return response;
       })
       .catch(async () => {

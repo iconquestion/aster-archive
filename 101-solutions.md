@@ -1110,7 +1110,6 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 ### 解题步骤
 
 1. 打开本关页面并使用固定账号登录：
-
    - username: `admin`
    - password: `admin`
 
@@ -1125,7 +1124,6 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 4. 打开开发者工具，将网络切换为 `Offline`，然后尝试提交修改。
 
 5. 提交失败后，页面不会跳转，而是直接弹出一个离线保护提示框，并显示：
-
    - `Connection lost`
    - `Recovery snapshot saved locally.`
    - `Snapshot ID: ...`
