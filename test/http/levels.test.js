@@ -236,7 +236,7 @@ describe('Levels 16-25', () => {
     const swRes = await request(app).get('/25-v5f2b5h0e9/sw.js');
 
     expect(pageRes.status).toBe(200);
-    expect(pageRes.text).toContain('Operations Recovery Terminal');
+    expect(pageRes.text).toContain('运维恢复终端');
     expect(pageRes.text).toContain("navigator.serviceWorker.register('./sw.js'");
 
     expect(swRes.status).toBe(200);
