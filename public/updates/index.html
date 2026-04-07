@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Aster Archive - 每日更新动态</title>
+    <meta
+      name="description"
+      content="查看 Aster Archive / IconQuestion 项目的每日更新动态、版本推进与发展历程。"
+    />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+
+    <style>
+      body {
+        min-height: 100vh;
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(13, 110, 253, 0.16),
+            transparent 30%
+          ),
+          linear-gradient(180deg, #f4f7fb 0%, #e9eef5 100%);
+        color: #1f2937;
+      }
+
+      .page-shell {
+        max-width: 1080px;
+      }
+
+      .hero-panel,
+      .timeline-card,
+      .summary-card {
+        border: 0;
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 1rem 2.5rem rgba(15, 23, 42, 0.08);
+      }
+
+      .hero-kicker,
+      .date-kicker {
+        letter-spacing: 0.1em;
+      }
+
+      .hero-text,
+      .summary-text,
+      .timeline-list li {
+        color: #4b5563;
+        line-height: 1.85;
+      }
+
+      .timeline-card {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .timeline-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 6px;
+        background: linear-gradient(180deg, #0d6efd, #5bc0de);
+      }
+
+      .timeline-list {
+        padding-left: 1.25rem;
+        margin-bottom: 0;
+      }
+
+      .timeline-list li + li {
+        margin-top: 0.65rem;
+      }
+
+      .metric-chip {
+        border-radius: 999px;
+        background: rgba(13, 110, 253, 0.08);
+        color: #0d6efd;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="container page-shell py-5">
+      <section class="hero-panel p-4 p-md-5 mb-4">
+        <div class="d-flex flex-column flex-lg-row gap-4 align-items-lg-end">
+          <div class="flex-grow-1">
+            <div class="small text-uppercase text-primary fw-semibold hero-kicker mb-3">
+              Development Log
+            </div>
+            <h1 class="display-5 fw-bold mb-3">Aster Archive 每日更新动态</h1>
+            <p class="lead hero-text mb-3">
+              这里按自然日整理了项目的主要开发推进，尽量压缩成接近
+              release notes 的短条目，方便快速浏览网站与项目的演进轨迹。
+            </p>
+            <p class="hero-text mb-0">
+              从初始化、关卡扩展、文档体系补全，到工程化、测试与世界观设定，这些记录构成了档案馆逐步成形的过程。
+            </p>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2">
+            <a href="/" class="btn btn-primary">返回首页</a>
+            <a
+              href="https://github.com/iconquestion/aster-archive"
+              target="_blank"
+              rel="noreferrer"
+              class="btn btn-outline-secondary"
+            >
+              查看仓库
+            </a>
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <span class="metric-chip px-3 py-2">时间范围：2026-03-24 至 2026-04-08</span>
+          <span class="metric-chip px-3 py-2">已整理：5 个开发日</span>
+          <span class="metric-chip px-3 py-2">形式：按天压缩摘要</span>
+        </div>
+      </section>
+
+      <section class="row g-4">
+        <div class="col-12 col-xl-8">
+          <div class="timeline-card p-4 p-md-5 mb-4">
+            <div class="small text-uppercase text-primary fw-semibold date-kicker mb-2">
+              2026-04-08
+            </div>
+            <h2 class="h3 fw-bold mb-3">背景设定开始独立沉淀</h2>
+            <ul class="timeline-list">
+              <li>新增 `bg-settings.md`，补充项目背景设定文档。</li>
+              <li>世界观与叙事设定开始独立沉淀，方便后续页面与关卡联动。</li>
+            </ul>
+          </div>
+
+          <div class="timeline-card p-4 p-md-5 mb-4">
+            <div class="small text-uppercase text-primary fw-semibold date-kicker mb-2">
+              2026-04-07
+            </div>
+            <h2 class="h3 fw-bold mb-3">工程化与第 25 关同步推进</h2>
+            <ul class="timeline-list">
+              <li>服务入口完成拆分，`index.js` 重构为多文件架构。</li>
+              <li>引入 Jest + Supertest，测试体系完成迁移。</li>
+              <li>增加优雅停机与错误处理，服务稳定性提升。</li>
+              <li>接入 GitHub Actions，补齐 CI 流程与环境生成细节。</li>
+              <li>新增日志轮转能力，完善运行期日志方案。</li>
+              <li>升级并固定 Node 版本建议，补充 `.nvmrc`。</li>
+              <li>引入 ESLint 与 Prettier，统一代码规范。</li>
+              <li>Beta 上线第 25 关，并补充对应测试。</li>
+              <li>清理旧测试资产，减少历史包袱。</li>
+              <li>多个关卡接入 Bootstrap 风格统一，并新增 `design.md` 设计说明。</li>
+            </ul>
+          </div>
+
+          <div class="timeline-card p-4 p-md-5 mb-4">
+            <div class="small text-uppercase text-primary fw-semibold date-kicker mb-2">
+              2026-04-06
+            </div>
+            <h2 class="h3 fw-bold mb-3">内容、文档与部署基础集中补强</h2>
+            <ul class="timeline-list">
+              <li>第 23 关继续强化，移除明文痕迹并提升混淆强度。</li>
+              <li>首页新增施工进度展示，项目状态对外可见。</li>
+              <li>更新自我介绍与建设文档，项目定位更清晰。</li>
+              <li>README、Construction、Solutions 等文档集中重写。</li>
+              <li>补齐 Issue 模板、PR 模板、贡献指南、行为准则与安全策略。</li>
+              <li>调整内容授权与许可证说明，文档边界更明确。</li>
+              <li>引入 `dotenv` 与示例环境配置，部署方式更规范。</li>
+              <li>补强测试覆盖，并修复部分关卡与入口逻辑。</li>
+              <li>新增第 24 关，首页同步更新入口。</li>
+              <li>修正资源相对路径与加载方式，降低环境耦合。</li>
+            </ul>
+          </div>
+
+          <div class="timeline-card p-4 p-md-5 mb-4">
+            <div class="small text-uppercase text-primary fw-semibold date-kicker mb-2">
+              2026-04-05
+            </div>
+            <h2 class="h3 fw-bold mb-3">仓库公开发布并进入连续更新</h2>
+            <ul class="timeline-list">
+              <li>仓库首次发布到 GitHub，项目进入公开迭代阶段。</li>
+              <li>合并远端历史与更新分支，整理主线提交。</li>
+              <li>补齐第 19 至 21 关题解内容。</li>
+              <li>新增第 22 关及题解。</li>
+              <li>新增第 23 关及题解，并加入配套前端资源。</li>
+              <li>调整多个前端关卡叙事文本，统一故事表达。</li>
+            </ul>
+          </div>
+
+          <div class="timeline-card p-4 p-md-5">
+            <div class="small text-uppercase text-primary fw-semibold date-kicker mb-2">
+              2026-03-24
+            </div>
+            <h2 class="h3 fw-bold mb-3">项目初始化完成</h2>
+            <ul class="timeline-list">
+              <li>项目初始化完成。</li>
+              <li>首次提交 `README` 与许可证，建立仓库基础结构。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+          <div class="summary-card p-4 p-md-4 mb-4">
+            <div class="small text-uppercase text-secondary fw-semibold mb-2">
+              一句话概览
+            </div>
+            <p class="summary-text mb-0">
+              项目从 2026-03-24 完成初始化，随后在 4 月上旬快速进入高频迭代：连续补完新关卡、重构服务架构、迁移测试体系、接入 CI 与日志轮转，并同步完善设计文档与世界观设定。
+            </p>
+          </div>
+
+          <div class="summary-card p-4 p-md-4 mb-4">
+            <div class="small text-uppercase text-secondary fw-semibold mb-3">
+              里程碑
+            </div>
+            <ul class="timeline-list">
+              <li>`2026-03-24` 项目立项并完成首次提交。</li>
+              <li>`2026-04-05` 仓库公开发布，关卡内容开始快速扩展。</li>
+              <li>`2026-04-06` 文档体系、测试覆盖与第 24 关同步推进。</li>
+              <li>`2026-04-07` 后端架构、工程化能力与第 25 关集中升级。</li>
+              <li>`2026-04-08` 背景设定文档落地，叙事层继续完善。</li>
+            </ul>
+          </div>
+
+          <div class="summary-card p-4 p-md-4">
+            <div class="small text-uppercase text-secondary fw-semibold mb-2">
+              页面说明
+            </div>
+            <p class="summary-text mb-3">
+              当前为静态展示页，内容依据现有 Git 提交历史整理。后续如果需要，可以继续扩展为自动读取日志、按月筛选或按主题分类。
+            </p>
+            <a href="/" class="btn btn-outline-primary w-100">回到入口页</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/js/analytics.js"></script>
+  </body>
+</html>

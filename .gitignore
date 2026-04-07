@@ -147,5 +147,8 @@ dist
 # AI related files
 .codex
 
+# temporary work files
+.work/
+
 # daily password file
 password.xdxdxdxd
