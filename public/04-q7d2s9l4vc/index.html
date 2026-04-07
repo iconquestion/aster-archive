@@ -3,21 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/challenge-theme.css" />
     <title>04 - An echo from the past</title>
   </head>
 
-  <body>
-    <div>
-      <h1>04 - An echo from the past</h1>
-      <p>你听见了来自远古的回音，</p>
-      <p>却未曾留意它的面容。</p>
-      <button id="getecho">Click me to get an echo</button>
-      <p id="echo"></p>
-      <details>
-        <summary>Hint</summary>
-        <p>有时候，"怎么说"比"说什么"更重要。</p>
-      </details>
-    </div>
+  <body class="challenge-page">
+    <main class="page-shell container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+          <section class="card puzzle-card shadow-sm">
+            <div class="card-body p-4 p-md-5 puzzle-copy">
+              <h1 class="display-6 fw-bold mb-3">04 - An echo from the past</h1>
+              <p class="text-secondary mb-2">你听见了来自远古的回音，</p>
+              <p class="text-secondary mb-0">却未曾留意它的面容。</p>
+
+              <div class="action-stack mt-4">
+                <div class="action-row">
+                  <button id="getecho" class="btn btn-primary" type="button">
+                    Click me to get an echo
+                  </button>
+                </div>
+                <p id="echo" class="result-panel"></p>
+              </div>
+
+              <div class="hint-panel mt-4">
+                <details>
+                  <summary>Hint</summary>
+                  <p class="mb-0">有时候，"怎么说"比"说什么"更重要。</p>
+                </details>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
     <script src="/js/get_json_response.js"></script>
     <script>
       get_json_response('getecho', 'echo', '/api/04');

@@ -3,23 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/challenge-theme.css" />
     <title>08 - A Book Without A Catalog</title>
   </head>
 
-  <body>
-    <div>
-      <h1>08 - A Book Without A Catalog</h1>
-      <p>你发现有一片区域尚未探索，但始终无法找到入口。</p>
-      <p>这时你注意到一张剥落的壁画。</p>
-      <p>你顺手撕了下来，露出了背后的墙。</p>
-      <p>墙上的字已经斑驳不清，需要费点力气才能勉强辨认。</p>
-      <button id="clickme">开始使劲辨认</button>
-      <pre id="result"></pre>
-      <details>
-        <summary>Hint</summary>
-        <p>每一关都可以视作独立的网站的根目录...</p>
-      </details>
-    </div>
+  <body class="challenge-page">
+    <main class="page-shell container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+          <section class="card puzzle-card shadow-sm">
+            <div class="card-body p-4 p-md-5 puzzle-copy">
+              <h1 class="display-6 fw-bold mb-3">08 - A Book Without A Catalog</h1>
+              <p class="text-secondary mb-2">
+                你发现有一片区域尚未探索，但始终无法找到入口。
+              </p>
+              <p class="text-secondary mb-2">这时你注意到一张剥落的壁画。</p>
+              <p class="text-secondary mb-2">
+                你顺手撕了下来，露出了背后的墙。
+              </p>
+              <p class="text-secondary mb-0">
+                墙上的字已经斑驳不清，需要费点力气才能勉强辨认。
+              </p>
+
+              <div class="action-stack mt-4">
+                <div class="action-row">
+                  <button id="clickme" class="btn btn-primary" type="button">
+                    开始使劲辨认
+                  </button>
+                </div>
+                <pre id="result" class="result-panel inline-code-block"></pre>
+              </div>
+
+              <div class="hint-panel mt-4">
+                <details>
+                  <summary>Hint</summary>
+                  <p class="mb-0">每一关都可以视作独立的网站的根目录...</p>
+                </details>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
     <script>
       let btn = document.getElementById('clickme');
       let result = document.getElementById('result');

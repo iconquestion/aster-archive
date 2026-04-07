@@ -3,26 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/challenge-theme.css" />
     <title>21 - Time Is Money</title>
   </head>
 
-  <body>
-    <div>
-      <h1>21 - Time Is Money</h1>
-      <p>你从后院走出档案馆，发现这里居然还有一个小小的操场。</p>
-      <p>一片荒芜破败的景色让你有些哀伤。</p>
-      <p>操场的旁边还立着标语牌，</p>
-      <p>上面写着：<br />“时间就是金钱！”（一种很古典的字体）</p>
-      <p>Wait...这不是车间常用的标语吗！</p>
+  <body class="challenge-page">
+    <main class="page-shell container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+          <section class="card puzzle-card shadow-sm">
+            <div class="card-body p-4 p-md-5 puzzle-copy">
+              <h1 class="display-6 fw-bold mb-3">21 - Time Is Money</h1>
+              <p class="text-secondary mb-2">
+                你从后院走出档案馆，发现这里居然还有一个小小的操场。
+              </p>
+              <p class="text-secondary mb-2">
+                一片荒芜破败的景色让你有些哀伤。
+              </p>
+              <p class="text-secondary mb-2">操场的旁边还立着标语牌，</p>
+              <p class="text-secondary mb-2">
+                上面写着：“时间就是金钱！”（一种很古典的字体）
+              </p>
+              <p class="text-secondary mb-0">
+                Wait...这不是车间常用的标语吗！
+              </p>
 
-      <button id="run">来都来了，跑一圈!</button>
-      <p id="result"></p>
+              <div class="action-stack mt-4">
+                <div class="action-row">
+                  <button id="run" class="btn btn-primary" type="button">
+                    来都来了，跑一圈!
+                  </button>
+                </div>
+                <p id="result" class="result-panel"></p>
+              </div>
 
-      <details>
-        <summary>Hint</summary>
-        <p>这个关卡需要你使用 HTTP/2 的特性来完成。</p>
-      </details>
-    </div>
+              <div class="hint-panel mt-4">
+                <details>
+                  <summary>Hint</summary>
+                  <p class="mb-0">这个关卡需要你使用 HTTP/2 的特性来完成。</p>
+                </details>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
     <script src="/js/get_json_response.js"></script>
     <script>
       get_json_response(

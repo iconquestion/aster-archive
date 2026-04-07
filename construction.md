@@ -85,7 +85,7 @@ Express 应用承担以下职责：
 
 - 提供 `public/` 下的静态资源
 
-- 提供 `/bootstrap/` 静态资源映射
+- 提供 `/bootstrap/` 到 `node_modules/bootstrap/` 的静态资源映射
 
 - 提供 `/api/status` 健康检查
 

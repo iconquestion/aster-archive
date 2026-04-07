@@ -13,9 +13,9 @@ function createApp({ appOrigin, logger }) {
     path.join(__dirname, '../public/08-c2x8m5q9nv'),
     'Level 08 directory'
   );
-  const bootstrapDistDir = requireExistingPath(
-    path.join(__dirname, '../node_modules/bootstrap/dist'),
-    'Bootstrap dist directory'
+  const bootstrapDir = requireExistingPath(
+    path.join(__dirname, '../node_modules/bootstrap'),
+    'Bootstrap directory'
   );
 
   app.use(express.urlencoded({ extended: true }));
@@ -59,7 +59,7 @@ function createApp({ appOrigin, logger }) {
 
   app.use(
     '/bootstrap/',
-    express.static(bootstrapDistDir, {
+    express.static(bootstrapDir, {
       fallthrough: false,
     })
   );

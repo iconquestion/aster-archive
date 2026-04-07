@@ -3,28 +3,61 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/challenge-theme.css" />
     <title>07 - Closed Door</title>
   </head>
 
-  <body>
-    <div>
-      <h1>07 - Closed Door</h1>
-      <p>有些门从一开始就不会为你打开。</p>
-      <p>但门上贴的告示，</p>
-      <p>往往比门后的内容更诚实。</p>
-      <br />
-      <p>要参观哪里呢？</p>
-      <div>
-        <button id="visit_grand_reading_hall">主览大厅</button>
-        <button id="visit_archive_room">公共档案区</button>
-        <button id="visit_exhibit_corridor">展示长廊</button>
+  <body class="challenge-page">
+    <main class="page-shell container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+          <section class="card puzzle-card shadow-sm">
+            <div class="card-body p-4 p-md-5 puzzle-copy">
+              <h1 class="display-6 fw-bold mb-3">07 - Closed Door</h1>
+              <p class="text-secondary mb-2">有些门从一开始就不会为你打开。</p>
+              <p class="text-secondary mb-2">但门上贴的告示，</p>
+              <p class="text-secondary mb-2">往往比门后的内容更诚实。</p>
+              <p class="text-secondary mb-0">要参观哪里呢？</p>
+
+              <div class="action-stack mt-4">
+                <div class="action-row">
+                  <button
+                    id="visit_grand_reading_hall"
+                    class="btn btn-outline-primary"
+                    type="button"
+                  >
+                    主览大厅
+                  </button>
+                  <button
+                    id="visit_archive_room"
+                    class="btn btn-outline-primary"
+                    type="button"
+                  >
+                    公共档案区
+                  </button>
+                  <button
+                    id="visit_exhibit_corridor"
+                    class="btn btn-outline-primary"
+                    type="button"
+                  >
+                    展示长廊
+                  </button>
+                </div>
+                <p id="result" class="result-panel"></p>
+              </div>
+
+              <div class="hint-panel mt-4">
+                <details>
+                  <summary>Hint</summary>
+                  <p class="mb-0">就这些地方了吗?有点无趣呢...</p>
+                </details>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
-      <p id="result"></p>
-      <details>
-        <summary>Hint</summary>
-        <p>就这些地方了吗?有点无趣呢...</p>
-      </details>
-    </div>
+    </main>
     <script src="/js/get_json_response.js"></script>
     <script>
       get_json_response(

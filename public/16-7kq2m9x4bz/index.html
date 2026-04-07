@@ -3,29 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/challenge-theme.css" />
     <title>16 - A Magic Museum</title>
   </head>
 
-  <body>
-    <div>
-      <h1>16 - A Magic Museum</h1>
-      <p>你发现了一块展台，</p>
-      <p>这块展台具有特殊的魔力，</p>
-      <p>可以选择任意一个时间点，查看对应时间人类的发展进程。</p>
-      <p>你会查看哪些时间点呢？</p>
+  <body class="challenge-page">
+    <main class="page-shell container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+          <section class="card puzzle-card shadow-sm">
+            <div class="card-body p-4 p-md-5 puzzle-copy">
+              <h1 class="display-6 fw-bold mb-3">16 - A Magic Museum</h1>
+              <p class="text-secondary mb-2">你发现了一块展台，</p>
+              <p class="text-secondary mb-2">这块展台具有特殊的魔力，</p>
+              <p class="text-secondary mb-2">
+                可以选择任意一个时间点，查看对应时间人类的发展进程。
+              </p>
+              <p class="text-secondary mb-0">你会查看哪些时间点呢？</p>
 
-      <input
-        type="number"
-        id="timepoint"
-        placeholder="请输入时间点, 格式为yyyy"
-      />
-      <button id="getresult" value="Get Result">Get Result</button>
-      <p id="result"></p>
-      <details>
-        <summary>Hint</summary>
-        <p>为什么不看看未来呢?</p>
-      </details>
-    </div>
+              <div class="action-stack mt-4">
+                <div class="action-row">
+                  <input
+                    class="form-control"
+                    style="max-width: 20rem"
+                    type="number"
+                    id="timepoint"
+                    placeholder="请输入时间点, 格式为yyyy"
+                  />
+                  <button id="getresult" class="btn btn-primary" type="button">
+                    Get Result
+                  </button>
+                </div>
+                <p id="result" class="result-panel"></p>
+              </div>
+
+              <div class="hint-panel mt-4">
+                <details>
+                  <summary>Hint</summary>
+                  <p class="mb-0">为什么不看看未来呢?</p>
+                </details>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
     <script src="/js/get_json_response.js"></script>
     <script>
       let trigger_ele_id = 'getresult';

@@ -3,24 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/challenge-theme.css" />
     <title>17 - Für Elise</title>
   </head>
 
-  <body>
-    <div>
-      <h1>17 - Für Elise</h1>
-      <p>你发现了一间音乐室，里面摆放着一架古老的钢琴。</p>
-      <p>琴上放着一封早已泛黄的信件。</p>
-      <p>你小心翼翼地打开它，生怕它脆弱得碎掉。</p>
-      <p>在信的末尾，你看到一句浪漫的告白。</p>
-      <p>也许，真正的心意永远藏在正文之后。</p>
-      <button id="get_envelope">打开信封</button>
-      <p id="envelope_content"></p>
-      <details>
-        <summary>Hint</summary>
-        <p>Read it carefully</p>
-      </details>
-    </div>
+  <body class="challenge-page">
+    <main class="page-shell container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+          <section class="card puzzle-card shadow-sm">
+            <div class="card-body p-4 p-md-5 puzzle-copy">
+              <h1 class="display-6 fw-bold mb-3">17 - Für Elise</h1>
+              <p class="text-secondary mb-2">
+                你发现了一间音乐室，里面摆放着一架古老的钢琴。
+              </p>
+              <p class="text-secondary mb-2">
+                琴上放着一封早已泛黄的信件。
+              </p>
+              <p class="text-secondary mb-2">
+                你小心翼翼地打开它，生怕它脆弱得碎掉。
+              </p>
+              <p class="text-secondary mb-0">
+                在信的末尾，你看到一句浪漫的告白。也许，真正的心意永远藏在正文之后。
+              </p>
+
+              <div class="action-stack mt-4">
+                <div class="action-row">
+                  <button
+                    id="get_envelope"
+                    class="btn btn-primary"
+                    type="button"
+                  >
+                    打开信封
+                  </button>
+                </div>
+                <p id="envelope_content" class="result-panel"></p>
+              </div>
+
+              <div class="hint-panel mt-4">
+                <details>
+                  <summary>Hint</summary>
+                  <p class="mb-0">Read it carefully</p>
+                </details>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
     <script src="/js/get_json_response.js"></script>
     <script>
       get_json_response(

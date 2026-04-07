@@ -3,22 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/challenge-theme.css" />
     <title>13 - You've Succeed</title>
   </head>
 
-  <body>
-    <div>
-      <h1>13 - You've Succeed</h1>
-      <p>你已经探索完所有的区域了！</p>
-      <p>恭喜你！</p>
-      <p>来查看给你准备的每一关的纪念CG吧！o(*￣▽￣*)ブ</p>
-      <p>可以在其中回顾此前每一关的重要瞬间哦</p>
-      <a href="gallery">点我进入</a>
-      <details>
-        <summary>Hint</summary>
-        <p>...That's it?</p>
-      </details>
-    </div>
+  <body class="challenge-page">
+    <main class="page-shell container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+          <section class="card puzzle-card shadow-sm">
+            <div class="card-body p-4 p-md-5 puzzle-copy">
+              <h1 class="display-6 fw-bold mb-3">13 - You've Succeed</h1>
+              <p class="text-secondary mb-2">你已经探索完所有的区域了！</p>
+              <p class="text-secondary mb-2">恭喜你！</p>
+              <p class="text-secondary mb-2">
+                来查看给你准备的每一关的纪念CG吧！o(*￣▽￣*)ブ
+              </p>
+              <p class="text-secondary mb-4">
+                可以在其中回顾此前每一关的重要瞬间哦
+              </p>
+
+              <a class="btn btn-primary btn-link-entry" href="gallery"
+                >点我进入</a
+              >
+
+              <div class="hint-panel mt-4">
+                <details>
+                  <summary>Hint</summary>
+                  <p class="mb-0">...That's it?</p>
+                </details>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
     <script src="/js/analytics.js"></script>
   </body>
 </html>

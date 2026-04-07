@@ -3,24 +3,56 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/challenge-theme.css" />
     <title>11 - Weird Book</title>
   </head>
 
-  <body>
-    <div>
-      <h1>11 - A Weird Book</h1>
-      <p>你找到了一本有着奇怪封面的书，</p>
-      <p>书上落满了灰尘，无言诉说着岁月的沧桑。</p>
-      <p>或许它藏着什么尘封已久的秘密？</p>
-      <button id="openbook">翻开书</button>
-      <button id="closebook">合上书</button>
-      <p id="content"></p>
-      <details>
-        <summary>Hint</summary>
-        <p>https://cyberchef.org/</p>
-        <p>答案格式: flags-12-xxxxxxxxxx</p>
-      </details>
-    </div>
+  <body class="challenge-page">
+    <main class="page-shell container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+          <section class="card puzzle-card shadow-sm">
+            <div class="card-body p-4 p-md-5 puzzle-copy">
+              <h1 class="display-6 fw-bold mb-3">11 - A Weird Book</h1>
+              <p class="text-secondary mb-2">
+                你找到了一本有着奇怪封面的书，
+              </p>
+              <p class="text-secondary mb-2">
+                书上落满了灰尘，无言诉说着岁月的沧桑。
+              </p>
+              <p class="text-secondary mb-0">
+                或许它藏着什么尘封已久的秘密？
+              </p>
+
+              <div class="action-stack mt-4">
+                <div class="action-row">
+                  <button id="openbook" class="btn btn-outline-primary" type="button">
+                    翻开书
+                  </button>
+                  <button
+                    id="closebook"
+                    class="btn btn-outline-secondary"
+                    type="button"
+                  >
+                    合上书
+                  </button>
+                </div>
+                <p id="content" class="result-panel"></p>
+              </div>
+
+              <div class="hint-panel mt-4">
+                <details>
+                  <summary>Hint</summary>
+                  <p class="mb-2">https://cyberchef.org/</p>
+                  <p class="mb-0">答案格式: flags-12-xxxxxxxxxx</p>
+                </details>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
     <script>
       document.getElementById('openbook').addEventListener('click', () => {
         let content_ele = document.getElementById('content');

@@ -3,30 +3,58 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/challenge-theme.css" />
     <title>24 - Newspaper Subscription Desk</title>
   </head>
 
-  <body>
-    <div>
-      <h1>24 - Newspaper Subscription Desk</h1>
-      <p>你来到了一处安静得有些过头的报刊订阅台。</p>
-      <p>
-        这里似乎负责整理更新、播报变动，以及向外发布一些固定格式的内部新闻报刊。
-      </p>
-      <p>用地球语应该怎么说来着...部落格？</p>
-      <p>
-        哦！（神之一指）（每日深度求索）他可能是想说"订阅"，没关系，我来教他！XD
-      </p>
-      <p>我们现在都叫做"订阅"，不叫"部落格"，你太out了！</p>
-      <button id="subscribe">点我订阅</button>
-      <p id="result"></p>
-      <details>
-        <summary>Hint</summary>
-        <p>
-          你忽然想到，这里会不会有以前的订阅名单？名单上会不会有什么好东西呢~
-        </p>
-      </details>
-    </div>
+  <body class="challenge-page">
+    <main class="page-shell container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+          <section class="card puzzle-card shadow-sm">
+            <div class="card-body p-4 p-md-5 puzzle-copy">
+              <h1 class="display-6 fw-bold mb-3">
+                24 - Newspaper Subscription Desk
+              </h1>
+              <p class="text-secondary mb-2">
+                你来到了一处安静得有些过头的报刊订阅台。
+              </p>
+              <p class="text-secondary mb-2">
+                这里似乎负责整理更新、播报变动，以及向外发布一些固定格式的内部新闻报刊。
+              </p>
+              <p class="text-secondary mb-2">
+                用地球语应该怎么说来着...部落格？
+              </p>
+              <p class="text-secondary mb-2">
+                哦！（神之一指）（每日深度求索）他可能是想说"订阅"，没关系，我来教他！XD
+              </p>
+              <p class="text-secondary mb-0">
+                我们现在都叫做"订阅"，不叫"部落格"，你太out了！
+              </p>
+
+              <div class="action-stack mt-4">
+                <div class="action-row">
+                  <button id="subscribe" class="btn btn-primary" type="button">
+                    点我订阅
+                  </button>
+                </div>
+                <p id="result" class="result-panel"></p>
+              </div>
+
+              <div class="hint-panel mt-4">
+                <details>
+                  <summary>Hint</summary>
+                  <p class="mb-0">
+                    你忽然想到，这里会不会有以前的订阅名单？名单上会不会有什么好东西呢~
+                  </p>
+                </details>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
     <script>
       let subscribeButton = document.getElementById('subscribe');
       let resultParagraph = document.getElementById('result');
