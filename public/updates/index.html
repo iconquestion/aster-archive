@@ -57,7 +57,7 @@
       }
 
       .timeline-card::before {
-        content: "";
+        content: '';
         position: absolute;
         inset: 0 auto 0 0;
         width: 6px;
@@ -87,13 +87,15 @@
       <section class="hero-panel p-4 p-md-5 mb-4">
         <div class="d-flex flex-column flex-lg-row gap-4 align-items-lg-end">
           <div class="flex-grow-1">
-            <div class="small text-uppercase text-primary fw-semibold hero-kicker mb-3">
+            <div
+              class="small text-uppercase text-primary fw-semibold hero-kicker mb-3"
+            >
               Development Log
             </div>
             <h1 class="display-5 fw-bold mb-3">Aster Archive 每日更新动态</h1>
             <p class="lead hero-text mb-3">
-              这里按自然日整理了项目的主要开发推进，尽量压缩成接近
-              release notes 的短条目，方便快速浏览网站与项目的演进轨迹。
+              这里按自然日整理了项目的主要开发推进，尽量压缩成接近 release notes
+              的短条目，方便快速浏览网站与项目的演进轨迹。
             </p>
             <p class="hero-text mb-0">
               从初始化、关卡扩展、文档体系补全，到工程化、测试与世界观设定，这些记录构成了档案馆逐步成形的过程。
@@ -114,7 +116,9 @@
         </div>
 
         <div class="d-flex flex-wrap gap-2 mt-4">
-          <span class="metric-chip px-3 py-2">时间范围：2026-03-24 至 2026-04-08</span>
+          <span class="metric-chip px-3 py-2"
+            >时间范围：2026-03-24 至 2026-04-08</span
+          >
           <span class="metric-chip px-3 py-2">已整理：5 个开发日</span>
           <span class="metric-chip px-3 py-2">形式：按天压缩摘要</span>
         </div>
@@ -123,7 +127,9 @@
       <section class="row g-4">
         <div class="col-12 col-xl-8">
           <div class="timeline-card p-4 p-md-5 mb-4">
-            <div class="small text-uppercase text-primary fw-semibold date-kicker mb-2">
+            <div
+              class="small text-uppercase text-primary fw-semibold date-kicker mb-2"
+            >
               2026-04-08
             </div>
             <h2 class="h3 fw-bold mb-3">背景设定开始独立沉淀</h2>
@@ -134,7 +140,9 @@
           </div>
 
           <div class="timeline-card p-4 p-md-5 mb-4">
-            <div class="small text-uppercase text-primary fw-semibold date-kicker mb-2">
+            <div
+              class="small text-uppercase text-primary fw-semibold date-kicker mb-2"
+            >
               2026-04-07
             </div>
             <h2 class="h3 fw-bold mb-3">工程化与第 25 关同步推进</h2>
@@ -148,12 +156,16 @@
               <li>引入 ESLint 与 Prettier，统一代码规范。</li>
               <li>Beta 上线第 25 关，并补充对应测试。</li>
               <li>清理旧测试资产，减少历史包袱。</li>
-              <li>多个关卡接入 Bootstrap 风格统一，并新增 `design.md` 设计说明。</li>
+              <li>
+                多个关卡接入 Bootstrap 风格统一，并新增 `design.md` 设计说明。
+              </li>
             </ul>
           </div>
 
           <div class="timeline-card p-4 p-md-5 mb-4">
-            <div class="small text-uppercase text-primary fw-semibold date-kicker mb-2">
+            <div
+              class="small text-uppercase text-primary fw-semibold date-kicker mb-2"
+            >
               2026-04-06
             </div>
             <h2 class="h3 fw-bold mb-3">内容、文档与部署基础集中补强</h2>
@@ -172,7 +184,9 @@
           </div>
 
           <div class="timeline-card p-4 p-md-5 mb-4">
-            <div class="small text-uppercase text-primary fw-semibold date-kicker mb-2">
+            <div
+              class="small text-uppercase text-primary fw-semibold date-kicker mb-2"
+            >
               2026-04-05
             </div>
             <h2 class="h3 fw-bold mb-3">仓库公开发布并进入连续更新</h2>
@@ -187,7 +201,9 @@
           </div>
 
           <div class="timeline-card p-4 p-md-5">
-            <div class="small text-uppercase text-primary fw-semibold date-kicker mb-2">
+            <div
+              class="small text-uppercase text-primary fw-semibold date-kicker mb-2"
+            >
               2026-03-24
             </div>
             <h2 class="h3 fw-bold mb-3">项目初始化完成</h2>
@@ -204,7 +220,9 @@
               一句话概览
             </div>
             <p class="summary-text mb-0">
-              项目从 2026-03-24 完成初始化，随后在 4 月上旬快速进入高频迭代：连续补完新关卡、重构服务架构、迁移测试体系、接入 CI 与日志轮转，并同步完善设计文档与世界观设定。
+              项目从 2026-03-24 完成初始化，随后在 4
+              月上旬快速进入高频迭代：连续补完新关卡、重构服务架构、迁移测试体系、接入
+              CI 与日志轮转，并同步完善设计文档与世界观设定。
             </p>
           </div>
 
@@ -226,7 +244,8 @@
               页面说明
             </div>
             <p class="summary-text mb-3">
-              当前为静态展示页，内容依据现有 Git 提交历史整理。后续如果需要，可以继续扩展为自动读取日志、按月筛选或按主题分类。
+              当前为静态展示页，内容依据现有 Git
+              提交历史整理。后续如果需要，可以继续扩展为自动读取日志、按月筛选或按主题分类。
             </p>
             <a href="/" class="btn btn-outline-primary w-100">回到入口页</a>
           </div>
