@@ -251,13 +251,25 @@ npm test
 
 - 安装依赖
 
+- 运行 `npm run lint`
+
 - 准备 `config/.env`
 
 - 准备测试所需的每日密码文件
 
 - 运行 `npm test`
 
-代码风格方面，项目已接入 Prettier，可使用以下命令：
+代码质量与风格方面，项目已接入 ESLint 与 Prettier：
+
+- `ESLint` 负责潜在错误与可疑逻辑检查
+
+- `Prettier` 负责统一格式化输出
+
+可使用以下命令：
+
+- `npm run lint`
+
+- `npm run lint:fix`
 
 - `npm run format`
 

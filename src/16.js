@@ -24,7 +24,6 @@ router.get('/', (req, res) => {
     });
   }
 
-  const h3 = isHttp3(req);
   res.json({
     message:
       'Welcome to 2077 Cyberpunk! 17-c8v1n5r2ya 由于HTTP/3支持原因 未找到合适的solution 本关日后将重新设计 您可以跳过',

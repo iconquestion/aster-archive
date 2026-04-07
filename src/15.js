@@ -6,18 +6,6 @@ const challengeWss = new WebSocketServer({ noServer: true });
 
 // 15关：提供一个 WebSocket 迷宫挑战，玩家初始化地图后不断移动，到达终点即可拿到下一关密码。
 /**
- * 生成随机奇数尺寸
- * 范围：7, 9, 11
- */
-function randomOddSize(min = 7, max = 11) {
-  const candidates = [];
-  for (let n = min; n <= max; n++) {
-    if (n % 2 === 1) candidates.push(n);
-  }
-  return candidates[Math.floor(Math.random() * candidates.length)];
-}
-
-/**
  * 生成 perfect maze
  * 约定：
  * - 1 = 墙
@@ -184,7 +172,7 @@ challengeWss.on('connection', (ws) => {
 
     try {
       data = JSON.parse(raw.toString());
-    } catch (err) {
+    } catch (_err) {
       ws.send(JSON.stringify({ error: 'invalid json' }));
       return;
     }
@@ -268,7 +256,7 @@ challengeWss.on('connection', (ws) => {
   });
 });
 
-function handleUpgrade(req, socket, head, logger = console) {
+function handleUpgrade(req, socket, head, _logger = console) {
   // 只允许升级 /api/15/challenge，其余路径直接拒绝。
   const requestUrl = new URL(req.url, 'http://hello.world');
   if (requestUrl.pathname !== '/api/15/challenge') {

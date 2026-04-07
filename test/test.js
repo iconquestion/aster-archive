@@ -87,11 +87,6 @@ function loadTestConfig() {
 
 let testConfig = null;
 
-// 统一断言工具，用于补充更清晰的失败信息。
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function assert(condition, message, details) {
   if (!condition) {
     const detailText = details

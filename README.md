@@ -46,6 +46,20 @@ https://www.iconquestion.com/
 
 详细构建说明和方法，请参阅 [construction.md](./construction.md)
 
+## 代码检查与格式化
+
+项目当前同时使用 `ESLint` 与 `Prettier`：
+
+- `ESLint` 负责检查潜在错误、未使用变量与可疑代码
+- `Prettier` 负责统一代码格式，不参与规则判定
+
+可使用以下命令：
+
+- `npm run lint`
+- `npm run lint:fix`
+- `npm run format`
+- `npm run format:check`
+
 ## License
 
 本项目采用分离授权方式。
