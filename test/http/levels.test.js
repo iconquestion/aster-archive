@@ -25,25 +25,34 @@ describe('Levels 01-14', () => {
     app = createTestApp();
   });
 
-  // 01-03 为静态资源线索测试，验证隐藏在 HTML/CSS 元数据中的下一关路径。
-  test('01 exposes the 02 clue in HTML comments', async () => {
+  // 01-03 为静态资源线索测试，验证文案提示与 HTML/CSS 元数据中的下一关路径。
+  test('01 ties the entrance story to the hidden 02 clue in HTML comments', async () => {
     const res = await request(app).get('/01-k3f9x2m7qd/');
 
     expect(res.status).toBe(200);
-    expect(res.text).toContain('<!-- 02-v8n2c4z1pa -->');
+    expect(res.text).toContain('你决定试试看找到它的入口');
+    expect(res.text).toContain('02-v8n2c4z1pa');
   });
 
-  test('02 exposes the 03 clue in the CSS payload', async () => {
-    const res = await request(app).get('/css/02.css');
+  test('02 points from the iron gate appearance to the CSS payload clue', async () => {
+    const pageRes = await request(app).get('/02-v8n2c4z1pa/');
+    const cssRes = await request(app).get('/css/02.css');
 
-    expect(res.status).toBe(200);
-    expect(res.text).toContain('03-r5t9m1x8wb');
+    expect(pageRes.status).toBe(200);
+    expect(pageRes.text).toContain('那个年代独有的审美风格');
+    expect(pageRes.text).toContain('/css/02.css');
+
+    expect(cssRes.status).toBe(200);
+    expect(cssRes.text).toContain('font-family');
+    expect(cssRes.text).toContain('03-r5t9m1x8wb');
   });
 
-  test('03 exposes the 04 clue in page metadata', async () => {
+  test('03 maps the leader head hint to the 04 clue in head metadata', async () => {
     const res = await request(app).get('/03-r5t9m1x8wb/');
 
     expect(res.status).toBe(200);
+    expect(res.text).toContain('领导人Benjamin');
+    expect(res.text).toContain('<head>');
     expect(res.text).toContain('04-q7d2s9l4vc');
   });
 
@@ -59,32 +68,66 @@ describe('Levels 01-14', () => {
     const getRes = await request(app).get('/api/05');
     const postRes = await request(app).post('/api/05');
 
-    expect(getRes.status).toBe(200);
-    expect(getRes.body.message).toBe('YOU SHALL NOT PASS!!!');
+    expect(getRes.status).toBe(400);
+    expect(getRes.body.message).toContain('YOU SHALL NOT PASS!!!');
+    expect(getRes.body.message).toContain('门似乎并不是很想让你过去');
 
     expect(postRes.status).toBe(200);
     expect(postRes.body.message).toContain('06-m4v7q2c9ta');
   });
 
-  test('06 identifies the admin query parameter', async () => {
-    const res = await request(app).get('/api/06?level=admin');
+  test('06 keeps the public staff flow on the page but hides the clue behind manager level', async () => {
+    const pageRes = await request(app).get('/06-m4v7q2c9ta/');
+    const staffRes = await request(app).get(
+      '/api/06?level=staff&fingerprint=test'
+    );
+    const managerRes = await request(app).get('/api/06?level=manager');
 
-    expect(res.status).toBe(200);
-    expect(res.body.message).toContain('Your identity: admin');
+    expect(pageRes.status).toBe(200);
+    expect(pageRes.text).toContain('指纹即可自动制作独一无二的工作卡片');
+    expect(pageRes.text).toContain('/api/06?level=staff&fingerprint=');
+
+    expect(staffRes.status).toBe(200);
+    expect(staffRes.body.message).toContain('Welcome to Aster Archive');
+    expect(staffRes.body.message).not.toContain('07-z9k3d6w1rx');
+
+    expect(managerRes.status).toBe(200);
+    expect(managerRes.body.message).toContain('Welcome, manager!');
+    expect(managerRes.body.message).toContain('07-z9k3d6w1rx');
   });
 
-  test('07 reveals the 08 clue for the admin office location', async () => {
-    const res = await request(app).get('/api/07?location=visit_admin_office');
+  test('07 expands the map beyond visible buttons and reveals the manager office clue', async () => {
+    const pageRes = await request(app).get('/07-z9k3d6w1rx/');
+    const defaultRes = await request(app).get(
+      '/api/07?location=visit_anywhere_else'
+    );
+    const managerRes = await request(app).get(
+      '/api/07?location=visit_manager_office'
+    );
 
-    expect(res.status).toBe(200);
-    expect(res.body.message).toContain('c2x8m5q9nv');
+    expect(pageRes.status).toBe(200);
+    expect(pageRes.text).toContain('主览大厅');
+    expect(pageRes.text).toContain('公共档案区');
+    expect(pageRes.text).toContain('展示长廊');
+    expect(pageRes.text).toContain('更多区域正在开发中');
+
+    expect(defaultRes.status).toBe(200);
+    expect(defaultRes.body.message).toContain('管理办公室');
+
+    expect(managerRes.status).toBe(200);
+    expect(managerRes.body.message).toContain('08-c2x8m5q9nv');
   });
 
   test('08 exposes both the restricted stack path and the 09 clue', async () => {
+    const pageRes = await request(app).get('/08-c2x8m5q9nv/');
     const robotsRes = await request(app).get('/08-c2x8m5q9nv/robots.txt');
     const noteRes = await request(app).get(
       '/08-c2x8m5q9nv/stack/restricted/914/2013-12-31.txt'
     );
+
+    expect(pageRes.status).toBe(200);
+    expect(pageRes.text).toContain('独立的网站的根目录');
+    expect(pageRes.text).toContain('serveIndex');
 
     expect(robotsRes.status).toBe(200);
     expect(robotsRes.text).toContain('/stack');

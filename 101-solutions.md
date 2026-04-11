@@ -8,6 +8,10 @@
 
 让玩家学习查看页面源代码。
 
+### 文案与知识点的结合
+
+这一关的剧情关键词是入口。玩家要找建筑群的入口，而在 Web 里，这一关真正的入口信息藏在页面源码里。
+
 ### 解题步骤
 
 1. 打开 `01-k3f9x2m7qd/index.html` 的源码。
@@ -26,6 +30,10 @@
 ### 设计目标
 
 让玩家学习查看引用的资源文件内容。
+
+### 文案与知识点的结合
+
+这一关写的是铁门、铁锁、年代感的外观。对应到前端里，最贴近外观的就是 CSS。
 
 ### 解题步骤
 
@@ -50,6 +58,10 @@
 
 让玩家学习查看 `<head>` 区域中的元数据。
 
+### 文案与知识点的结合
+
+文案里特别写了这座楼以领导人 Benjamin 的名字命名。领导人对应英文 `head`，正好引导玩家想到 HTML 里的 `<head>`。
+
 ### 解题步骤
 
 1. 打开 `public/03-r5t9m1x8wb/index.html`。
@@ -68,6 +80,10 @@
 ### 设计目标
 
 让玩家学习观察 HTTP 响应头。
+
+### 文案与知识点的结合
+
+这一关的核心意象是回音和钟声。页面里真正显示出来的正文内容并不重要，关键是敲一下钟之后服务器回了什么额外信息。对应到 HTTP，就是除了响应体之外，还要看响应头这种附带回声。
 
 ### 实现方式
 
@@ -97,6 +113,10 @@ Content-Type: application/json; charset=utf-8
 
 让玩家学习使用不同的 HTTP Method。
 
+### 文案与知识点的结合
+
+剧情里你面对的是一扇门，按钮写的是"推一下门"，提示写的是"推不开就拉拉试试"。现实里的推 / 拉对应到 HTTP 里的换一种请求方式。前端默认是 `GET`，而真正能打开门的是 `POST`。
+
 ### 实现方式
 
 前端按钮默认调用的是 `fetch("/api/05")`，也就是 `GET`。但后端在 `src/05.js` 中把真正答案放在 `POST /api/05`。
@@ -125,7 +145,7 @@ Host: www.iconquestion.com
 错误响应：
 
 ```json
-{ "message": "YOU SHALL NOT PASS!!!" }
+{ "message": "YOU SHALL NOT PASS!!!\n门似乎并不是很想让你过去。" }
 ```
 
 正确请求示例：
@@ -158,27 +178,39 @@ curl -X POST https://www.iconquestion.com/api/05
 
 让玩家学习猜测和修改query查询参数，而不是完全相信前端给的默认值，培养探索思维。
 
+### 文案与知识点的结合
+
+剧情里这是一台员工自助领取 ID 卡片的机器，默认逻辑当然只会给普通员工流程；但文案又写了"支持自定义样式"和"不妨大胆一些"，其实是在鼓励玩家不要只照着前端按钮走，而是主动改请求参数，尝试更高权限身份。前端生成复杂指纹只是叙事包装，真正关键的知识点仍然是 query 参数可被观察和修改。
+
 ### 实现方式
 
-前端固定请求 `/api/06?level=guest`，后端 `src/06.js` 根据 query 参数 `level` 返回不同的响应。
+前端会生成一段浏览器指纹，然后请求：
+
+```js
+/api/06?level=staff&fingerprint=...
+```
+
+但后端 `src/06.js` 真正判断的关键是 `level`，当它等于 `manager` 时才会给出下一关线索。
 
 ### 解题步骤
 
 1. 查看JS代码
 
 ```js
-get_json_response('getmyidcard', 'result', '/api/06?level=guest');
+/api/06?level=staff&fingerprint=...
 ```
 
-2. 把 query 参数从 `guest` 改成 `admin` ，重新发送请求。
+前端默认把你包装成普通员工 `staff`，并附带一长串指纹信息，看起来很唬人，但真正决定结果的是 `level`。
 
-`GET https://www.iconquestion.com/api/06?level=admin`
+2. 把 query 参数改成 `manager`，重新发送请求。
+
+`GET https://www.iconquestion.com/api/06?level=manager`
 
 响应：
 
 ```json
 {
-  "message": "Your identity: admin. \nYour office is located at No.z9k3d6w1rx, 7th floor."
+  "message": "Welcome, manager! Your office is located at No.07-z9k3d6w1rx, 7th floor."
 }
 ```
 
@@ -192,9 +224,13 @@ get_json_response('getmyidcard', 'result', '/api/06?level=guest');
 
 让玩家学习进一步探索页面中未给出的其他信息。
 
+### 文案与知识点的结合
+
+剧情里你拿到了一份地图导览，但上面只有三个可选地点，显得信息过少。标题 `Less Is More` 也是在提醒你：页面展示得越少，越应该怀疑还有隐藏分支。地图上缺失的地点，对应到 Web 里就是前端没做出来、但后端可能已经支持的参数分支。
+
 ### 实现方式
 
-当前实现中，只要请求一个页面上未提供的位置，后端默认分支就会返回一段提示语，提示你还有"管理办公室"这个方向可以尝试；当你进一步请求 `visit_admin_office` 时，才会拿到下一关线索。
+当前实现中，只要请求一个页面上未提供的位置，后端默认分支就会返回一段提示语，提示你还有管理办公室这个方向可以尝试；当你进一步请求 `visit_manager_office` 时，才会拿到下一关线索。
 
 ### 解题步骤
 
@@ -223,25 +259,25 @@ get_json_response('getmyidcard', 'result', '/api/06?level=guest');
    }
    ```
 
-   这个响应已经明确把"管理办公室"作为新的可尝试方向暴露出来了。
+   这个响应已经明确把管理办公室作为新的可尝试方向暴露出来了。
 
-3. 尝试请求"管理办公室"与之对应的 query 参数。玩家需要进行一定的猜测。
+3. 尝试请求管理办公室与之对应的 query 参数。玩家需要进行一定的猜测。
 
    后端 `src/07.js` 中对应分支是：
 
    ```js
-   case "visit_admin_office": {
+   case "visit_manager_office": {
       responseMsg = "...";
    }
    ```
 
-   `GET https://www.iconquestion.com/api/07?location=visit_admin_office`
+   `GET https://www.iconquestion.com/api/07?location=visit_manager_office`
 
    响应：
 
    ```json
    {
-     "message": "这里曾经是档案的管理办公室，陈列着早已泛黄的旧文件和木制桌椅。最上面的文件是有关08房间c2x8m5q9nv档案的展出规划资料。"
+     "message": "这里曾经是档案的管理办公室，陈列着早已泛黄的旧文件和木制桌椅。最上面的文件是有关08-c2x8m5q9nv房间档案的展出规划资料。"
    }
    ```
 
@@ -254,6 +290,10 @@ get_json_response('getmyidcard', 'result', '/api/06?level=guest');
 ### 设计目标
 
 让玩家学习查看 `robots.txt` 并利用其中的信息挖掘隐藏目录。
+
+### 文案与知识点的结合
+
+剧情里你找不到入口，而墙上的残缺信息提示你换一个角度理解这片区域。Hint 明说"每一关都可以视作独立的网站根目录"，这相当于把建筑平面图转换成网站目录结构。找不到房间入口，对应到 Web 里就是去根目录下找 `robots.txt`、目录索引和隐藏路径。
 
 ### 实现方式
 
@@ -278,7 +318,7 @@ get_json_response('getmyidcard', 'result', '/api/06?level=guest');
    Disallow: /staff
    ```
 
-   其中最值得继续看的是 `/stack`。
+   其中最值得继续看的是 `/stack`，因为它最像档案馆里的库房区域。
 
    因为这一关目录启用了索引，可以继续浏览目录，最终会找到：
 
@@ -1115,7 +1155,7 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 
 2. 登录后会进入运维终端，可以看到当前配置值，并可以编辑 `relay_target`。
 
-3. 这一关的关键不在正常提交，而在“断网时系统如何保护未提交内容”。
+3. 这一关的关键不在正常提交，而在"断网时系统如何保护未提交内容"。
 
    页面提示中已经暗示：
 

@@ -7,9 +7,9 @@ router.get('/', (req, res) => {
   const { level } = req.query;
   res.json({
     message:
-      level == 'admin'
-        ? 'Your identity: admin. \nYour office is located at No.z9k3d6w1rx, 7th floor.'
-        : 'Your identity: guest. \nWelcome to visit here. Hope you have a great day!',
+      level == 'manager'
+        ? 'Welcome, manager! Your office is located at No.07-z9k3d6w1rx, 7th floor.'
+        : 'Welcome to Aster Archive. Hope you have a great day!',
   });
 });
 

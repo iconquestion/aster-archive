@@ -18,7 +18,13 @@
                 08 - A Book Without A Catalog
               </h1>
               <p class="text-secondary mb-2">
-                你发现有一片区域尚未探索，但始终无法找到入口。
+                你很想探索管理办公室，但这座建筑的布局似乎有些奇怪，对陌生的人而言很不友好。
+              </p>
+              <p class="text-secondary mb-2">
+                在经历了又一番迷路后，你打算暂时放弃自行探索，还是老老实实跟着地图走。
+              </p>
+              <p class="text-secondary mb-2">
+                你发现地图上有一片区域尚未探索，但始终无法找到入口。
               </p>
               <p class="text-secondary mb-2">这时你注意到一张剥落的壁画。</p>
               <p class="text-secondary mb-2">
@@ -31,7 +37,7 @@
               <div class="action-stack mt-4">
                 <div class="action-row">
                   <button id="clickme" class="btn btn-primary" type="button">
-                    开始使劲辨认
+                    尝试辨认
                   </button>
                 </div>
                 <pre id="result" class="result-panel inline-code-block"></pre>
@@ -54,11 +60,13 @@
 
       btn.addEventListener('click', function () {
         result.textContent = `
-        location /08-c2x8m5q9nv/ {
-            autoindex on;
-            autoindex_exact_size on;
-            autoindex_localtime on;
-        }
+        app.use(
+          '/08-c2x8m5q9nv/',
+          serveIndex(level08Dir, {
+            icons: true,
+            view: 'details',
+          })
+        );
         `;
         btn.disabled = true;
       });
