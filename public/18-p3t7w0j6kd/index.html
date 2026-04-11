@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" href="/css/challenge-theme.css" />
-    <title>18 - Dinner Time</title>
+    <title>18 - Piano Sheet Music</title>
   </head>
 
   <body class="challenge-page">
@@ -14,44 +14,15 @@
         <div class="col-12 col-lg-9 col-xl-8">
           <section class="card puzzle-card shadow-sm">
             <div class="card-body p-4 p-md-5 puzzle-copy">
-              <h1 class="display-6 fw-bold mb-3">18 - Dinner Time</h1>
-              <p class="text-secondary mb-2">该吃晚饭了！</p>
-              <p class="text-secondary mb-2">
-                摆在你面前的是好长好长的一条面包（不是法棍！）
-              </p>
-              <p class="text-secondary mb-0">你要从哪里开始吃起？:D</p>
-
-              <div class="action-stack mt-4">
-                <div class="action-row">
-                  <button
-                    id="get_left"
-                    class="btn btn-outline-primary"
-                    type="button"
-                  >
-                    左边!
-                  </button>
-                  <button
-                    id="get_middle"
-                    class="btn btn-outline-primary"
-                    type="button"
-                  >
-                    中间!
-                  </button>
-                  <button
-                    id="get_right"
-                    class="btn btn-outline-primary"
-                    type="button"
-                  >
-                    右边!
-                  </button>
-                </div>
-                <p id="response" class="result-panel"></p>
-              </div>
+              <h1 class="display-6 fw-bold mb-3">18 - Piano Sheet Music</h1>
+              <p class="text-secondary mb-2">你在琴凳中发现了一份乐谱。</p>
+              <p class="text-secondary mb-2">但光线太过昏暗，难以全部看清。</p>
+              <p class="text-secondary mb-0">每次最多只能看清一部分内容。</p>
 
               <div class="hint-panel mt-4">
                 <details>
                   <summary>Hint</summary>
-                  <p class="mb-0">嗯...切分的[方式]好像...不太对</p>
+                  <p class="mb-0">API: GET /api/18</p>
                 </details>
               </div>
             </div>
@@ -59,12 +30,6 @@
         </div>
       </div>
     </main>
-    <script src="/js/get_json_response.js"></script>
-    <script>
-      get_json_response('get_left', 'response', '/api/18?food=left');
-      get_json_response('get_middle', 'response', '/api/18?food=middle');
-      get_json_response('get_right', 'response', '/api/18?food=right');
-    </script>
     <script src="/js/analytics.js"></script>
   </body>
 </html>
