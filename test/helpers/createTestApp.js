@@ -1,8 +1,7 @@
-const fs = require('fs');
-const path = require('path');
 const { loadConfig } = require('../../src/config');
 const { createApp } = require('../../src/app');
 const { createServers } = require('../../src/createServers');
+const { getLevel12DailyPassword } = require('../../src/12');
 
 let cachedRuntime = null;
 
@@ -16,26 +15,17 @@ function createSilentLogger() {
   };
 }
 
-// 复用一份测试运行时配置，避免每个测试文件重复加载 .env 和本地密码文件。
+// 复用一份测试运行时配置，避免每个测试文件重复加载 .env。
 function getTestRuntime() {
   if (cachedRuntime) {
     return cachedRuntime;
   }
 
   const config = loadConfig();
-  const passwordFilePath = path.join(
-    __dirname,
-    '../../public/12-d1q7m4z8pv/password.xdxdxdxd'
-  );
-
-  if (!fs.existsSync(passwordFilePath)) {
-    throw new Error(`Daily password file does not exist: ${passwordFilePath}`);
-  }
 
   cachedRuntime = {
     config,
     logger: createSilentLogger(),
-    passwordFilePath,
   };
 
   return cachedRuntime;
@@ -85,8 +75,7 @@ async function createStartedTestServers() {
 }
 
 function getDailyPassword() {
-  const { passwordFilePath } = getTestRuntime();
-  return fs.readFileSync(passwordFilePath, 'utf8').trim();
+  return getLevel12DailyPassword();
 }
 
 // 统一绑定到随机本地端口，避免测试之间争抢固定端口。

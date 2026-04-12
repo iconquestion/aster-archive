@@ -1,19 +1,50 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
+const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
 
 const router = express.Router();
 const COOKIE_NAME = 'bibilabu';
+const DEFAULT_SECRET = 'level-12-daily-password-v1';
+const DEFAULT_TIME_ZONE = 'Asia/Shanghai';
+const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: DEFAULT_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+let cachedDateKey = '';
+let cachedPassword = '';
 
 router.use(cookieParser());
 
-function getDailyPw() {
-  const dailyPasswordFilePath = path.join(
-    __dirname,
-    '../public/12-d1q7m4z8pv/password.xdxdxdxd'
-  );
-  return fs.readFileSync(dailyPasswordFilePath, 'utf8').trim();
+function getDateKey(now = new Date()) {
+  return dateFormatter.format(now);
+}
+
+function buildLevel12DailyPassword(dateKey) {
+  const digest = crypto
+    .createHash('sha256')
+    .update(`${DEFAULT_SECRET}:${dateKey}`)
+    .digest();
+  const passwordNumber = digest.readUInt32BE(0) % 10000;
+
+  return String(passwordNumber).padStart(4, '0');
+}
+
+function getLevel12DailyPassword({ now = new Date() } = {}) {
+  const dateKey = getDateKey(now);
+
+  if (dateKey !== cachedDateKey) {
+    cachedDateKey = dateKey;
+    cachedPassword = buildLevel12DailyPassword(dateKey);
+  }
+
+  return cachedPassword;
+}
+
+function isFourDigitPassword(value) {
+  return /^\d{4}$/.test(value);
 }
 
 // 12关登录：校验用户名和当日密码，成功后设置授权 Cookie。
@@ -33,7 +64,10 @@ router.post('/login', (req, res) => {
     });
   }
 
-  if (Number(password) !== Number(getDailyPw())) {
+  if (
+    !isFourDigitPassword(password) ||
+    password !== getLevel12DailyPassword()
+  ) {
     return res.status(401).json({
       message: '密码错误',
     });
@@ -65,7 +99,10 @@ router.get('/get_room_info', (req, res) => {
     });
   }
 
-  if (!cookieValue || Number(cookieValue) !== Number(getDailyPw())) {
+  if (
+    !isFourDigitPassword(cookieValue) ||
+    cookieValue !== getLevel12DailyPassword()
+  ) {
     return res.status(401).json({
       message: '未授权的访问',
     });
@@ -77,3 +114,4 @@ router.get('/get_room_info', (req, res) => {
 });
 
 module.exports = router;
+module.exports.getLevel12DailyPassword = getLevel12DailyPassword;

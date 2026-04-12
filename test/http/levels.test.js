@@ -8,13 +8,14 @@ const { constants: level25Constants } = require('../../src/25');
 
 describe('Config', () => {
   test('loads env and required local fixtures', () => {
-    const { config, passwordFilePath } = getTestRuntime();
+    const { config } = getTestRuntime();
+    const dailyPassword = getDailyPassword();
 
     expect(config.httpPort).toEqual(expect.any(Number));
     expect(config.httpsPort).toEqual(expect.any(Number));
     expect(config.http2Port).toEqual(expect.any(Number));
     expect(typeof config.appOrigin).toBe('string');
-    expect(passwordFilePath).toContain('password.xdxdxdxd');
+    expect(dailyPassword).toMatch(/^\d{4}$/);
   });
 });
 
