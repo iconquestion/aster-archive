@@ -3,30 +3,1337 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
-    <link rel="stylesheet" href="/css/challenge-theme.css" />
     <title>26 - 中继库房</title>
+    <style>
+      :root {
+        --bg: #f3efe7;
+        --panel: #fffdf9;
+        --line: #d9cfc0;
+        --ink: #261e17;
+        --muted: #6f655c;
+        --accent: #d95d39;
+        --ok: #2d7f5e;
+        --pending: #d47a29;
+        --bad: #b74134;
+        --empty: #f4ead8;
+        --blocker: #70675d;
+        --source: #d95d39;
+        --target: #1e8f9a;
+        --pipeLocked: #3b4f73;
+        --pipeEditable: #8d5d2f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'IBM Plex Sans', 'Noto Sans SC', sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(217, 93, 57, 0.08),
+            transparent 28%
+          ),
+          linear-gradient(180deg, #f6f2eb 0%, var(--bg) 100%);
+      }
+
+      main {
+        width: min(1180px, calc(100vw - 24px));
+        margin: 24px auto;
+        display: grid;
+        gap: 20px;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+        gap: 20px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: 0 18px 50px rgba(38, 30, 23, 0.08);
+      }
+
+      .card-body {
+        padding: 20px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .header p,
+      .meta,
+      .hint,
+      .inventory-list,
+      .result {
+        color: var(--muted);
+      }
+
+      .title {
+        display: grid;
+        gap: 6px;
+      }
+
+      .status-pill {
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-weight: 600;
+        border: 1px solid rgba(212, 122, 41, 0.2);
+        background: var(--pending);
+        color: #fff;
+      }
+
+      .status-pill.ok {
+        color: #fff;
+        border-color: rgba(45, 127, 94, 0.2);
+        background: var(--ok);
+      }
+
+      .board-wrap {
+        display: grid;
+        gap: 14px;
+      }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .tile {
+        aspect-ratio: 1;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--empty);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        overflow: hidden;
+      }
+
+      .tile.clickable {
+        cursor: pointer;
+      }
+
+      .tile.selected {
+        border-color: var(--accent);
+        box-shadow: inset 0 0 0 2px rgba(217, 93, 57, 0.22);
+      }
+
+      .tile::before {
+        content: attr(data-label);
+        position: absolute;
+        inset: 6px auto auto 8px;
+        font-size: 12px;
+        color: rgba(38, 30, 23, 0.48);
+      }
+
+      .tile.empty {
+        background: var(--empty);
+      }
+
+      .tile.blocker {
+        background: var(--blocker);
+        color: #fff;
+      }
+
+      .tile.source {
+        background: rgba(217, 93, 57, 0.14);
+        border-color: rgba(217, 93, 57, 0.24);
+      }
+
+      .tile.target {
+        background: rgba(30, 143, 154, 0.12);
+        border-color: rgba(30, 143, 154, 0.24);
+      }
+
+      .tile.pipe.locked {
+        background: rgba(59, 79, 115, 0.12);
+        border-color: rgba(59, 79, 115, 0.22);
+      }
+
+      .tile.pipe.editable {
+        background: rgba(141, 93, 47, 0.13);
+        border-color: rgba(141, 93, 47, 0.25);
+      }
+
+      .pipe-core {
+        width: 78%;
+        height: 78%;
+        position: relative;
+        color: currentColor;
+      }
+
+      .pipe-arm {
+        position: absolute;
+        background: currentColor;
+        border-radius: 3px;
+        z-index: 1;
+      }
+
+      .pipe-arm.up {
+        left: calc(50% - 4px);
+        top: 0;
+        width: 8px;
+        height: calc(50% + 4px);
+      }
+
+      .pipe-arm.right {
+        top: calc(50% - 4px);
+        left: calc(50% - 4px);
+        width: calc(50% + 4px);
+        height: 8px;
+      }
+
+      .pipe-arm.down {
+        left: calc(50% - 4px);
+        top: calc(50% - 4px);
+        width: 8px;
+        height: calc(50% + 4px);
+      }
+
+      .pipe-arm.left {
+        top: calc(50% - 4px);
+        left: 0;
+        width: calc(50% + 4px);
+        height: 8px;
+      }
+
+      .tile-symbol {
+        font-size: 1.15rem;
+        font-weight: 700;
+      }
+
+      .controls,
+      .inventory-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .meta-box strong,
+      .inventory-list strong,
+      label {
+        display: block;
+        color: var(--ink);
+      }
+
+      .inventory-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .inventory-item {
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: #faf6ef;
+        border: 1px solid var(--line);
+      }
+
+      .inventory-item.selectable {
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .inventory-item.selectable.active {
+        background: rgba(217, 93, 57, 0.12);
+        border-color: rgba(217, 93, 57, 0.36);
+        color: var(--accent);
+      }
+
+      .inventory-item.selectable:disabled {
+        cursor: not-allowed;
+      }
+
+      .controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      select,
+      input,
+      button {
+        font: inherit;
+      }
+
+      select,
+      input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+      }
+
+      button {
+        padding: 12px 16px;
+        border-radius: 14px;
+        border: 0;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      .actions button {
+        flex: 1 1 0;
+      }
+
+      .actions .primary {
+        flex: 1.35 1 0;
+      }
+
+      .message-box {
+        min-height: 52px;
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        white-space: pre-line;
+      }
+
+      .message-box.ok {
+        border-color: rgba(45, 127, 94, 0.28);
+        background: rgba(45, 127, 94, 0.08);
+        color: var(--ok);
+      }
+
+      .message-box.bad {
+        border-color: rgba(183, 65, 52, 0.28);
+        background: rgba(183, 65, 52, 0.08);
+        color: var(--bad);
+      }
+
+      .method-buttons,
+      .rotation-buttons {
+        display: grid;
+        gap: 10px;
+      }
+
+      .method-buttons {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .rotation-buttons {
+        grid-template-columns: repeat(
+          var(--rotation-columns, 4),
+          minmax(0, 1fr)
+        );
+        gap: 10px;
+      }
+
+      .method-toggle,
+      .rotation-toggle {
+        min-width: 0;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        white-space: nowrap;
+      }
+
+      .rotation-toggle {
+        min-height: 70px;
+        padding: 10px;
+      }
+
+      .rotation-toggle-label {
+        font-size: 0.9rem;
+      }
+
+      .rotation-toggle-icon {
+        width: 42px;
+        height: 42px;
+        margin: 0 auto 6px;
+        color: var(--pipeEditable);
+      }
+
+      .rotation-toggle-icon .pipe-arm {
+        border-radius: 4px;
+      }
+
+      .method-toggle.active,
+      .rotation-toggle.active {
+        background: rgba(217, 93, 57, 0.12);
+        border-color: rgba(217, 93, 57, 0.36);
+        color: var(--accent);
+      }
+
+      .field-row {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .method-field,
+      .pipe-type-field,
+      .rotation-field {
+        grid-column: 1 / -1;
+      }
+
+      .rotation-preview {
+        min-height: 22px;
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .secondary {
+        background: #ece3d4;
+        color: var(--ink);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      @media (max-width: 960px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .inventory-list,
+        .controls {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .inventory-list,
+        .controls {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
   </head>
 
-  <body class="challenge-page">
-    <main class="page-shell container py-5">
-      <div class="row justify-content-center">
-        <div class="col-12 col-lg-9 col-xl-8">
-          <section class="card puzzle-card shadow-sm">
-            <div class="card-body p-4 p-md-5 puzzle-copy">
-              <h1 class="display-6 fw-bold mb-3">26 - 中继库房</h1>
-              <p class="text-secondary mb-2">
-                你成功拿到了上一台终端留下的恢复快照编号。
-              </p>
-              <p class="text-secondary mb-2">
-                看起来你已经被系统默认为“会处理异常恢复的人”了。
-              </p>
-              <p class="text-secondary mb-0">欢迎来到下一处设施。</p>
-            </div>
-          </section>
+  <body>
+    <main>
+      <section class="card">
+        <div class="card-body header">
+          <div class="title">
+            <h1>26 - 中继库房</h1>
+            <p>HTTP / PUT / PATCH / DELETE</p>
+          </div>
+          <div class="status-pill" id="solvedBadge">未完成</div>
         </div>
-      </div>
+      </section>
+
+      <section class="shell">
+        <section class="card">
+          <div class="card-body board-wrap">
+            <div class="board" id="board"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-body">
+            <h2>操作</h2>
+            <div class="hint" style="margin-top: 8px; margin-bottom: 16px">
+              <span id="boardMeta">10 x 10</span>
+            </div>
+
+            <form id="actionForm" style="margin-top: 20px">
+              <div class="controls">
+                <div class="field method-field">
+                  <label for="method">请求方法</label>
+                  <div
+                    class="method-buttons"
+                    id="methodButtons"
+                    role="radiogroup"
+                    aria-label="Request method"
+                  >
+                    <button
+                      class="method-toggle active"
+                      type="button"
+                      data-method="PUT"
+                      aria-pressed="true"
+                    >
+                      PUT
+                    </button>
+                    <button
+                      class="method-toggle"
+                      type="button"
+                      data-method="PATCH"
+                      aria-pressed="false"
+                    >
+                      PATCH
+                    </button>
+                    <button
+                      class="method-toggle"
+                      type="button"
+                      data-method="DELETE"
+                      aria-pressed="false"
+                    >
+                      DELETE
+                    </button>
+                  </div>
+                  <input id="method" name="method" type="hidden" value="PUT" />
+                </div>
+
+                <div class="field pipe-type-field">
+                  <label for="pipeType">管道类型</label>
+                  <div
+                    class="inventory-list"
+                    id="pipeTypeButtons"
+                    role="radiogroup"
+                    aria-label="Pipe type"
+                  >
+                    <button
+                      class="inventory-item selectable active"
+                      type="button"
+                      data-pipe-type="straight"
+                      aria-pressed="true"
+                    >
+                      <strong>直管道</strong>
+                      <span id="invStraight">0</span>
+                    </button>
+                    <button
+                      class="inventory-item selectable"
+                      type="button"
+                      data-pipe-type="elbow"
+                      aria-pressed="false"
+                    >
+                      <strong>弯管道</strong>
+                      <span id="invElbow">0</span>
+                    </button>
+                    <button
+                      class="inventory-item selectable"
+                      type="button"
+                      data-pipe-type="tee"
+                      aria-pressed="false"
+                    >
+                      <strong>三通管道</strong>
+                      <span id="invTee">0</span>
+                    </button>
+                  </div>
+                  <input
+                    id="pipeType"
+                    name="pipeType"
+                    type="hidden"
+                    value="straight"
+                  />
+                </div>
+
+                <div class="field-row">
+                  <div class="field">
+                    <label for="x">x</label>
+                    <input
+                      id="x"
+                      name="x"
+                      type="number"
+                      min="0"
+                      max="9"
+                      value="0"
+                    />
+                  </div>
+
+                  <div class="field">
+                    <label for="y">y</label>
+                    <input
+                      id="y"
+                      name="y"
+                      type="number"
+                      min="0"
+                      max="9"
+                      value="0"
+                    />
+                  </div>
+                </div>
+
+                <div class="field rotation-field">
+                  <label for="rotation">方向</label>
+                  <div
+                    class="rotation-buttons"
+                    id="rotationButtons"
+                    role="radiogroup"
+                    aria-label="管道方向"
+                  ></div>
+                  <input
+                    id="rotation"
+                    name="rotation"
+                    type="hidden"
+                    value="0"
+                  />
+                  <div class="rotation-preview" id="rotationPreview">
+                    当前角度：0°
+                  </div>
+                </div>
+
+                <div class="field full">
+                  <div class="actions">
+                    <button class="primary" type="submit" id="submitBtn">
+                      提交
+                    </button>
+                    <button class="secondary" type="button" id="refreshBtn">
+                      刷新
+                    </button>
+                    <button class="secondary" type="button" id="resetBtn">
+                      新游戏
+                    </button>
+                  </div>
+                  <div class="message-box" id="resultBox">等待操作</div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </section>
+      </section>
     </main>
+
+    <script>
+      const API_BASE = '/api/26';
+
+      const state = {
+        board: null,
+        inventory: null,
+        solved: false,
+        lastSuccess: null,
+        lastMessage: '',
+        flagMessage: '',
+        flagRequested: false,
+        busy: false,
+        selectedX: 0,
+        selectedY: 0,
+        rotationDirection: 'cw',
+      };
+
+      const elements = {
+        board: document.getElementById('board'),
+        boardMeta: document.getElementById('boardMeta'),
+        solvedBadge: document.getElementById('solvedBadge'),
+        invStraight: document.getElementById('invStraight'),
+        invElbow: document.getElementById('invElbow'),
+        invTee: document.getElementById('invTee'),
+        actionForm: document.getElementById('actionForm'),
+        method: document.getElementById('method'),
+        methodButtons: Array.from(document.querySelectorAll('[data-method]')),
+        pipeType: document.getElementById('pipeType'),
+        pipeTypeButtons: Array.from(
+          document.querySelectorAll('[data-pipe-type]')
+        ),
+        x: document.getElementById('x'),
+        y: document.getElementById('y'),
+        rotation: document.getElementById('rotation'),
+        rotationButtonsWrap: document.getElementById('rotationButtons'),
+        rotationPreview: document.getElementById('rotationPreview'),
+        submitBtn: document.getElementById('submitBtn'),
+        refreshBtn: document.getElementById('refreshBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        resultBox: document.getElementById('resultBox'),
+      };
+
+      const PUT_ROTATION_OPTIONS = {
+        straight: [
+          { rotation: 0, label: '水平' },
+          { rotation: 90, label: '垂直' },
+        ],
+        elbow: [
+          { rotation: 0, label: '右上' },
+          { rotation: 90, label: '右下' },
+          { rotation: 180, label: '左下' },
+          { rotation: 270, label: '左上' },
+        ],
+        tee: [
+          { rotation: 0, label: '左' },
+          { rotation: 90, label: '上' },
+          { rotation: 180, label: '右' },
+          { rotation: 270, label: '下' },
+        ],
+      };
+
+      const PATCH_ROTATION_OPTIONS = [
+        { direction: 'cw', label: '顺时针' },
+        { direction: 'ccw', label: '逆时针' },
+      ];
+
+      const PIPE_OPENINGS = {
+        straight: {
+          0: ['left', 'right'],
+          90: ['up', 'down'],
+          180: ['left', 'right'],
+          270: ['up', 'down'],
+        },
+        elbow: {
+          0: ['up', 'right'],
+          90: ['right', 'down'],
+          180: ['down', 'left'],
+          270: ['left', 'up'],
+        },
+        tee: {
+          0: ['up', 'right', 'down'],
+          90: ['right', 'down', 'left'],
+          180: ['down', 'left', 'up'],
+          270: ['left', 'up', 'right'],
+        },
+      };
+
+      function setBusy(nextBusy) {
+        state.busy = nextBusy;
+        elements.submitBtn.disabled = nextBusy;
+        elements.refreshBtn.disabled = nextBusy;
+        elements.resetBtn.disabled = nextBusy;
+        elements.method.disabled = nextBusy;
+        elements.pipeType.disabled = nextBusy;
+        elements.x.disabled = nextBusy;
+        elements.y.disabled = nextBusy;
+        elements.rotation.disabled = nextBusy;
+        for (const button of elements.methodButtons) {
+          button.disabled = nextBusy;
+        }
+        for (const button of getRotationButtons()) {
+          button.disabled = nextBusy;
+        }
+        syncPipeTypeButtonAvailability();
+      }
+
+      function renderResult() {
+        const lines = [];
+
+        if (state.lastMessage) {
+          lines.push(state.lastMessage);
+        }
+
+        if (state.flagMessage) {
+          lines.push(`flag: ${state.flagMessage}`);
+        }
+
+        elements.resultBox.textContent = lines.join('\n') || '等待操作';
+        elements.resultBox.className =
+          state.lastSuccess === null
+            ? 'message-box'
+            : state.lastSuccess
+              ? 'message-box ok'
+              : 'message-box bad';
+      }
+
+      function setResult(success, message) {
+        state.lastSuccess = success;
+        state.lastMessage = message;
+        renderResult();
+      }
+
+      function setFlagMessage(message) {
+        state.flagMessage = message || '';
+        renderResult();
+      }
+
+      function updateSolved(solved) {
+        const wasSolved = state.solved;
+        state.solved = solved;
+        elements.solvedBadge.textContent = solved ? '已完成' : '未完成';
+        elements.solvedBadge.className = solved
+          ? 'status-pill ok'
+          : 'status-pill';
+
+        if (!solved) {
+          state.flagMessage = '';
+          state.flagRequested = false;
+          renderResult();
+          return;
+        }
+
+        if (!wasSolved || !state.flagMessage) {
+          void fetchFlag();
+        }
+      }
+
+      function updateInventory(inventory) {
+        state.inventory = inventory;
+        elements.invStraight.textContent = inventory?.straight ?? 0;
+        elements.invElbow.textContent = inventory?.elbow ?? 0;
+        elements.invTee.textContent = inventory?.tee ?? 0;
+        syncPipeTypeButtonAvailability();
+      }
+
+      function findTile(x, y) {
+        if (!state.board?.tiles) {
+          return null;
+        }
+
+        return (
+          state.board.tiles.find((tile) => tile.x === x && tile.y === y) || null
+        );
+      }
+
+      function getRotationButtons() {
+        return Array.from(
+          elements.rotationButtonsWrap.querySelectorAll('.rotation-toggle')
+        );
+      }
+
+      function getNextRotation(rotation) {
+        const next = Number(rotation);
+
+        if (Number.isNaN(next)) {
+          return 0;
+        }
+
+        return (next + 90) % 360;
+      }
+
+      function getPreviousRotation(rotation) {
+        const next = Number(rotation);
+
+        if (Number.isNaN(next)) {
+          return 0;
+        }
+
+        return (next + 270) % 360;
+      }
+
+      function getRotationByDirection(rotation, direction) {
+        return direction === 'ccw'
+          ? getPreviousRotation(rotation)
+          : getNextRotation(rotation);
+      }
+
+      function setRotationValue(rotation) {
+        elements.rotation.value = String(rotation);
+        elements.rotationPreview.textContent = `当前角度：${rotation}°`;
+      }
+
+      function updateRotationDirectionButtons() {
+        for (const button of getRotationButtons()) {
+          const active =
+            elements.method.value === 'PUT'
+              ? Number(button.dataset.rotation) ===
+                Number(elements.rotation.value)
+              : button.dataset.direction === state.rotationDirection;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        }
+      }
+
+      function updateMethodButtons() {
+        for (const button of elements.methodButtons) {
+          const active = button.dataset.method === elements.method.value;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        }
+      }
+
+      function updatePipeTypeButtons() {
+        for (const button of elements.pipeTypeButtons) {
+          const active = button.dataset.pipeType === elements.pipeType.value;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        }
+      }
+
+      function syncPipeTypeButtonAvailability() {
+        for (const button of elements.pipeTypeButtons) {
+          const count = state.inventory?.[button.dataset.pipeType] ?? 0;
+          button.disabled = state.busy || count <= 0;
+        }
+      }
+
+      function buildPipePreview(pipeType, rotation) {
+        const preview = pipeNode({
+          pipeType,
+          rotation,
+          locked: false,
+        });
+        preview.classList.add('rotation-toggle-icon');
+        preview.style.color = 'var(--pipeEditable)';
+        return preview;
+      }
+
+      function renderPutRotationButtons() {
+        const options =
+          PUT_ROTATION_OPTIONS[elements.pipeType.value] ||
+          PUT_ROTATION_OPTIONS.straight;
+
+        elements.rotationButtonsWrap.innerHTML = '';
+        elements.rotationButtonsWrap.classList.remove('patch-mode');
+        elements.rotationButtonsWrap.style.setProperty(
+          '--rotation-columns',
+          String(Math.max(options.length, 1))
+        );
+
+        for (const option of options) {
+          const button = document.createElement('button');
+          button.className = 'rotation-toggle';
+          button.type = 'button';
+          button.dataset.rotation = String(option.rotation);
+          button.disabled = state.busy;
+          button.appendChild(
+            buildPipePreview(elements.pipeType.value, option.rotation)
+          );
+
+          const label = document.createElement('span');
+          label.className = 'rotation-toggle-label';
+          label.textContent = option.label;
+          button.appendChild(label);
+
+          button.addEventListener('click', handleRotationButtonClick);
+          elements.rotationButtonsWrap.appendChild(button);
+        }
+      }
+
+      function renderPatchRotationButtons() {
+        elements.rotationButtonsWrap.innerHTML = '';
+        elements.rotationButtonsWrap.classList.add('patch-mode');
+        elements.rotationButtonsWrap.style.setProperty(
+          '--rotation-columns',
+          String(PATCH_ROTATION_OPTIONS.length)
+        );
+
+        for (const option of PATCH_ROTATION_OPTIONS) {
+          const button = document.createElement('button');
+          button.className = 'rotation-toggle';
+          button.type = 'button';
+          button.dataset.direction = option.direction;
+          button.disabled = state.busy;
+          button.textContent = option.label;
+          button.addEventListener('click', handleRotationButtonClick);
+          elements.rotationButtonsWrap.appendChild(button);
+        }
+      }
+
+      function renderRotationButtons() {
+        if (elements.method.value === 'PUT') {
+          renderPutRotationButtons();
+        } else if (elements.method.value === 'PATCH') {
+          renderPatchRotationButtons();
+        } else {
+          elements.rotationButtonsWrap.innerHTML = '';
+          elements.rotationButtonsWrap.classList.remove('patch-mode');
+          elements.rotationButtonsWrap.style.removeProperty(
+            '--rotation-columns'
+          );
+        }
+
+        updateRotationDirectionButtons();
+      }
+
+      function renderBoardSelection() {
+        for (const tileEl of elements.board.children) {
+          const selected =
+            Number(tileEl.dataset.x) === state.selectedX &&
+            Number(tileEl.dataset.y) === state.selectedY;
+          tileEl.classList.toggle('selected', selected);
+        }
+      }
+
+      function selectTile(x, y) {
+        state.selectedX = x;
+        state.selectedY = y;
+        elements.x.value = String(x);
+        elements.y.value = String(y);
+        renderBoardSelection();
+        syncPatchRotationPreview();
+      }
+
+      function syncSelectionFromInputs() {
+        state.selectedX = Number(elements.x.value);
+        state.selectedY = Number(elements.y.value);
+        renderBoardSelection();
+        syncPatchRotationPreview();
+      }
+
+      function syncPatchRotationPreview() {
+        if (elements.method.value === 'PUT') {
+          const selectedOption =
+            PUT_ROTATION_OPTIONS[elements.pipeType.value]?.find(
+              (option) => option.rotation === Number(elements.rotation.value)
+            ) || null;
+          elements.rotationPreview.textContent = selectedOption
+            ? `当前方向：${selectedOption.label}`
+            : `当前角度：${elements.rotation.value}°`;
+          updateRotationDirectionButtons();
+          return;
+        }
+
+        if (elements.method.value !== 'PATCH') {
+          elements.rotationPreview.textContent = `当前角度：${elements.rotation.value}°`;
+          return;
+        }
+
+        const x = Number(elements.x.value);
+        const y = Number(elements.y.value);
+        const tile = findTile(x, y);
+
+        if (!tile || tile.tileType !== 'pipe') {
+          elements.rotationPreview.textContent = '当前角度：未选中可旋转水管';
+          return;
+        }
+
+        setRotationValue(
+          getRotationByDirection(tile.rotation, state.rotationDirection)
+        );
+      }
+
+      async function fetchFlag() {
+        if (!state.solved || state.flagRequested || state.flagMessage) {
+          return;
+        }
+
+        // 结果栏可能因刷新棋盘重复进入 solved 状态，这里做一次幂等保护。
+        state.flagRequested = true;
+
+        try {
+          const response = await fetch(`${API_BASE}/flag`);
+          const payload = await response.json();
+
+          if (!response.ok || !payload?.message) {
+            throw new Error(payload?.message || 'flag 获取失败');
+          }
+
+          setFlagMessage(payload.message);
+        } catch (_error) {
+          state.flagRequested = false;
+        }
+      }
+
+      function syncMethodFields() {
+        const method = elements.method.value;
+        const showPipeType = method === 'PUT';
+        const showRotation = method !== 'DELETE';
+
+        if (method === 'PUT') {
+          const options = PUT_ROTATION_OPTIONS[elements.pipeType.value] || [];
+          if (
+            !options.some(
+              (option) => option.rotation === Number(elements.rotation.value)
+            )
+          ) {
+            setRotationValue(options[0]?.rotation ?? 0);
+          }
+        }
+
+        elements.pipeType
+          .closest('.field')
+          .classList.toggle('hidden', !showPipeType);
+        elements.rotation
+          .closest('.field')
+          .classList.toggle('hidden', !showRotation);
+        renderRotationButtons();
+        syncPatchRotationPreview();
+      }
+
+      function getPipeDirections(pipeType, rotation) {
+        return PIPE_OPENINGS[pipeType]?.[rotation] || [];
+      }
+
+      function pipeNode(tile) {
+        const core = document.createElement('div');
+        core.className = `pipe-core ${tile.pipeType}`;
+        core.style.color = tile.locked
+          ? 'var(--pipeLocked)'
+          : 'var(--pipeEditable)';
+
+        for (const direction of getPipeDirections(
+          tile.pipeType,
+          tile.rotation
+        )) {
+          const arm = document.createElement('span');
+          arm.className = `pipe-arm ${direction}`;
+          core.appendChild(arm);
+        }
+
+        return core;
+      }
+
+      function createTileElement(tile) {
+        const el = document.createElement('div');
+        el.className = `tile ${tile.tileType} clickable`;
+        el.dataset.label = `${tile.x},${tile.y}`;
+        el.dataset.x = String(tile.x);
+        el.dataset.y = String(tile.y);
+        el.addEventListener('click', () => {
+          selectTile(tile.x, tile.y);
+        });
+
+        if (tile.x === state.selectedX && tile.y === state.selectedY) {
+          el.classList.add('selected');
+        }
+
+        if (tile.tileType === 'pipe') {
+          el.classList.add(tile.locked ? 'locked' : 'editable');
+          el.appendChild(pipeNode(tile));
+          return el;
+        }
+
+        const label = document.createElement('span');
+        label.className = 'tile-symbol';
+
+        if (tile.tileType === 'source') {
+          label.textContent = 'S';
+        } else if (tile.tileType === 'target') {
+          label.textContent = 'T';
+        } else if (tile.tileType === 'blocker') {
+          label.textContent = 'X';
+        } else {
+          label.textContent = '';
+        }
+
+        el.appendChild(label);
+        return el;
+      }
+
+      function renderBoard(board) {
+        state.board = board;
+        elements.board.innerHTML = '';
+        elements.boardMeta.textContent = `${board.width} x ${board.height}`;
+
+        for (const tile of board.tiles) {
+          elements.board.appendChild(createTileElement(tile));
+        }
+
+        renderBoardSelection();
+        syncPatchRotationPreview();
+      }
+
+      async function fetchBoard() {
+        const res = await fetch(`${API_BASE}/board`, {
+          credentials: 'same-origin',
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'load failed');
+        }
+
+        renderBoard(data.board);
+        updateInventory(data.inventory);
+        updateSolved(Boolean(data.solved));
+      }
+
+      function buildRequest() {
+        const method = elements.method.value;
+        const x = Number(elements.x.value);
+        const y = Number(elements.y.value);
+        const url = `${API_BASE}/tiles/${x}/${y}`;
+
+        if (method === 'DELETE') {
+          return { method, url };
+        }
+
+        if (method === 'PATCH') {
+          const tile = findTile(x, y);
+          const rotation =
+            tile && tile.tileType === 'pipe'
+              ? // PATCH 按题意提交旋转后的绝对角度，而不是“顺/逆时针”文本本身。
+                getRotationByDirection(tile.rotation, state.rotationDirection)
+              : Number(elements.rotation.value);
+
+          return {
+            method,
+            url,
+            body: {
+              rotation,
+            },
+          };
+        }
+
+        return {
+          method,
+          url,
+          body: {
+            pipeType: elements.pipeType.value,
+            rotation: Number(elements.rotation.value),
+          },
+        };
+      }
+
+      function handleRotationButtonClick(event) {
+        if (elements.method.value === 'PUT') {
+          const rotation = Number(event.currentTarget.dataset.rotation);
+          if (Number.isNaN(rotation)) {
+            return;
+          }
+
+          setRotationValue(rotation);
+          updateRotationDirectionButtons();
+          return;
+        }
+
+        const direction = event.currentTarget.dataset.direction;
+
+        if (!direction) {
+          return;
+        }
+
+        const sameDirection = direction === state.rotationDirection;
+        state.rotationDirection = direction;
+        updateRotationDirectionButtons();
+
+        if (sameDirection || elements.method.value === 'PATCH') {
+          syncPatchRotationPreview();
+        }
+      }
+
+      function handleMethodButtonClick(event) {
+        const method = event.currentTarget.dataset.method;
+
+        if (!method || method === elements.method.value) {
+          return;
+        }
+
+        elements.method.value = method;
+        updateMethodButtons();
+        syncMethodFields();
+      }
+
+      function handlePipeTypeButtonClick(event) {
+        const pipeType = event.currentTarget.dataset.pipeType;
+
+        if (!pipeType || pipeType === elements.pipeType.value) {
+          return;
+        }
+
+        elements.pipeType.value = pipeType;
+        updatePipeTypeButtons();
+        if (elements.method.value === 'PUT') {
+          const options = PUT_ROTATION_OPTIONS[pipeType] || [];
+          if (
+            !options.some(
+              (option) => option.rotation === Number(elements.rotation.value)
+            )
+          ) {
+            setRotationValue(options[0]?.rotation ?? 0);
+          }
+          renderRotationButtons();
+          syncPatchRotationPreview();
+        }
+      }
+
+      async function submitAction(event) {
+        event.preventDefault();
+        setBusy(true);
+
+        try {
+          // 每次操作后都重新取一次棋盘，保证库存、完成状态和结果栏同步。
+          const request = buildRequest();
+          const res = await fetch(request.url, {
+            method: request.method,
+            credentials: 'same-origin',
+            headers: request.body
+              ? { 'Content-Type': 'application/json' }
+              : undefined,
+            body: request.body ? JSON.stringify(request.body) : undefined,
+          });
+          const data = await res.json();
+
+          setResult(Boolean(data.success), data.message || '');
+          updateSolved(Boolean(data.solved));
+
+          if (!res.ok) {
+            return;
+          }
+
+          await fetchBoard();
+        } catch (error) {
+          setResult(false, error.message || 'request failed');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function refreshBoard() {
+        setBusy(true);
+
+        try {
+          await fetchBoard();
+        } catch (error) {
+          setResult(false, error.message || 'load failed');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function resetBoard() {
+        setBusy(true);
+
+        try {
+          const res = await fetch(`${API_BASE}/reset`, {
+            method: 'POST',
+            credentials: 'same-origin',
+          });
+          const data = await res.json();
+
+          setResult(Boolean(data.success), data.message || '');
+          updateSolved(Boolean(data.solved));
+
+          if (!res.ok) {
+            return;
+          }
+
+          await fetchBoard();
+        } catch (error) {
+          setResult(false, error.message || 'reset failed');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      elements.x.addEventListener('input', syncSelectionFromInputs);
+      elements.y.addEventListener('input', syncSelectionFromInputs);
+      for (const button of elements.methodButtons) {
+        button.addEventListener('click', handleMethodButtonClick);
+      }
+      for (const button of elements.pipeTypeButtons) {
+        button.addEventListener('click', handlePipeTypeButtonClick);
+      }
+      elements.actionForm.addEventListener('submit', submitAction);
+      elements.refreshBtn.addEventListener('click', refreshBoard);
+      elements.resetBtn.addEventListener('click', resetBoard);
+
+      updateMethodButtons();
+      updatePipeTypeButtons();
+      syncMethodFields();
+      setResult(null, '');
+      void refreshBoard();
+    </script>
     <script src="/js/analytics.js"></script>
   </body>
 </html>

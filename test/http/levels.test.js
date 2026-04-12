@@ -1,3 +1,8 @@
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const request = require('supertest');
 const {
   createTestApp,
@@ -5,6 +10,10 @@ const {
   getTestRuntime,
 } = require('../helpers/createTestApp');
 const { constants: level25Constants } = require('../../src/25');
+const {
+  createLevel26Router,
+  constants: level26Constants,
+} = require('../../src/26');
 
 describe('Config', () => {
   test('loads env and required local fixtures', () => {
@@ -393,5 +402,184 @@ describe('Levels 16-25', () => {
 
     expect(stateRes.status).toBe(200);
     expect(stateRes.body.current_value).toBe('edge-node-9');
+  });
+});
+
+describe('Level 26', () => {
+  let app;
+
+  beforeAll(() => {
+    app = createTestApp();
+  });
+
+  test('26 board api returns the puzzle state payload', async () => {
+    const agent = request.agent(app);
+    const res = await agent.get('/api/26/board');
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.board.width).toBe(10);
+    expect(res.body.board.height).toBe(10);
+    expect(Array.isArray(res.body.board.tiles)).toBe(true);
+    expect(res.body.inventory).toEqual(
+      expect.objectContaining({
+        straight: expect.any(Number),
+        elbow: expect.any(Number),
+        tee: expect.any(Number),
+      })
+    );
+  });
+
+  test('26 new board only exposes locked preset pipes', async () => {
+    const agent = request.agent(app);
+    const boardRes = await agent.get('/api/26/board');
+
+    expect(boardRes.status).toBe(200);
+    expect(boardRes.body.success).toBe(true);
+
+    const editablePresetPipe = boardRes.body.board.tiles.find(
+      (tile) => tile.tileType === 'pipe' && tile.locked === false
+    );
+
+    expect(editablePresetPipe).toBeUndefined();
+  });
+
+  test('26 patch still accepts absolute rotations for player placed pipes', async () => {
+    const agent = request.agent(app);
+    const boardRes = await agent.get('/api/26/board');
+
+    expect(boardRes.status).toBe(200);
+    expect(boardRes.body.success).toBe(true);
+
+    const placeableType = Object.entries(boardRes.body.inventory).find(
+      ([, count]) => count > 0
+    )?.[0];
+    const emptyTile = boardRes.body.board.tiles.find(
+      (tile) => tile.tileType === 'empty'
+    );
+
+    expect(placeableType).toBeDefined();
+    expect(emptyTile).toBeDefined();
+
+    const putRes = await agent
+      .put(`/api/26/tiles/${emptyTile.x}/${emptyTile.y}`)
+      .send({ pipeType: placeableType, rotation: 0 });
+
+    expect(putRes.status).toBe(200);
+    expect(putRes.body.success).toBe(true);
+
+    const patchRes = await agent
+      .patch(`/api/26/tiles/${emptyTile.x}/${emptyTile.y}`)
+      .send({ rotation: 270 });
+
+    expect(patchRes.status).toBe(200);
+    expect(patchRes.body.success).toBe(true);
+  });
+
+  test('26 reset creates a new board while keeping the same session uuid', async () => {
+    const storageDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'iconquestion-level26-test-')
+    );
+    let nowMs = Date.parse('2026-04-12T00:00:00.000Z');
+    const now = () => new Date(nowMs);
+    let randomByteCalls = 0;
+    const randomBytes = (size) => {
+      randomByteCalls += 1;
+      return Buffer.alloc(size, randomByteCalls);
+    };
+
+    const sequence = [
+      1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 2, 1, 0, 0, 1, 3, 0, 1, 2, 0, 1, 2, 1, 0, 3,
+      2, 0, 1, 0, 1, 0, 1,
+    ];
+    let randomIndex = 0;
+    const randomInt = (max) => {
+      const value = sequence[randomIndex] ?? 0;
+      randomIndex += 1;
+      return value % max;
+    };
+
+    const testApp = express();
+    testApp.use(express.json());
+    testApp.use(cookieParser());
+    testApp.use(
+      '/api/26',
+      createLevel26Router({
+        storageDir,
+        now,
+        randomBytes,
+        randomInt,
+      })
+    );
+
+    const agent = request.agent(testApp);
+    const boardRes = await agent.get('/api/26/board');
+    const firstCookie = boardRes.headers['set-cookie'][0];
+    const firstSessionId = /relay_pipe_sid=([^;]+)/.exec(firstCookie)?.[1];
+
+    expect(boardRes.status).toBe(200);
+    expect(firstSessionId).toMatch(/^[a-f0-9]{32}$/);
+
+    nowMs += 1000;
+
+    const resetRes = await agent.post('/api/26/reset');
+    const resetCookie = resetRes.headers['set-cookie'][0];
+    const resetSessionId = /relay_pipe_sid=([^;]+)/.exec(resetCookie)?.[1];
+
+    expect(resetRes.status).toBe(200);
+    expect(resetRes.body.success).toBe(true);
+    expect(resetRes.body.message).toBe('操作成功');
+    expect(resetSessionId).toBe(firstSessionId);
+
+    const nextBoardRes = await agent.get('/api/26/board');
+
+    expect(nextBoardRes.status).toBe(200);
+    expect(nextBoardRes.body.board).not.toEqual(boardRes.body.board);
+  });
+
+  test('26 flag api only returns the next flag after the solved session is verified by cookie', async () => {
+    const storageDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'iconquestion-level26-flag-test-')
+    );
+    const testApp = express();
+    testApp.use(express.json());
+    testApp.use(cookieParser());
+    testApp.use(
+      '/api/26',
+      createLevel26Router({
+        storageDir,
+      })
+    );
+
+    const agent = request.agent(testApp);
+    const boardRes = await agent.get('/api/26/board');
+    const sessionCookie = boardRes.headers['set-cookie'][0];
+    const sessionId = new RegExp(
+      `${level26Constants.SESSION_COOKIE_NAME}=([^;]+)`
+    ).exec(sessionCookie)?.[1];
+
+    expect(boardRes.status).toBe(200);
+    expect(sessionId).toMatch(/^[a-f0-9]{32}$/);
+
+    const unsolvedFlagRes = await agent.get('/api/26/flag');
+
+    expect(unsolvedFlagRes.status).toBe(403);
+    expect(unsolvedFlagRes.body.success).toBe(false);
+
+    // 直接修改会话文件，验证 /flag 的权限边界只依赖当前 cookie 对应的解谜状态。
+    const sessionFile = path.join(storageDir, `${sessionId}.json`);
+    const serializedState = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
+    serializedState.solved = true;
+    fs.writeFileSync(
+      sessionFile,
+      JSON.stringify(serializedState, null, 2),
+      'utf8'
+    );
+
+    const solvedFlagRes = await agent.get('/api/26/flag');
+
+    expect(solvedFlagRes.status).toBe(200);
+    expect(solvedFlagRes.body.success).toBe(true);
+    expect(solvedFlagRes.body.message).toBe(level26Constants.NEXT_LEVEL_FLAG);
   });
 });
