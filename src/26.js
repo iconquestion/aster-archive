@@ -1076,6 +1076,7 @@ const router = createLevel26Router();
 module.exports = router;
 module.exports.createLevel26Router = createLevel26Router;
 module.exports.cleanupStaleSessions = cleanupStaleSessions;
+module.exports.getSessionFilePath = getSessionFilePath;
 module.exports.serializeState = serializeState;
 module.exports.deserializeState = deserializeState;
 module.exports.constants = {

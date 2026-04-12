@@ -12,6 +12,7 @@ const {
 const { constants: level25Constants } = require('../../src/25');
 const {
   createLevel26Router,
+  getSessionFilePath,
   constants: level26Constants,
 } = require('../../src/26');
 
@@ -407,9 +408,16 @@ describe('Levels 16-25', () => {
 
 describe('Level 26', () => {
   let app;
+  const tempDirs = [];
 
   beforeAll(() => {
     app = createTestApp();
+  });
+
+  afterEach(() => {
+    for (const tempDir of tempDirs.splice(0)) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 
   test('26 board api returns the puzzle state payload', async () => {
@@ -480,6 +488,7 @@ describe('Level 26', () => {
     const storageDir = fs.mkdtempSync(
       path.join(os.tmpdir(), 'iconquestion-level26-test-')
     );
+    tempDirs.push(storageDir);
     let nowMs = Date.parse('2026-04-12T00:00:00.000Z');
     const now = () => new Date(nowMs);
     let randomByteCalls = 0;
@@ -541,6 +550,7 @@ describe('Level 26', () => {
     const storageDir = fs.mkdtempSync(
       path.join(os.tmpdir(), 'iconquestion-level26-flag-test-')
     );
+    tempDirs.push(storageDir);
     const testApp = express();
     testApp.use(express.json());
     testApp.use(cookieParser());
@@ -567,7 +577,7 @@ describe('Level 26', () => {
     expect(unsolvedFlagRes.body.success).toBe(false);
 
     // 直接修改会话文件，验证 /flag 的权限边界只依赖当前 cookie 对应的解谜状态。
-    const sessionFile = path.join(storageDir, `${sessionId}.json`);
+    const sessionFile = getSessionFilePath(storageDir, sessionId);
     const serializedState = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
     serializedState.solved = true;
     fs.writeFileSync(
