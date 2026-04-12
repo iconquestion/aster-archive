@@ -207,13 +207,7 @@ cp .env.example .env
 
 #### 特殊关卡配置
 
-添加一个自动生成密码的 cron 任务（12关），参考配置如下
-
-```bash
-crontab -e
-
-0 0 * * * shuf -i 0-9999 -n 1 > /var/www/www.iconquestion.com/public/12-d1q7m4z8pv/password.xdxdxdxd
-```
+第 12 关的当日四位数字密码由服务端代码基于固定 secret 和当天日期直接生成，并在进程内按天缓存。
 
 ### 启动项目
 
@@ -255,7 +249,7 @@ npm test
 
 - 准备 `config/.env`
 
-- 准备测试所需的每日密码文件
+- 准备测试所需的本地 TLS 证书与环境变量
 
 - 运行 `npm test`
 

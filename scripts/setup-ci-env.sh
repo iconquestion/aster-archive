@@ -5,7 +5,6 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 mkdir -p "$repo_root/config/.ci-tls"
-mkdir -p "$repo_root/public/12-d1q7m4z8pv"
 
 openssl req \
   -x509 \
@@ -15,8 +14,6 @@ openssl req \
   -out "$repo_root/config/.ci-tls/cert.pem" \
   -days 7 \
   -subj "/CN=localhost"
-
-printf '4242\n' > "$repo_root/public/12-d1q7m4z8pv/password.xdxdxdxd"
 
 cat > "$repo_root/config/.env" <<EOF
 HTTP_PORT=8080
