@@ -38,6 +38,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup project
         uses: ./.github/actions/setup-node-project
         with:
@@ -50,6 +53,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup project
         uses: ./.github/actions/setup-node-project
         with:
@@ -62,6 +68,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup project
         uses: ./.github/actions/setup-node-project
         with:
