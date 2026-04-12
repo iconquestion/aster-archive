@@ -24,7 +24,7 @@ https://www.iconquestion.com/
 
 `public/` 存放首页、起始页、各关卡页面，以及JS、字体、CSS等静态资源。
 
-`src/` 存放 Node/Express 服务入口和各个需要后端能力的关卡实现。
+`src/` 存放 Node/Express 服务入口与通用服务模块；其中各个需要后端能力的关卡实现集中放在 `src/levels/`。
 
 `test/` 自动化测试脚本。
 

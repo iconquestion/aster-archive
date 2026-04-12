@@ -86,7 +86,10 @@ function optionalBooleanEnv(name, defaultValue) {
 function loadConfig() {
   // 统一从项目内的 config/.env 加载运行配置，避免入口与测试各自维护一套解析逻辑。
   const envPath = path.join(__dirname, '../config/.env');
-  const envResult = dotenv.config({ path: envPath });
+  const envResult = dotenv.config({
+    path: envPath,
+    quiet: true,
+  });
 
   if (envResult.error) {
     throw new Error(

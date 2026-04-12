@@ -2,7 +2,7 @@ const http = require('http');
 const { loadConfig } = require('../../src/config');
 const { createApp } = require('../../src/app');
 const { createServers } = require('../../src/createServers');
-const { getLevel12DailyPassword } = require('../../src/12');
+const { getLevel12DailyPassword } = require('../../src/levels/12');
 
 let cachedRuntime = null;
 

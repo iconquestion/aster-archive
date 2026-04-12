@@ -17,7 +17,7 @@
   使用 Express 提供静态资源、普通 API、部分特殊关卡逻辑，并单独启动 HTTPS 与 HTTP/2 服务。
 
 - 内容与测试层  
-  `public/` 存放各关卡页面与静态资源，`src/` 存放后端关卡实现，`test/` 用于验证关键 API 行为。
+  `public/` 存放各关卡页面与静态资源，`src/` 存放 Node 应用入口与通用服务模块，`src/levels/` 存放后端关卡实现，`test/` 用于验证关键 API 行为。
 
 ## 目录架构
 
@@ -43,7 +43,9 @@ Node 服务端代码目录。
 
 - 应用入口：`src/index.js`
 
-- 每一关具体后端逻辑：`src/{关卡编号}.js`
+- 应用装配与通用模块：`src/app.js`、`src/config.js`、`src/createServers.js`、`src/logger.js`
+
+- 每一关具体后端逻辑：`src/levels/{关卡编号}.js`
 
 部分关卡需要利用一些特性，因此结构可能不同于上述内容。
 
@@ -98,7 +100,7 @@ Express 应用承担以下职责：
 当前存在几个较为特殊的关卡，需要独立设计：
 
 - 15 关 —— WebSocket  
-  `src/15.js` 通过 `handleUpgrade` 接管升级请求。若使用 Nginx 中间件，需留意传递 Upgrade 头。
+  `src/levels/15.js` 通过 `handleUpgrade` 接管升级请求。若使用 Nginx 中间件，需留意传递 Upgrade 头。
 
 - 17 关 —— HTTP Trailer  
   HTTP Trailer 在低版本 Nginx 的 proxy_pass 场景中不受支持，因此设计时让客户端直接访问 Node 的 `8443` 端口。新版本 Nginx 中此特性的支持情况需要进一步确认。
@@ -199,7 +201,7 @@ cp .env.example .env
 
 注意：
 
-- `src/index.js` 与 `test/test.js` 会在启动时严格校验这些变量，缺失、空值、格式错误或路径不存在都会直接报错退出
+- `src/index.js` 与测试辅助代码会在启动时严格校验这些变量，缺失、空值、格式错误或路径不存在都会直接报错退出
 
 - `APP_ORIGIN` 应与实际访问入口保持一致，否则部分跨域响应和测试会失败
 

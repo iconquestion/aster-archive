@@ -9,24 +9,24 @@ const {
   getDailyPassword,
   getTestRuntime,
 } = require('../helpers/createTestApp');
-const level04Router = require('../../src/04');
-const level05Router = require('../../src/05');
-const level06Router = require('../../src/06');
-const level07Router = require('../../src/07');
-const level12Router = require('../../src/12');
-const level14Router = require('../../src/14');
-const level16Router = require('../../src/16');
-const level18Router = require('../../src/18');
-const level20Router = require('../../src/20');
-const level22Router = require('../../src/22');
+const level04Router = require('../../src/levels/04');
+const level05Router = require('../../src/levels/05');
+const level06Router = require('../../src/levels/06');
+const level07Router = require('../../src/levels/07');
+const level12Router = require('../../src/levels/12');
+const level14Router = require('../../src/levels/14');
+const level16Router = require('../../src/levels/16');
+const level18Router = require('../../src/levels/18');
+const level20Router = require('../../src/levels/20');
+const level22Router = require('../../src/levels/22');
 const {
   createLevel25Router,
   constants: level25Constants,
-} = require('../../src/25');
+} = require('../../src/levels/25');
 const {
   createLevel26Router,
   constants: level26Constants,
-} = require('../../src/26');
+} = require('../../src/levels/26');
 
 function createIsolatedLevelsApp({ level25Options, level26Options } = {}) {
   const app = express();

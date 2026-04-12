@@ -68,22 +68,22 @@ function createApp({ appOrigin, logger }) {
     res.status(200).json({ message: 'ok' });
   });
 
-  app.use('/api/04', require('./04'));
-  app.use('/api/05', require('./05'));
-  app.use('/api/06', require('./06'));
-  app.use('/api/07', require('./07'));
-  app.use('/api/12', require('./12'));
-  app.use('/api/14', require('./14'));
-  app.use('/api/16', require('./16'));
-  app.use('/api/17', require('./17'));
-  app.use('/api/18', require('./18'));
-  app.use('/api/20', require('./20'));
-  app.use('/api/22', require('./22'));
-  app.use('/api/25', require('./25'));
-  app.use('/api/26', require('./26'));
+  app.use('/api/04', require('./levels/04'));
+  app.use('/api/05', require('./levels/05'));
+  app.use('/api/06', require('./levels/06'));
+  app.use('/api/07', require('./levels/07'));
+  app.use('/api/12', require('./levels/12'));
+  app.use('/api/14', require('./levels/14'));
+  app.use('/api/16', require('./levels/16'));
+  app.use('/api/17', require('./levels/17'));
+  app.use('/api/18', require('./levels/18'));
+  app.use('/api/20', require('./levels/20'));
+  app.use('/api/22', require('./levels/22'));
+  app.use('/api/25', require('./levels/25'));
+  app.use('/api/26', require('./levels/26'));
 
   // 15 关同时依赖普通 HTTP 路由和后续 server 层的 WebSocket upgrade。
-  const level15 = require('./15');
+  const level15 = require('./levels/15');
   app.use('/api/15', level15.router);
 
   // 全局错误处理放在应用装配末尾，兜底记录未捕获的路由异常。
