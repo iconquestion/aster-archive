@@ -6,8 +6,6 @@ const path = require('path');
 const BOARD_SIZE = 10;
 const SESSION_COOKIE_NAME = 'relay_pipe_sid';
 const STORAGE_DIR = path.join('/tmp', 'iconquestion-level26-sessions');
-const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
-const COOKIE_MAX_AGE_MS = SESSION_TTL_MS;
 const NEXT_LEVEL_FLAG = '27-q8v6j6d6d4';
 
 const PIPE_TYPES = ['straight', 'elbow', 'tee'];
@@ -41,52 +39,30 @@ const PIPE_OPENINGS = {
   },
 };
 
-function ensureStorageDir(storageDir) {
-  fs.mkdirSync(storageDir, { recursive: true });
-}
+const PIPE_BY_SIGNATURE = {
+  'left,right': { pipeType: 'straight', rotation: 0 },
+  'down,up': { pipeType: 'straight', rotation: 90 },
+  'right,up': { pipeType: 'elbow', rotation: 0 },
+  'down,right': { pipeType: 'elbow', rotation: 90 },
+  'down,left': { pipeType: 'elbow', rotation: 180 },
+  'left,up': { pipeType: 'elbow', rotation: 270 },
+  'down,right,up': { pipeType: 'tee', rotation: 0 },
+  'down,left,right': { pipeType: 'tee', rotation: 90 },
+  'down,left,up': { pipeType: 'tee', rotation: 180 },
+  'left,right,up': { pipeType: 'tee', rotation: 270 },
+};
 
+// 会话 id 只接受 32 位十六进制字符串，避免把任意 cookie 内容拼进文件路径。
 function sanitizeSessionId(sessionId) {
   return /^[a-f0-9]{32}$/.test(sessionId) ? sessionId : null;
 }
 
-function getSessionFilePath(storageDir, sessionId) {
-  return path.join(storageDir, `${sessionId}.json`);
-}
-
-function cleanupStaleSessions({
-  storageDir,
-  nowMs = Date.now(),
-  ttlMs = SESSION_TTL_MS,
-}) {
-  ensureStorageDir(storageDir);
-
-  for (const entry of fs.readdirSync(storageDir)) {
-    if (!entry.endsWith('.json')) {
-      continue;
-    }
-
-    const filePath = path.join(storageDir, entry);
-
-    try {
-      const stats = fs.statSync(filePath);
-      if (nowMs - stats.mtimeMs > ttlMs) {
-        fs.unlinkSync(filePath);
-      }
-    } catch (_err) {
-      // 机会性清理，不阻断正常请求。
-    }
-  }
-}
-
-function randomChoice(items, randomInt) {
-  return items[randomInt(items.length)];
-}
-
-function sampleDistinct(items, count, randomInt) {
+// 随机选出若干个不重复元素。这里通过原地洗牌副本再切片实现。
+function sampleDistinct(items, count) {
   const next = [...items];
 
   for (let index = next.length - 1; index > 0; index -= 1) {
-    const swapIndex = randomInt(index + 1);
+    const swapIndex = crypto.randomInt(index + 1);
     const temp = next[index];
     next[index] = next[swapIndex];
     next[swapIndex] = temp;
@@ -95,33 +71,24 @@ function sampleDistinct(items, count, randomInt) {
   return next.slice(0, count);
 }
 
+// 棋盘底层始终是完整的二维数组；空格统一表示为 { tileType: 'empty' }。
 function createEmptyGrid() {
   return Array.from({ length: BOARD_SIZE }, () =>
     Array.from({ length: BOARD_SIZE }, () => ({ tileType: 'empty' }))
   );
 }
 
-function cloneCells(cells) {
+// 写操作前先深拷贝 cells，避免直接修改旧状态对象。
+function cloneGrid(cells) {
   return cells.map((row) => row.map((tile) => ({ ...tile })));
 }
 
-function setCell(cells, x, y, value) {
-  cells[y][x] = { ...value };
-}
-
-function getCell(cells, x, y) {
-  return cells[y][x];
-}
-
+// 把坐标转成 Set / Map 友好的字符串键。
 function keyOf(x, y) {
   return `${x},${y}`;
 }
 
-function parseKey(key) {
-  const [x, y] = key.split(',').map(Number);
-  return { x, y };
-}
-
+// 解析并校验单个坐标。接口只接受 0-9 的整数。
 function parseCoordinate(value) {
   if (!/^\d+$/.test(String(value))) {
     return null;
@@ -140,15 +107,18 @@ function parseCoordinate(value) {
   return coordinate;
 }
 
+// 校验请求体里的 pipeType 是否属于本关允许的三种水管。
 function isValidPipeType(pipeType) {
   return PIPE_TYPES.includes(pipeType);
 }
 
+// 校验旋转角是否是 0/90/180/270 之一。
 function isValidRotation(rotation) {
   return Number.isInteger(rotation) && ROTATIONS.includes(rotation);
 }
 
-function createPathCells(from, to) {
+// 生成一条只沿横竖方向移动的离散路径，包含起点和终点。
+function buildPath(from, to) {
   const points = [];
   let currentX = from.x;
   let currentY = from.y;
@@ -168,13 +138,15 @@ function createPathCells(from, to) {
   return points;
 }
 
-function addPath(occupied, path) {
+// 把一段路径上的所有格子标记为“已占用”。
+function markPath(occupied, path) {
   for (const point of path) {
     occupied.add(keyOf(point.x, point.y));
   }
 }
 
-function getNeighborDirections(occupiedSet, x, y) {
+// 查看某个格子四周哪些方向存在相邻路径格，用于把路径形状反推为具体水管。
+function getPipeDirections(occupiedSet, x, y) {
   const directions = [];
 
   for (const [direction, offset] of Object.entries(DIRECTION_OFFSETS)) {
@@ -193,89 +165,22 @@ function getNeighborDirections(occupiedSet, x, y) {
   return directions.sort();
 }
 
-function directionsToPipe(directions) {
-  const sorted = [...directions].sort();
-  const signature = sorted.join(',');
-
-  if (signature === 'left,right') {
-    return { pipeType: 'straight', rotation: 0 };
-  }
-
-  if (signature === 'down,up') {
-    return { pipeType: 'straight', rotation: 90 };
-  }
-
-  if (signature === 'right,up') {
-    return { pipeType: 'elbow', rotation: 0 };
-  }
-
-  if (signature === 'down,right') {
-    return { pipeType: 'elbow', rotation: 90 };
-  }
-
-  if (signature === 'down,left') {
-    return { pipeType: 'elbow', rotation: 180 };
-  }
-
-  if (signature === 'left,up') {
-    return { pipeType: 'elbow', rotation: 270 };
-  }
-
-  if (signature === 'down,right,up') {
-    return { pipeType: 'tee', rotation: 0 };
-  }
-
-  if (signature === 'down,left,right') {
-    return { pipeType: 'tee', rotation: 90 };
-  }
-
-  if (signature === 'down,left,up') {
-    return { pipeType: 'tee', rotation: 180 };
-  }
-
-  if (signature === 'left,right,up') {
-    return { pipeType: 'tee', rotation: 270 };
-  }
-
-  return null;
+// 把方向组合映射回水管类型与旋转角。
+function pipeFromDirections(directions) {
+  return PIPE_BY_SIGNATURE[[...directions].sort().join(',')] || null;
 }
 
+// 查询某个水管在指定旋转下朝哪些方向开口。
 function getPipeOpenings(pipeType, rotation) {
   return PIPE_OPENINGS[pipeType]?.[rotation] || [];
 }
 
-function rotateToDifferentValid(pipeType, rotation, randomInt) {
-  const candidates = ROTATIONS.filter(
-    (candidate) =>
-      candidate !== rotation &&
-      getPipeOpenings(pipeType, candidate).join(',') !==
-        getPipeOpenings(pipeType, rotation).join(',')
-  );
-
-  return randomChoice(candidates, randomInt);
-}
-
-function createWrongPipe(correctPipe, randomInt) {
-  const wrongTypes = PIPE_TYPES.filter(
-    (pipeType) => pipeType !== correctPipe.pipeType
-  );
-  const pipeType = randomChoice(wrongTypes, randomInt);
-  const rotation = randomChoice(ROTATIONS, randomInt);
-
-  return {
-    x: correctPipe.x,
-    y: correctPipe.y,
-    tileType: 'pipe',
-    pipeType,
-    rotation,
-    locked: false,
-  };
-}
-
-function generateLayout({ randomInt }) {
+// 生成一张保证 source 能连到三个 target 的“完整答案图”。
+// 本函数只负责构造答案，不负责抠图、库存和障碍格。
+function createSolution() {
   const source = {
     x: 1,
-    y: 2 + randomInt(6),
+    y: 2 + crypto.randomInt(6),
   };
 
   const topChoices = [];
@@ -291,8 +196,8 @@ function generateLayout({ randomInt }) {
   }
 
   const targetRows = [
-    randomChoice(topChoices, randomInt),
-    randomChoice(bottomChoices, randomInt),
+    topChoices[crypto.randomInt(topChoices.length)],
+    bottomChoices[crypto.randomInt(bottomChoices.length)],
   ];
 
   const remainingRows = [];
@@ -301,39 +206,38 @@ function generateLayout({ randomInt }) {
       remainingRows.push(y);
     }
   }
-  targetRows.push(randomChoice(remainingRows, randomInt));
+  targetRows.push(remainingRows[crypto.randomInt(remainingRows.length)]);
   targetRows.sort((a, b) => a - b);
 
   const targets = targetRows.map((y) => ({ x: 8, y }));
-  const trunkX = 3 + randomInt(3);
+  const trunkX = 3 + crypto.randomInt(3);
   const splitXs = sampleDistinct(
     Array.from({ length: 7 - trunkX }, (_, index) => trunkX + 1 + index),
-    3,
-    randomInt
+    3
   ).sort((a, b) => a - b);
 
   const occupied = new Set();
-  addPath(occupied, createPathCells(source, { x: trunkX, y: source.y }));
+  markPath(occupied, buildPath(source, { x: trunkX, y: source.y }));
 
   for (let index = 0; index < targets.length; index += 1) {
     const target = targets[index];
     const splitX = splitXs[index];
 
-    addPath(
+    markPath(
       occupied,
-      createPathCells({ x: trunkX, y: source.y }, { x: splitX, y: source.y })
+      buildPath({ x: trunkX, y: source.y }, { x: splitX, y: source.y })
     );
-    addPath(
+    markPath(
       occupied,
-      createPathCells({ x: splitX, y: source.y }, { x: splitX, y: target.y })
+      buildPath({ x: splitX, y: source.y }, { x: splitX, y: target.y })
     );
-    addPath(occupied, createPathCells({ x: splitX, y: target.y }, target));
+    markPath(occupied, buildPath({ x: splitX, y: target.y }, target));
   }
 
   const solutionPipes = [];
 
   for (const key of occupied) {
-    const { x, y } = parseKey(key);
+    const [x, y] = key.split(',').map(Number);
 
     if (x === source.x && y === source.y) {
       continue;
@@ -343,7 +247,7 @@ function generateLayout({ randomInt }) {
       continue;
     }
 
-    const pipe = directionsToPipe(getNeighborDirections(occupied, x, y));
+    const pipe = pipeFromDirections(getPipeDirections(occupied, x, y));
 
     if (!pipe) {
       continue;
@@ -365,21 +269,25 @@ function generateLayout({ randomInt }) {
   };
 }
 
-function createInitialState({ nowIso, randomInt }) {
-  const { source, targets, solutionPipes } = generateLayout({ randomInt });
+// 生成玩家初始局面：
+// 1. 先拿到完整答案图
+// 2. 挖掉一部分答案管道作为玩家库存
+// 3. 留下的答案管道标记为 locked
+// 4. 再随机放一些 blocker
+function createSessionState() {
+  const { source, targets, solutionPipes } = createSolution();
 
   const cells = createEmptyGrid();
-  setCell(cells, source.x, source.y, { tileType: 'source' });
+  cells[source.y][source.x] = { tileType: 'source' };
 
   for (const target of targets) {
-    setCell(cells, target.x, target.y, { tileType: 'target' });
+    cells[target.y][target.x] = { tileType: 'target' };
   }
 
   const removalCount = Math.max(1, Math.floor(solutionPipes.length * 0.4));
   const missingSolutionPipes = sampleDistinct(
     solutionPipes,
-    Math.min(removalCount, solutionPipes.length),
-    randomInt
+    Math.min(removalCount, solutionPipes.length)
   );
   const missingKeys = new Set(
     missingSolutionPipes.map((pipe) => keyOf(pipe.x, pipe.y))
@@ -400,10 +308,10 @@ function createInitialState({ nowIso, randomInt }) {
       continue;
     }
 
-    setCell(cells, pipe.x, pipe.y, {
+    cells[pipe.y][pipe.x] = {
       ...pipe,
       locked: true,
-    });
+    };
   }
 
   const occupiedKeys = new Set([
@@ -419,16 +327,17 @@ function createInitialState({ nowIso, randomInt }) {
       if (occupiedKeys.has(keyOf(x, y))) {
         continue;
       }
+
       blockerCandidates.push({ x, y });
     }
   }
 
-  const blockers = sampleDistinct(blockerCandidates, 10, randomInt);
+  const blockers = sampleDistinct(blockerCandidates, 10);
   for (const blocker of blockers) {
-    setCell(cells, blocker.x, blocker.y, { tileType: 'blocker' });
+    cells[blocker.y][blocker.x] = { tileType: 'blocker' };
   }
 
-  const solved = evaluateSolved(cells, source, targets).solved;
+  const solved = isSolved(cells, source, targets);
 
   return {
     width: BOARD_SIZE,
@@ -438,146 +347,38 @@ function createInitialState({ nowIso, randomInt }) {
     cells,
     inventory,
     solved,
-    createdAt: nowIso,
-    updatedAt: nowIso,
   };
 }
 
-function serializeState(state) {
-  const blockers = [];
-  const pipes = [];
-
-  for (let y = 0; y < state.height; y += 1) {
-    for (let x = 0; x < state.width; x += 1) {
-      const tile = getCell(state.cells, x, y);
-
-      if (tile.tileType === 'blocker') {
-        blockers.push({ x, y });
-        continue;
-      }
-
-      if (tile.tileType === 'pipe') {
-        pipes.push({
-          x,
-          y,
-          pipeType: tile.pipeType,
-          rotation: tile.rotation,
-          locked: Boolean(tile.locked),
-        });
-      }
-    }
-  }
-
-  return {
-    width: state.width,
-    height: state.height,
-    source: state.source,
-    targets: state.targets,
-    blockers,
-    pipes,
-    inventory: state.inventory,
-    solved: state.solved,
-    createdAt: state.createdAt,
-    updatedAt: state.updatedAt,
-  };
-}
-
-function deserializeState(serialized) {
-  const cells = createEmptyGrid();
-
-  setCell(cells, serialized.source.x, serialized.source.y, {
-    tileType: 'source',
-  });
-
-  for (const target of serialized.targets) {
-    setCell(cells, target.x, target.y, {
-      tileType: 'target',
-    });
-  }
-
-  for (const blocker of serialized.blockers || []) {
-    setCell(cells, blocker.x, blocker.y, {
-      tileType: 'blocker',
-    });
-  }
-
-  for (const pipe of serialized.pipes || []) {
-    setCell(cells, pipe.x, pipe.y, {
-      tileType: 'pipe',
-      pipeType: pipe.pipeType,
-      rotation: pipe.rotation,
-      locked: Boolean(pipe.locked),
-    });
-  }
-
-  return {
-    width: serialized.width,
-    height: serialized.height,
-    source: serialized.source,
-    targets: serialized.targets,
-    cells,
-    inventory: serialized.inventory,
-    solved: Boolean(serialized.solved),
-    createdAt: serialized.createdAt,
-    updatedAt: serialized.updatedAt,
-  };
-}
-
-function readSerializedState(filePath) {
+// 当前会话状态本身已经足够小，直接按运行时结构落盘即可。
+// 这样读写时不需要维护两套数据模型。
+// 读取原始 JSON；任何读文件或 JSON 解析失败都视为“无有效存档”。
+function readState(filePath) {
   try {
-    const raw = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(raw);
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
   } catch (_err) {
     return null;
   }
 }
 
-function readState(filePath) {
-  const serialized = readSerializedState(filePath);
-  return serialized ? deserializeState(serialized) : null;
-}
-
+// 持久化当前状态到会话文件。
 function writeState(filePath, state) {
-  fs.writeFileSync(
-    filePath,
-    JSON.stringify(serializeState(state), null, 2),
-    'utf8'
-  );
+  fs.writeFileSync(filePath, JSON.stringify(state, null, 2), 'utf8');
 }
 
-function setSessionCookie(res, sessionId) {
-  res.cookie(SESSION_COOKIE_NAME, sessionId, {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: COOKIE_MAX_AGE_MS,
-  });
-}
-
-function touchSessionFile(filePath, now) {
-  try {
-    fs.utimesSync(filePath, now, now);
-  } catch (_err) {
-    // 刷新存活时间失败时不阻断请求。
-  }
-}
-
-function getOrCreateSession({
-  req,
-  res,
-  storageDir,
-  now,
-  randomBytes,
-  randomInt,
-}) {
+// 读取已有会话；没有的话就创建新会话和初始棋盘。
+function loadSession({ req, res, storageDir }) {
   const sessionId = sanitizeSessionId(req.cookies?.[SESSION_COOKIE_NAME]);
 
   if (sessionId) {
-    const filePath = getSessionFilePath(storageDir, sessionId);
+    const filePath = path.join(storageDir, `${sessionId}.json`);
     const state = readState(filePath);
 
     if (state) {
-      setSessionCookie(res, sessionId);
-      touchSessionFile(filePath, now());
+      res.cookie(SESSION_COOKIE_NAME, sessionId, {
+        httpOnly: true,
+        sameSite: 'lax',
+      });
       return {
         sessionId,
         filePath,
@@ -586,15 +387,15 @@ function getOrCreateSession({
     }
   }
 
-  const nextSessionId = randomBytes(16).toString('hex');
-  const filePath = getSessionFilePath(storageDir, nextSessionId);
-  const nextState = createInitialState({
-    nowIso: now().toISOString(),
-    randomInt,
-  });
+  const nextSessionId = crypto.randomBytes(16).toString('hex');
+  const filePath = path.join(storageDir, `${nextSessionId}.json`);
+  const nextState = createSessionState();
 
   writeState(filePath, nextState);
-  setSessionCookie(res, nextSessionId);
+  res.cookie(SESSION_COOKIE_NAME, nextSessionId, {
+    httpOnly: true,
+    sameSite: 'lax',
+  });
 
   return {
     sessionId: nextSessionId,
@@ -603,7 +404,9 @@ function getOrCreateSession({
   };
 }
 
-function getTileOpenings(tile) {
+// 把棋盘格转换为“连通判定视角”的开口信息。
+// source 和 target 不是 pipe，但在通关判定里也要视作具有固定朝向的端点。
+function getOpenings(tile) {
   if (!tile) {
     return [];
   }
@@ -623,30 +426,32 @@ function getTileOpenings(tile) {
   return getPipeOpenings(tile.pipeType, tile.rotation);
 }
 
-function evaluateSolved(cells, source, targets) {
+// 边界判断，避免走出 10x10 棋盘。
+function isInsideBoard(x, y) {
+  return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
+}
+
+// 从 source 出发做一次 BFS。
+// 只有当前格朝向能出去，且相邻格朝向也能接回来，才算真正连通。
+function isSolved(cells, source, targets) {
   const queue = [{ x: source.x, y: source.y }];
   const visited = new Set([keyOf(source.x, source.y)]);
 
   while (queue.length > 0) {
     const current = queue.shift();
-    const openings = getTileOpenings(getCell(cells, current.x, current.y));
+    const openings = getOpenings(cells[current.y][current.x]);
 
     for (const direction of openings) {
       const offset = DIRECTION_OFFSETS[direction];
       const nextX = current.x + offset.dx;
       const nextY = current.y + offset.dy;
 
-      if (
-        nextX < 0 ||
-        nextX >= BOARD_SIZE ||
-        nextY < 0 ||
-        nextY >= BOARD_SIZE
-      ) {
+      if (!isInsideBoard(nextX, nextY)) {
         continue;
       }
 
-      const nextTile = getCell(cells, nextX, nextY);
-      const nextOpenings = getTileOpenings(nextTile);
+      const nextTile = cells[nextY][nextX];
+      const nextOpenings = getOpenings(nextTile);
 
       if (!nextOpenings.includes(offset.opposite)) {
         continue;
@@ -662,16 +467,10 @@ function evaluateSolved(cells, source, targets) {
     }
   }
 
-  const connectedTargets = targets.filter((target) =>
-    visited.has(keyOf(target.x, target.y))
-  ).length;
-
-  return {
-    solved: connectedTargets === targets.length,
-    connectedTargets,
-  };
+  return targets.every((target) => visited.has(keyOf(target.x, target.y)));
 }
 
+// 把二维棋盘展开成前端更容易消费的 tiles 数组。
 function serializeTiles(cells) {
   const tiles = [];
 
@@ -680,7 +479,7 @@ function serializeTiles(cells) {
       tiles.push({
         x,
         y,
-        ...getCell(cells, x, y),
+        ...cells[y][x],
       });
     }
   }
@@ -688,137 +487,87 @@ function serializeTiles(cells) {
   return tiles;
 }
 
-function createBoardPayload(state) {
-  return {
-    success: true,
-    message: 'ok',
-    solved: state.solved,
-    board: {
-      width: state.width,
-      height: state.height,
-      source: state.source,
-      targets: state.targets,
-      tiles: serializeTiles(state.cells),
-    },
-    inventory: state.inventory,
-  };
-}
-
-function sendBadRequest(res, message) {
-  return res.status(400).json({
-    success: false,
-    message,
-    solved: false,
-  });
-}
-
-function sendOperationResult(res, success, message, solved) {
-  return res.status(200).json({
-    success,
-    message,
-    solved,
-  });
-}
-
-function buildNextState(session, cells, inventory, nowIso) {
-  const solved = evaluateSolved(
-    cells,
-    session.state.source,
-    session.state.targets
-  ).solved;
-
-  return {
-    ...session.state,
-    cells,
-    inventory,
-    solved,
-    updatedAt: nowIso,
-  };
-}
-
-function persistState(filePath, state) {
-  writeState(filePath, state);
-}
-
-function resetSessionState(nowIso, randomInt) {
-  return createInitialState({
-    nowIso,
-    randomInt,
-  });
-}
-
-// /flag 只接受已存在且已完成解密的会话，不为未完成玩家隐式创建新局。
-function getExistingSession({ req, res, storageDir, now }) {
-  const sessionId = sanitizeSessionId(req.cookies?.[SESSION_COOKIE_NAME]);
-
-  if (!sessionId) {
-    return null;
+// 三个写接口共享同一套“不可操作/只读”判定，避免规则描述在不同分支里漂移。
+function getTileError(tile, solved, expectedType) {
+  if (tile.tileType === 'blocker') {
+    return {
+      success: false,
+      message: '该格不可操作',
+      solved,
+    };
   }
 
-  const filePath = getSessionFilePath(storageDir, sessionId);
-  const state = readState(filePath);
-
-  if (!state) {
-    return null;
+  if (tile.locked) {
+    return {
+      success: false,
+      message: '该格为只读设施',
+      solved,
+    };
   }
 
-  setSessionCookie(res, sessionId);
-  touchSessionFile(filePath, now());
+  if (tile.tileType !== expectedType) {
+    return {
+      success: false,
+      message: expectedType === 'empty' ? '目标格不是空位' : '目标格为空',
+      solved,
+    };
+  }
 
-  return {
-    sessionId,
-    filePath,
-    state,
-  };
+  return null;
 }
 
-function createLevel26Router({
-  storageDir = STORAGE_DIR,
-  now = () => new Date(),
-  randomBytes = crypto.randomBytes,
-  randomInt = crypto.randomInt,
-  ttlMs = SESSION_TTL_MS,
-} = {}) {
-  ensureStorageDir(storageDir);
+// 构造 26 关路由。
+// 这里只保留存储目录注入；时间与随机数都直接在实际使用处生成。
+function createLevel26Router({ storageDir = STORAGE_DIR } = {}) {
+  fs.mkdirSync(storageDir, { recursive: true });
 
   const router = express.Router();
 
-  router.use((_req, _res, next) => {
-    cleanupStaleSessions({
-      storageDir,
-      nowMs: now().getTime(),
-      ttlMs,
-    });
-    next();
-  });
-
+  // 读取棋盘；如果玩家还没有会话，会在这里自动开新局。
   router.get('/board', (req, res) => {
-    const session = getOrCreateSession({
+    const session = loadSession({
       req,
       res,
       storageDir,
-      now,
-      randomBytes,
-      randomInt,
     });
 
-    return res.status(200).json(createBoardPayload(session.state));
+    return res.status(200).json({
+      success: true,
+      message: 'ok',
+      solved: session.state.solved,
+      board: {
+        width: session.state.width,
+        height: session.state.height,
+        source: session.state.source,
+        targets: session.state.targets,
+        tiles: serializeTiles(session.state.cells),
+      },
+      inventory: session.state.inventory,
+    });
   });
 
+  // 只有已经 solved 的现有会话才能读取下一关 flag。
   router.get('/flag', (req, res) => {
-    const session = getExistingSession({
-      req,
-      res,
-      storageDir,
-      now,
-    });
-
-    if (!session || !session.state.solved) {
+    const sessionId = sanitizeSessionId(req.cookies?.[SESSION_COOKIE_NAME]);
+    if (!sessionId) {
       return res.status(403).json({
         success: false,
         message: '尚未完成解密',
       });
     }
+
+    const state = readState(path.join(storageDir, `${sessionId}.json`));
+    if (!state || !state.solved) {
+      return res.status(403).json({
+        success: false,
+        message: '尚未完成解密',
+      });
+    }
+
+    res.cookie(SESSION_COOKIE_NAME, sessionId, {
+      httpOnly: true,
+      sameSite: 'lax',
+    });
 
     // 下一关入口只在当前会话确认为 solved 后返回。
     return res.status(200).json({
@@ -827,245 +576,211 @@ function createLevel26Router({
     });
   });
 
+  // 重开一局，但沿用当前玩家的会话文件路径。
   router.post('/reset', (req, res) => {
-    const session = getOrCreateSession({
+    const session = loadSession({
       req,
       res,
       storageDir,
-      now,
-      randomBytes,
-      randomInt,
     });
 
-    const nextState = resetSessionState(now().toISOString(), randomInt);
+    const nextState = createSessionState();
 
-    persistState(session.filePath, nextState);
+    writeState(session.filePath, nextState);
 
-    return sendOperationResult(res, true, '操作成功', nextState.solved);
+    return res.status(200).json({
+      success: true,
+      message: '操作成功',
+      solved: nextState.solved,
+    });
   });
 
+  // PUT 表示在空格新建一段水管，因此既要校验空位，也要扣减库存。
   router.put('/tiles/:x/:y', (req, res) => {
     const x = parseCoordinate(req.params.x);
     const y = parseCoordinate(req.params.y);
 
     if (x === null || y === null) {
-      return sendBadRequest(res, '坐标不合法');
+      return res.status(400).json({
+        success: false,
+        message: '坐标不合法',
+        solved: false,
+      });
     }
 
     const pipeType = String(req.body?.pipeType || '').trim();
     const rotation = req.body?.rotation;
 
     if (!isValidPipeType(pipeType)) {
-      return sendBadRequest(res, '水管类型不合法');
+      return res.status(400).json({
+        success: false,
+        message: '水管类型不合法',
+        solved: false,
+      });
     }
 
     if (!isValidRotation(rotation)) {
-      return sendBadRequest(res, '方向不合法');
+      return res.status(400).json({
+        success: false,
+        message: '方向不合法',
+        solved: false,
+      });
     }
 
-    const session = getOrCreateSession({
+    const session = loadSession({
       req,
       res,
       storageDir,
-      now,
-      randomBytes,
-      randomInt,
     });
-    const targetTile = getCell(session.state.cells, x, y);
+    const targetTile = session.state.cells[y][x];
 
-    if (targetTile.tileType === 'blocker') {
-      return sendOperationResult(
-        res,
-        false,
-        '该格不可操作',
-        session.state.solved
-      );
-    }
-
-    if (targetTile.locked) {
-      return sendOperationResult(
-        res,
-        false,
-        '该格为只读设施',
-        session.state.solved
-      );
-    }
-
-    if (targetTile.tileType !== 'empty') {
-      return sendOperationResult(
-        res,
-        false,
-        '目标格不是空位',
-        session.state.solved
-      );
+    const tileError = getTileError(targetTile, session.state.solved, 'empty');
+    if (tileError) {
+      return res.status(200).json(tileError);
     }
 
     if ((session.state.inventory[pipeType] || 0) <= 0) {
-      return sendOperationResult(res, false, '库存不足', session.state.solved);
+      return res.status(200).json({
+        success: false,
+        message: '库存不足',
+        solved: session.state.solved,
+      });
     }
 
-    const cells = cloneCells(session.state.cells);
+    const cells = cloneGrid(session.state.cells);
     const inventory = {
       ...session.state.inventory,
       [pipeType]: session.state.inventory[pipeType] - 1,
     };
 
-    setCell(cells, x, y, {
+    cells[y][x] = {
       tileType: 'pipe',
       pipeType,
       rotation,
       locked: false,
-    });
+    };
 
-    const nextState = buildNextState(
-      session,
+    const nextState = {
+      ...session.state,
       cells,
       inventory,
-      now().toISOString()
-    );
+      solved: isSolved(cells, session.state.source, session.state.targets),
+    };
 
-    persistState(session.filePath, nextState);
+    writeState(session.filePath, nextState);
 
-    return sendOperationResult(res, true, '操作成功', nextState.solved);
+    return res.status(200).json({
+      success: true,
+      message: '操作成功',
+      solved: nextState.solved,
+    });
   });
 
+  // PATCH 只读取已有 pipe 的 rotation，其余字段一律忽略。
   router.patch('/tiles/:x/:y', (req, res) => {
     const x = parseCoordinate(req.params.x);
     const y = parseCoordinate(req.params.y);
 
     if (x === null || y === null) {
-      return sendBadRequest(res, '坐标不合法');
-    }
-
-    if (Object.hasOwn(req.body || {}, 'pipeType')) {
-      return sendBadRequest(res, 'PATCH 只允许修改方向');
+      return res.status(400).json({
+        success: false,
+        message: '坐标不合法',
+        solved: false,
+      });
     }
 
     const rotation = req.body?.rotation;
 
     if (!isValidRotation(rotation)) {
-      return sendBadRequest(res, '方向不合法');
+      return res.status(400).json({
+        success: false,
+        message: '方向不合法',
+        solved: false,
+      });
     }
 
-    const session = getOrCreateSession({
+    const session = loadSession({
       req,
       res,
       storageDir,
-      now,
-      randomBytes,
-      randomInt,
     });
-    const targetTile = getCell(session.state.cells, x, y);
+    const targetTile = session.state.cells[y][x];
 
-    if (targetTile.tileType === 'blocker') {
-      return sendOperationResult(
-        res,
-        false,
-        '该格不可操作',
-        session.state.solved
-      );
+    const tileError = getTileError(targetTile, session.state.solved, 'pipe');
+    if (tileError) {
+      return res.status(200).json(tileError);
     }
 
-    if (targetTile.locked) {
-      return sendOperationResult(
-        res,
-        false,
-        '该格为只读设施',
-        session.state.solved
-      );
-    }
-
-    if (targetTile.tileType !== 'pipe') {
-      return sendOperationResult(
-        res,
-        false,
-        '目标格为空',
-        session.state.solved
-      );
-    }
-
-    const cells = cloneCells(session.state.cells);
-    setCell(cells, x, y, {
-      ...getCell(cells, x, y),
+    const cells = cloneGrid(session.state.cells);
+    cells[y][x] = {
+      ...cells[y][x],
       rotation,
-    });
+    };
 
-    const nextState = buildNextState(
-      session,
+    const nextState = {
+      ...session.state,
       cells,
-      { ...session.state.inventory },
-      now().toISOString()
-    );
+      inventory: { ...session.state.inventory },
+      solved: isSolved(cells, session.state.source, session.state.targets),
+    };
 
-    persistState(session.filePath, nextState);
+    writeState(session.filePath, nextState);
 
-    return sendOperationResult(res, true, '操作成功', nextState.solved);
+    return res.status(200).json({
+      success: true,
+      message: '操作成功',
+      solved: nextState.solved,
+    });
   });
 
+  // DELETE 删除已有 pipe，并把对应型号返还回库存。
   router.delete('/tiles/:x/:y', (req, res) => {
     const x = parseCoordinate(req.params.x);
     const y = parseCoordinate(req.params.y);
 
     if (x === null || y === null) {
-      return sendBadRequest(res, '坐标不合法');
+      return res.status(400).json({
+        success: false,
+        message: '坐标不合法',
+        solved: false,
+      });
     }
 
-    const session = getOrCreateSession({
+    const session = loadSession({
       req,
       res,
       storageDir,
-      now,
-      randomBytes,
-      randomInt,
     });
-    const targetTile = getCell(session.state.cells, x, y);
+    const targetTile = session.state.cells[y][x];
 
-    if (targetTile.tileType === 'blocker') {
-      return sendOperationResult(
-        res,
-        false,
-        '该格不可操作',
-        session.state.solved
-      );
+    const tileError = getTileError(targetTile, session.state.solved, 'pipe');
+    if (tileError) {
+      return res.status(200).json(tileError);
     }
 
-    if (targetTile.locked) {
-      return sendOperationResult(
-        res,
-        false,
-        '该格为只读设施',
-        session.state.solved
-      );
-    }
-
-    if (targetTile.tileType !== 'pipe') {
-      return sendOperationResult(
-        res,
-        false,
-        '目标格为空',
-        session.state.solved
-      );
-    }
-
-    const cells = cloneCells(session.state.cells);
+    const cells = cloneGrid(session.state.cells);
     const inventory = {
       ...session.state.inventory,
       [targetTile.pipeType]:
         (session.state.inventory[targetTile.pipeType] || 0) + 1,
     };
 
-    setCell(cells, x, y, { tileType: 'empty' });
+    cells[y][x] = { tileType: 'empty' };
 
-    const nextState = buildNextState(
-      session,
+    const nextState = {
+      ...session.state,
       cells,
       inventory,
-      now().toISOString()
-    );
+      solved: isSolved(cells, session.state.source, session.state.targets),
+    };
 
-    persistState(session.filePath, nextState);
+    writeState(session.filePath, nextState);
 
-    return sendOperationResult(res, true, '操作成功', nextState.solved);
+    return res.status(200).json({
+      success: true,
+      message: '操作成功',
+      solved: nextState.solved,
+    });
   });
 
   return router;
@@ -1075,16 +790,10 @@ const router = createLevel26Router();
 
 module.exports = router;
 module.exports.createLevel26Router = createLevel26Router;
-module.exports.cleanupStaleSessions = cleanupStaleSessions;
-module.exports.getSessionFilePath = getSessionFilePath;
-module.exports.serializeState = serializeState;
-module.exports.deserializeState = deserializeState;
 module.exports.constants = {
   BOARD_SIZE,
   SESSION_COOKIE_NAME,
   STORAGE_DIR,
-  SESSION_TTL_MS,
-  COOKIE_MAX_AGE_MS,
   NEXT_LEVEL_FLAG,
   PIPE_TYPES,
   ROTATIONS,
