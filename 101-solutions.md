@@ -402,6 +402,9 @@ curl -X POST https://www.iconquestion.com/api/05
    将页面中的残缺代码补全后，等价逻辑如下：
 
    ```js
+   const hash = hashDate(rawDate);
+   const ch = hashToChar(hash);
+
    result.push({
      date: rawDate,
      ch: ch,
@@ -414,6 +417,8 @@ curl -X POST https://www.iconquestion.com/api/05
 
    console.log('FLAG:', '11-' + flag);
    ```
+
+   也就是说，`div` 的 `id` 只是干扰项，真正参与计算的是每张照片上方的日期文本。先用页面给出的自定义哈希算法把日期映射成字符，再按日期先后重新排序，才能得到正确结果。
 
 4. 运行脚本。
 
