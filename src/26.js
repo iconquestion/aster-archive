@@ -119,6 +119,19 @@ function isValidRotation(rotation) {
 
 // 生成一条只沿横竖方向移动的离散路径，包含起点和终点。
 function buildPath(from, to) {
+  if (
+    !from ||
+    !to ||
+    !Number.isInteger(from.x) ||
+    !Number.isInteger(from.y) ||
+    !Number.isInteger(to.x) ||
+    !Number.isInteger(to.y)
+  ) {
+    throw new Error(
+      `Invalid path endpoints: from=${JSON.stringify(from)} to=${JSON.stringify(to)}`
+    );
+  }
+
   const points = [];
   let currentX = from.x;
   let currentY = from.y;
@@ -210,11 +223,28 @@ function createSolution() {
   targetRows.sort((a, b) => a - b);
 
   const targets = targetRows.map((y) => ({ x: 8, y }));
-  const trunkX = 3 + crypto.randomInt(3);
-  const splitXs = sampleDistinct(
-    Array.from({ length: 7 - trunkX }, (_, index) => trunkX + 1 + index),
-    3
-  ).sort((a, b) => a - b);
+
+  // 这里必须保证右侧候选列至少有 3 个，否则 splitXs 长度不足，
+  // 后续 buildPath 会收到 undefined 坐标，导致死循环与 OOM。
+  // trunkX=3 => 候选 [4,5,6,7]
+  // trunkX=4 => 候选 [5,6,7]
+  // trunkX=5 => 候选仅 [6,7]，不足 3 个，因此不能取。
+  const trunkX = 3 + crypto.randomInt(2);
+
+  const splitCandidates = Array.from(
+    { length: 7 - trunkX },
+    (_, index) => trunkX + 1 + index
+  );
+
+  const splitXs = sampleDistinct(splitCandidates, 3).sort((a, b) => a - b);
+
+  if (splitXs.length !== 3) {
+    throw new Error(
+      `Invalid split column generation: trunkX=${trunkX}, splitCandidates=${JSON.stringify(
+        splitCandidates
+      )}, splitXs=${JSON.stringify(splitXs)}`
+    );
+  }
 
   const occupied = new Set();
   markPath(occupied, buildPath(source, { x: trunkX, y: source.y }));
@@ -267,6 +297,72 @@ function createSolution() {
     targets,
     solutionPipes,
   };
+}
+
+// 把棋盘格转换为“连通判定视角”的开口信息。
+// source 和 target 不是 pipe，但在通关判定里也要视作具有固定朝向的端点。
+function getOpenings(tile) {
+  if (!tile) {
+    return [];
+  }
+
+  if (tile.tileType === 'source') {
+    return ['right'];
+  }
+
+  if (tile.tileType === 'target') {
+    return ['left'];
+  }
+
+  if (tile.tileType !== 'pipe') {
+    return [];
+  }
+
+  return getPipeOpenings(tile.pipeType, tile.rotation);
+}
+
+// 边界判断，避免走出 10x10 棋盘。
+function isInsideBoard(x, y) {
+  return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
+}
+
+// 从 source 出发做一次 BFS。
+// 只有当前格朝向能出去，且相邻格朝向也能接回来，才算真正连通。
+function isSolved(cells, source, targets) {
+  const queue = [{ x: source.x, y: source.y }];
+  const visited = new Set([keyOf(source.x, source.y)]);
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const openings = getOpenings(cells[current.y][current.x]);
+
+    for (const direction of openings) {
+      const offset = DIRECTION_OFFSETS[direction];
+      const nextX = current.x + offset.dx;
+      const nextY = current.y + offset.dy;
+
+      if (!isInsideBoard(nextX, nextY)) {
+        continue;
+      }
+
+      const nextTile = cells[nextY][nextX];
+      const nextOpenings = getOpenings(nextTile);
+
+      if (!nextOpenings.includes(offset.opposite)) {
+        continue;
+      }
+
+      const key = keyOf(nextX, nextY);
+      if (visited.has(key)) {
+        continue;
+      }
+
+      visited.add(key);
+      queue.push({ x: nextX, y: nextY });
+    }
+  }
+
+  return targets.every((target) => visited.has(keyOf(target.x, target.y)));
 }
 
 // 生成玩家初始局面：
@@ -402,72 +498,6 @@ function loadSession({ req, res, storageDir }) {
     filePath,
     state: nextState,
   };
-}
-
-// 把棋盘格转换为“连通判定视角”的开口信息。
-// source 和 target 不是 pipe，但在通关判定里也要视作具有固定朝向的端点。
-function getOpenings(tile) {
-  if (!tile) {
-    return [];
-  }
-
-  if (tile.tileType === 'source') {
-    return ['right'];
-  }
-
-  if (tile.tileType === 'target') {
-    return ['left'];
-  }
-
-  if (tile.tileType !== 'pipe') {
-    return [];
-  }
-
-  return getPipeOpenings(tile.pipeType, tile.rotation);
-}
-
-// 边界判断，避免走出 10x10 棋盘。
-function isInsideBoard(x, y) {
-  return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
-}
-
-// 从 source 出发做一次 BFS。
-// 只有当前格朝向能出去，且相邻格朝向也能接回来，才算真正连通。
-function isSolved(cells, source, targets) {
-  const queue = [{ x: source.x, y: source.y }];
-  const visited = new Set([keyOf(source.x, source.y)]);
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-    const openings = getOpenings(cells[current.y][current.x]);
-
-    for (const direction of openings) {
-      const offset = DIRECTION_OFFSETS[direction];
-      const nextX = current.x + offset.dx;
-      const nextY = current.y + offset.dy;
-
-      if (!isInsideBoard(nextX, nextY)) {
-        continue;
-      }
-
-      const nextTile = cells[nextY][nextX];
-      const nextOpenings = getOpenings(nextTile);
-
-      if (!nextOpenings.includes(offset.opposite)) {
-        continue;
-      }
-
-      const key = keyOf(nextX, nextY);
-      if (visited.has(key)) {
-        continue;
-      }
-
-      visited.add(key);
-      queue.push({ x: nextX, y: nextY });
-    }
-  }
-
-  return targets.every((target) => visited.has(keyOf(target.x, target.y)));
 }
 
 // 把二维棋盘展开成前端更容易消费的 tiles 数组。
