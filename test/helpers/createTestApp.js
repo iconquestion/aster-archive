@@ -1,3 +1,4 @@
+const http = require('http');
 const { loadConfig } = require('../../src/config');
 const { createApp } = require('../../src/app');
 const { createServers } = require('../../src/createServers');
@@ -40,6 +41,22 @@ function createTestApp() {
   });
 
   return app;
+}
+
+async function createStartedTestAppServer() {
+  const app = createTestApp();
+  const server = http.createServer(app);
+  const port = await listenOnRandomPort(server);
+
+  return {
+    app,
+    server,
+    port,
+    origin: `http://127.0.0.1:${port}`,
+    close: async () => {
+      await closeServer(server);
+    },
+  };
 }
 
 // 协议类测试需要真实 server 才能覆盖 WebSocket upgrade、HTTPS trailer、HTTP/2 等行为。
@@ -97,8 +114,22 @@ function listenOnRandomPort(server) {
   });
 }
 
+function closeServer(server) {
+  return new Promise((resolve, reject) => {
+    server.close((err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
 module.exports = {
   createTestApp,
+  createStartedTestAppServer,
   createStartedTestServers,
   getDailyPassword,
   getTestRuntime,
