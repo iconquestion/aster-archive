@@ -146,9 +146,7 @@ dist
 # Start of custom ignores
 # AI related files
 .codex
+AGENTS.md
 
 # temporary work files
 .work/
-
-# daily password file
-password.xdxdxdxd
