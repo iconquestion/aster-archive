@@ -23,8 +23,12 @@ const {
   createLevel25Router,
   constants: level25Constants,
 } = require('../../src/25');
+const {
+  createLevel26Router,
+  constants: level26Constants,
+} = require('../../src/26');
 
-function createIsolatedLevelsApp({ level25Options } = {}) {
+function createIsolatedLevelsApp({ level25Options, level26Options } = {}) {
   const app = express();
   const publicDir = path.join(__dirname, '../../public');
   const level08Dir = path.join(publicDir, '08-c2x8m5q9nv');
@@ -52,8 +56,78 @@ function createIsolatedLevelsApp({ level25Options } = {}) {
   app.use('/api/20', level20Router);
   app.use('/api/22', level22Router);
   app.use('/api/25', createLevel25Router(level25Options));
+  app.use('/api/26', createLevel26Router(level26Options));
 
   return app;
+}
+
+function createEmptyLevel26Cells() {
+  return Array.from({ length: level26Constants.BOARD_SIZE }, () =>
+    Array.from({ length: level26Constants.BOARD_SIZE }, () => ({
+      tileType: 'empty',
+    }))
+  );
+}
+
+function createControlledLevel26State() {
+  const cells = createEmptyLevel26Cells();
+
+  const source = { x: 1, y: 1 };
+  const targets = [
+    { x: 8, y: 1 },
+    { x: 8, y: 3 },
+    { x: 8, y: 5 },
+  ];
+
+  cells[source.y][source.x] = { tileType: 'source' };
+  for (const target of targets) {
+    cells[target.y][target.x] = { tileType: 'target' };
+  }
+
+  // 预放一个玩家管道，供 PATCH / DELETE 成功路径使用。
+  cells[4][4] = {
+    tileType: 'pipe',
+    pipeType: 'straight',
+    rotation: 0,
+    locked: false,
+  };
+
+  // 预放一个锁定管道，覆盖只读设施分支。
+  cells[2][2] = {
+    tileType: 'pipe',
+    pipeType: 'elbow',
+    rotation: 90,
+    locked: true,
+  };
+
+  // blocker 与玩家管道分开摆放，方便单测精确命中。
+  cells[3][3] = { tileType: 'blocker' };
+
+  return {
+    width: level26Constants.BOARD_SIZE,
+    height: level26Constants.BOARD_SIZE,
+    source,
+    targets,
+    cells,
+    inventory: {
+      straight: 2,
+      elbow: 1,
+      tee: 1,
+    },
+    solved: false,
+  };
+}
+
+function writeLevel26SessionState(storageDir, sessionId, state) {
+  const filePath = path.join(storageDir, `${sessionId}.json`);
+  fs.writeFileSync(filePath, JSON.stringify(state, null, 2), 'utf8');
+  return filePath;
+}
+
+function readLevel26SessionState(storageDir, sessionId) {
+  return JSON.parse(
+    fs.readFileSync(path.join(storageDir, `${sessionId}.json`), 'utf8')
+  );
 }
 
 describe('Config', () => {
@@ -506,5 +580,545 @@ describe('Levels 16-25', () => {
 
     expect(stateRes.status).toBe(200);
     expect(stateRes.body.current_value).toBe('edge-node-9');
+  });
+});
+
+describe('Level 26 HTTP API', () => {
+  const tempDirs = [];
+  const validSessionId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  let storageDir;
+  let app;
+
+  beforeEach(() => {
+    storageDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'iconquestion-level26-test-')
+    );
+    tempDirs.push(storageDir);
+    app = createIsolatedLevelsApp({
+      level26Options: {
+        storageDir,
+      },
+    });
+  });
+
+  afterEach(() => {
+    for (const tempDir of tempDirs.splice(0)) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  // 测试方式：首次访问真实新局，确认接口返回结构完整，并且下发了合法 session cookie。
+  // 通过标准：返回 200，棋盘尺寸和 tiles/inventory 存在，且 set-cookie 中带有 32 位十六进制 sid。
+  test('GET /api/26/board returns the board payload and creates a valid session cookie', async () => {
+    const res = await request(app).get('/api/26/board');
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toBe('ok');
+    expect(res.body.board.width).toBe(level26Constants.BOARD_SIZE);
+    expect(res.body.board.height).toBe(level26Constants.BOARD_SIZE);
+    expect(res.body.board.tiles).toHaveLength(
+      level26Constants.BOARD_SIZE * level26Constants.BOARD_SIZE
+    );
+    expect(res.body.inventory).toEqual(
+      expect.objectContaining({
+        straight: expect.any(Number),
+        elbow: expect.any(Number),
+        tee: expect.any(Number),
+      })
+    );
+    expect(res.headers['set-cookie'][0]).toMatch(
+      new RegExp(`${level26Constants.SESSION_COOKIE_NAME}=[a-f0-9]{32}`)
+    );
+  });
+
+  // 测试方式：使用同一个 agent 连续读取两次 /board，验证会话状态不会被重复初始化。
+  // 通过标准：两次响应中的棋盘和库存保持一致，说明第二次读取的是同一局状态。
+  test('GET /api/26/board reuses the same session state for repeated agent requests', async () => {
+    const agent = request.agent(app);
+
+    const firstRes = await agent.get('/api/26/board');
+    const secondRes = await agent.get('/api/26/board');
+
+    expect(firstRes.status).toBe(200);
+    expect(secondRes.status).toBe(200);
+    expect(secondRes.body.board).toEqual(firstRes.body.board);
+    expect(secondRes.body.inventory).toEqual(firstRes.body.inventory);
+    expect(secondRes.body.solved).toBe(firstRes.body.solved);
+  });
+
+  // 测试方式：直接检查随机新局的关键生成约束，不依赖某个具体坐标。
+  // 通过标准：source/target/blocker 数量正确、所有 locked pipe 都为只读、坐标合法、库存键集合固定、初始 solved 为 false。
+  test('GET /api/26/board satisfies the initial board generation constraints', async () => {
+    const res = await request(app).get('/api/26/board');
+    const { board, inventory, solved } = res.body;
+    const tileTypes = new Set(['source', 'target', 'empty', 'blocker', 'pipe']);
+    const sourceTiles = board.tiles.filter(
+      (tile) => tile.tileType === 'source'
+    );
+    const targetTiles = board.tiles.filter(
+      (tile) => tile.tileType === 'target'
+    );
+    const blockerTiles = board.tiles.filter(
+      (tile) => tile.tileType === 'blocker'
+    );
+    const pipeTiles = board.tiles.filter((tile) => tile.tileType === 'pipe');
+
+    expect(res.status).toBe(200);
+    expect(solved).toBe(false);
+    expect(sourceTiles).toHaveLength(1);
+    expect(targetTiles).toHaveLength(3);
+    expect(blockerTiles).toHaveLength(10);
+    expect(Object.keys(inventory).sort()).toEqual(['elbow', 'straight', 'tee']);
+
+    for (const tile of board.tiles) {
+      expect(tile.x).toBeGreaterThanOrEqual(0);
+      expect(tile.x).toBeLessThan(level26Constants.BOARD_SIZE);
+      expect(tile.y).toBeGreaterThanOrEqual(0);
+      expect(tile.y).toBeLessThan(level26Constants.BOARD_SIZE);
+      expect(tileTypes.has(tile.tileType)).toBe(true);
+    }
+
+    for (const pipe of pipeTiles) {
+      expect(pipe.locked).toBe(true);
+      expect(level26Constants.PIPE_TYPES).toContain(pipe.pipeType);
+      expect(level26Constants.ROTATIONS).toContain(pipe.rotation);
+    }
+  });
+
+  // 测试方式：不带 cookie 直接访问 flag 接口，验证它不会隐式创建新会话。
+  // 通过标准：返回 403，且消息明确表示尚未完成解密。
+  test('GET /api/26/flag returns 403 without a valid session cookie', async () => {
+    const res = await request(app).get('/api/26/flag');
+
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({
+      success: false,
+      message: '尚未完成解密',
+    });
+  });
+
+  // 测试方式：预写一个未解谜存档，再带合法 cookie 访问 flag。
+  // 通过标准：即使 session 存在，只要 solved 仍为 false，就必须返回 403。
+  test('GET /api/26/flag returns 403 for an existing but unsolved session', async () => {
+    writeLevel26SessionState(
+      storageDir,
+      validSessionId,
+      createControlledLevel26State()
+    );
+
+    const res = await request(app)
+      .get('/api/26/flag')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      );
+
+    expect(res.status).toBe(403);
+    expect(res.body.message).toBe('尚未完成解密');
+  });
+
+  // 测试方式：预写一个 solved=true 的合法存档，验证 flag 只依赖持久化状态。
+  // 通过标准：返回 200，消息即下一关 flag，并沿用原 session cookie。
+  test('GET /api/26/flag returns the next level flag for a solved session', async () => {
+    const solvedState = {
+      ...createControlledLevel26State(),
+      solved: true,
+    };
+    writeLevel26SessionState(storageDir, validSessionId, solvedState);
+
+    const res = await request(app)
+      .get('/api/26/flag')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      );
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      message: level26Constants.NEXT_LEVEL_FLAG,
+    });
+    expect(res.headers['set-cookie'][0]).toContain(
+      `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+    );
+  });
+
+  // 测试方式：先写入一个固定存档，再调用 reset，确认它复用原文件路径但改写为新局。
+  // 通过标准：session 文件仍存在于原路径，文件内容发生变化，且响应中的 solved 与落盘状态一致。
+  test('POST /api/26/reset rewrites the current session file with a fresh board', async () => {
+    const initialState = createControlledLevel26State();
+    const filePath = writeLevel26SessionState(
+      storageDir,
+      validSessionId,
+      initialState
+    );
+
+    const res = await request(app)
+      .post('/api/26/reset')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      );
+
+    const nextState = readLevel26SessionState(storageDir, validSessionId);
+
+    expect(res.status).toBe(200);
+    expect(fs.existsSync(filePath)).toBe(true);
+    expect(nextState).not.toEqual(initialState);
+    expect(res.body).toEqual({
+      success: true,
+      message: '操作成功',
+      solved: nextState.solved,
+    });
+  });
+
+  // 测试方式：对固定空白格执行 PUT，验证成功落盘、库存扣减以及新管道属性。
+  // 通过标准：返回成功，目标格变成 unlocked pipe，且对应库存减 1。
+  test('PUT /api/26/tiles/:x/:y places a pipe on an empty tile and decreases inventory', async () => {
+    writeLevel26SessionState(
+      storageDir,
+      validSessionId,
+      createControlledLevel26State()
+    );
+
+    const res = await request(app)
+      .put('/api/26/tiles/5/5')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({
+        pipeType: 'tee',
+        rotation: 270,
+      });
+
+    const nextState = readLevel26SessionState(storageDir, validSessionId);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      message: '操作成功',
+      solved: nextState.solved,
+    });
+    expect(nextState.cells[5][5]).toEqual({
+      tileType: 'pipe',
+      pipeType: 'tee',
+      rotation: 270,
+      locked: false,
+    });
+    expect(nextState.inventory.tee).toBe(0);
+  });
+
+  // 测试方式：分别覆盖非法坐标、非法 pipeType、非法 rotation 三个参数校验分支。
+  // 通过标准：三类无效输入都返回 400，并给出对应错误消息。
+  test('PUT /api/26/tiles/:x/:y validates coordinates, pipeType and rotation', async () => {
+    const invalidCoordinateRes = await request(app)
+      .put('/api/26/tiles/10/0')
+      .send({ pipeType: 'straight', rotation: 0 });
+    const invalidTypeRes = await request(app)
+      .put('/api/26/tiles/1/1')
+      .send({ pipeType: 'cross', rotation: 0 });
+    const invalidRotationRes = await request(app)
+      .put('/api/26/tiles/1/1')
+      .send({ pipeType: 'straight', rotation: 45 });
+
+    expect(invalidCoordinateRes.status).toBe(400);
+    expect(invalidCoordinateRes.body.message).toBe('坐标不合法');
+
+    expect(invalidTypeRes.status).toBe(400);
+    expect(invalidTypeRes.body.message).toBe('水管类型不合法');
+
+    expect(invalidRotationRes.status).toBe(400);
+    expect(invalidRotationRes.body.message).toBe('方向不合法');
+  });
+
+  // 测试方式：命中 blocker、locked、source、target、玩家已有管道和库存不足六种业务失败路径。
+  // 通过标准：这些场景都返回 200，但 success=false，且消息分别符合当前实现。
+  test('PUT /api/26/tiles/:x/:y returns business failures for non-empty or unavailable targets', async () => {
+    const state = createControlledLevel26State();
+    state.inventory.elbow = 0;
+    writeLevel26SessionState(storageDir, validSessionId, state);
+
+    const blockerRes = await request(app)
+      .put('/api/26/tiles/3/3')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ pipeType: 'straight', rotation: 0 });
+    const lockedRes = await request(app)
+      .put('/api/26/tiles/2/2')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ pipeType: 'straight', rotation: 0 });
+    const sourceRes = await request(app)
+      .put('/api/26/tiles/1/1')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ pipeType: 'straight', rotation: 0 });
+    const targetRes = await request(app)
+      .put('/api/26/tiles/8/1')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ pipeType: 'straight', rotation: 0 });
+    const occupiedPipeRes = await request(app)
+      .put('/api/26/tiles/4/4')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ pipeType: 'straight', rotation: 0 });
+    const outOfStockRes = await request(app)
+      .put('/api/26/tiles/5/5')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ pipeType: 'elbow', rotation: 90 });
+
+    expect(blockerRes.status).toBe(200);
+    expect(blockerRes.body).toEqual({
+      success: false,
+      message: '该格不可操作',
+      solved: false,
+    });
+
+    expect(lockedRes.status).toBe(200);
+    expect(lockedRes.body).toEqual({
+      success: false,
+      message: '该格为只读设施',
+      solved: false,
+    });
+
+    expect(sourceRes.status).toBe(200);
+    expect(sourceRes.body.message).toBe('目标格不是空位');
+
+    expect(targetRes.status).toBe(200);
+    expect(targetRes.body.message).toBe('目标格不是空位');
+
+    expect(occupiedPipeRes.status).toBe(200);
+    expect(occupiedPipeRes.body.message).toBe('目标格不是空位');
+
+    expect(outOfStockRes.status).toBe(200);
+    expect(outOfStockRes.body).toEqual({
+      success: false,
+      message: '库存不足',
+      solved: false,
+    });
+  });
+
+  // 测试方式：对玩家管道执行 PATCH，并额外带入 pipeType 等无关字段，验证只更新 rotation。
+  // 通过标准：rotation 被改写，但 pipeType 与 inventory 保持不变。
+  test('PATCH /api/26/tiles/:x/:y only updates rotation and ignores extra fields', async () => {
+    writeLevel26SessionState(
+      storageDir,
+      validSessionId,
+      createControlledLevel26State()
+    );
+
+    const res = await request(app)
+      .patch('/api/26/tiles/4/4')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({
+        rotation: 180,
+        pipeType: 'tee',
+        locked: true,
+      });
+
+    const nextState = readLevel26SessionState(storageDir, validSessionId);
+
+    expect(res.status).toBe(200);
+    expect(nextState.cells[4][4]).toEqual({
+      tileType: 'pipe',
+      pipeType: 'straight',
+      rotation: 180,
+      locked: false,
+    });
+    expect(nextState.inventory).toEqual({
+      straight: 2,
+      elbow: 1,
+      tee: 1,
+    });
+  });
+
+  // 测试方式：分别覆盖 PATCH 的非法 rotation 和非法坐标分支。
+  // 通过标准：非法 rotation 返回 400/方向不合法，非法坐标返回 400/坐标不合法。
+  test('PATCH /api/26/tiles/:x/:y validates rotation and coordinates', async () => {
+    const invalidRotationRes = await request(app)
+      .patch('/api/26/tiles/4/4')
+      .send({ rotation: 45 });
+    const invalidCoordinateRes = await request(app)
+      .patch('/api/26/tiles/a/4')
+      .send({ rotation: 90 });
+
+    expect(invalidRotationRes.status).toBe(400);
+    expect(invalidRotationRes.body.message).toBe('方向不合法');
+
+    expect(invalidCoordinateRes.status).toBe(400);
+    expect(invalidCoordinateRes.body.message).toBe('坐标不合法');
+  });
+
+  // 测试方式：覆盖 PATCH 对 empty、blocker、locked、source、target 的业务返回。
+  // 通过标准：empty 返回“目标格为空”，blocker/locked 返回对应只读或不可操作消息，source/target 也视为空目标。
+  test('PATCH /api/26/tiles/:x/:y returns expected business failures for non-player tiles', async () => {
+    writeLevel26SessionState(
+      storageDir,
+      validSessionId,
+      createControlledLevel26State()
+    );
+
+    const emptyRes = await request(app)
+      .patch('/api/26/tiles/5/5')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ rotation: 90 });
+    const blockerRes = await request(app)
+      .patch('/api/26/tiles/3/3')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ rotation: 90 });
+    const lockedRes = await request(app)
+      .patch('/api/26/tiles/2/2')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ rotation: 90 });
+    const sourceRes = await request(app)
+      .patch('/api/26/tiles/1/1')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ rotation: 90 });
+    const targetRes = await request(app)
+      .patch('/api/26/tiles/8/1')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      )
+      .send({ rotation: 90 });
+
+    expect(emptyRes.status).toBe(200);
+    expect(emptyRes.body).toEqual({
+      success: false,
+      message: '目标格为空',
+      solved: false,
+    });
+
+    expect(blockerRes.status).toBe(200);
+    expect(blockerRes.body.message).toBe('该格不可操作');
+
+    expect(lockedRes.status).toBe(200);
+    expect(lockedRes.body.message).toBe('该格为只读设施');
+
+    expect(sourceRes.status).toBe(200);
+    expect(sourceRes.body.message).toBe('目标格为空');
+
+    expect(targetRes.status).toBe(200);
+    expect(targetRes.body.message).toBe('目标格为空');
+  });
+
+  // 测试方式：删除预放的玩家管道，验证格子恢复 empty 且库存返还。
+  // 通过标准：返回成功，落盘后该格为 empty，straight 库存加 1。
+  test('DELETE /api/26/tiles/:x/:y removes a player pipe and refunds inventory', async () => {
+    writeLevel26SessionState(
+      storageDir,
+      validSessionId,
+      createControlledLevel26State()
+    );
+
+    const res = await request(app)
+      .delete('/api/26/tiles/4/4')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      );
+
+    const nextState = readLevel26SessionState(storageDir, validSessionId);
+
+    expect(res.status).toBe(200);
+    expect(nextState.cells[4][4]).toEqual({ tileType: 'empty' });
+    expect(nextState.inventory.straight).toBe(3);
+    expect(res.body).toEqual({
+      success: true,
+      message: '操作成功',
+      solved: nextState.solved,
+    });
+  });
+
+  // 测试方式：分别覆盖 DELETE 的非法坐标和五类不可删除目标。
+  // 通过标准：非法坐标返回 400，其余业务失败保持 200，并按当前实现返回对应消息。
+  test('DELETE /api/26/tiles/:x/:y validates coordinates and rejects non-player targets', async () => {
+    writeLevel26SessionState(
+      storageDir,
+      validSessionId,
+      createControlledLevel26State()
+    );
+
+    const invalidCoordinateRes =
+      await request(app).delete('/api/26/tiles/-1/4');
+    const emptyRes = await request(app)
+      .delete('/api/26/tiles/5/5')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      );
+    const blockerRes = await request(app)
+      .delete('/api/26/tiles/3/3')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      );
+    const lockedRes = await request(app)
+      .delete('/api/26/tiles/2/2')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      );
+    const sourceRes = await request(app)
+      .delete('/api/26/tiles/1/1')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      );
+    const targetRes = await request(app)
+      .delete('/api/26/tiles/8/1')
+      .set(
+        'Cookie',
+        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
+      );
+
+    expect(invalidCoordinateRes.status).toBe(400);
+    expect(invalidCoordinateRes.body.message).toBe('坐标不合法');
+
+    expect(emptyRes.status).toBe(200);
+    expect(emptyRes.body.message).toBe('目标格为空');
+
+    expect(blockerRes.status).toBe(200);
+    expect(blockerRes.body.message).toBe('该格不可操作');
+
+    expect(lockedRes.status).toBe(200);
+    expect(lockedRes.body.message).toBe('该格为只读设施');
+
+    expect(sourceRes.status).toBe(200);
+    expect(sourceRes.body.message).toBe('目标格为空');
+
+    expect(targetRes.status).toBe(200);
+    expect(targetRes.body.message).toBe('目标格为空');
   });
 });
