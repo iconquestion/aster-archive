@@ -144,7 +144,45 @@ describe('Levels 01-14', () => {
     expect(res.text).toContain('10-w3n9c6v2mq');
   });
 
-  test.skip('10 skips the algorithm reconstruction challenge', () => {});
+  test('10 reconstructs the flag from the custom date hash instead of DOM ids', async () => {
+    const res = await request(app).get('/10-w3n9c6v2mq/');
+
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('hashDate');
+    expect(res.text).toContain('hashToChar');
+    expect(res.text).toContain('result = []');
+
+    const photoDates = Array.from(
+      res.text.matchAll(/<div id="[^"]+">\s*<p>(\d{4}\/\d{2}\/\d{2})<\/p>/g)
+    ).map((match) => match[1]);
+
+    expect(photoDates).toHaveLength(10);
+
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz1234567890';
+    const hashDate = (str) => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash * 31 + str.charCodeAt(i)) | 0;
+      }
+      return hash;
+    };
+    const hashToChar = (hash) => {
+      hash ^= hash >>> 16;
+      hash ^= hash << 5;
+      return alphabet[Math.abs(hash) % alphabet.length];
+    };
+
+    const flag = photoDates
+      .map((date) => ({
+        date,
+        ch: hashToChar(hashDate(date)),
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .map((item) => item.ch)
+      .join('');
+
+    expect(flag).toBe('zcwl17ouoa');
+  });
 
   test.skip('11 skips the multi-step decoding challenge', () => {});
 
