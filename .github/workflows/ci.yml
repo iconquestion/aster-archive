@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  NODE_VERSION: 24.14.0
+
 on:
   push:
     branches:
@@ -31,46 +34,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup project
+        uses: ./.github/actions/setup-node-project
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Check formatting
+        run: npm run format:check
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup project
+        uses: ./.github/actions/setup-node-project
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run lint
+        run: npm run lint
+
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup project
+        uses: ./.github/actions/setup-node-project
         with:
-          node-version: 24.14.0
-          cache: npm
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Prepare CI environment
-        run: |
-          mkdir -p config/.ci-tls
-          mkdir -p public/12-d1q7m4z8pv
-          openssl req \
-            -x509 \
-            -newkey rsa:2048 \
-            -nodes \
-            -keyout config/.ci-tls/key.pem \
-            -out config/.ci-tls/cert.pem \
-            -days 7 \
-            -subj "/CN=localhost"
-          printf '4242\n' > public/12-d1q7m4z8pv/password.xdxdxdxd
-          cat <<EOF > config/.env
-          HTTP_PORT=8080
-          HTTPS_PORT=8443
-          HTTP2_PORT=9443
-          APP_ORIGIN=https://localhost:8443
-          TLS_KEY_PATH=${{ github.workspace }}/config/.ci-tls/key.pem
-          TLS_CERT_PATH=${{ github.workspace }}/config/.ci-tls/cert.pem
-          EOF
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check formatting
-        run: npm run format:check
+        run: bash scripts/setup-ci-env.sh
 
       - name: Run tests
         run: npm test

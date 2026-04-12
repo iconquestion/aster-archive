@@ -1,0 +1,27 @@
+name: Setup Node Project
+description: Checkout the repository, setup Node.js, and install dependencies
+
+inputs:
+  node-version:
+    description: Node.js version to use
+    required: true
+  install-command:
+    description: Command used to install dependencies
+    required: false
+    default: npm ci
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+
+    - name: Install dependencies
+      shell: bash
+      run: ${{ inputs.install-command }}
