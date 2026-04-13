@@ -1,5 +1,6 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const csurf = require('csurf');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -36,6 +37,11 @@ function createIsolatedLevelsApp({ level25Options, level26Options } = {}) {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
   app.use(cookieParser());
+  app.use(csurf({ cookie: true }));
+  app.use((req, res, next) => {
+    res.set('x-csrf-token', req.csrfToken());
+    next();
+  });
   app.use(express.static(publicDir));
   app.use(
     '/08-c2x8m5q9nv/',
