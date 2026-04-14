@@ -42,6 +42,9 @@ function createIsolatedLevelsApp({ level25Options, level26Options } = {}) {
     res.set('x-csrf-token', req.csrfToken());
     next();
   });
+  app.get('/__csrf__', (req, res) => {
+    res.status(200).json({ success: true });
+  });
   app.use(express.static(publicDir));
   app.use(
     '/08-c2x8m5q9nv/',
@@ -65,6 +68,65 @@ function createIsolatedLevelsApp({ level25Options, level26Options } = {}) {
   app.use('/api/26', createLevel26Router(level26Options));
 
   return app;
+}
+
+function findSetCookie(headers, cookieName) {
+  return headers['set-cookie']?.find((cookie) =>
+    cookie.startsWith(`${cookieName}=`)
+  );
+}
+
+async function getCsrfContext({ app, agent }) {
+  const primingResponse = agent
+    ? await agent.get('/__csrf__')
+    : await request(app).get('/__csrf__');
+
+  return {
+    csrfToken: primingResponse.headers['x-csrf-token'],
+    setCookie: primingResponse.headers['set-cookie'] || [],
+  };
+}
+
+async function createCsrfRequest({
+  app,
+  agent,
+  method,
+  url,
+  cookies = [],
+  headers = {},
+}) {
+  const { csrfToken, setCookie } = await getCsrfContext({ app, agent });
+  const requestBuilder = agent ? agent[method](url) : request(app)[method](url);
+  const mergedCookies = [...setCookie, ...cookies].map(
+    (cookie) => cookie.split(';', 1)[0]
+  );
+
+  if (mergedCookies.length > 0) {
+    requestBuilder.set('Cookie', mergedCookies.join('; '));
+  }
+
+  requestBuilder.set('x-csrf-token', csrfToken);
+
+  for (const [headerName, headerValue] of Object.entries(headers)) {
+    requestBuilder.set(headerName, headerValue);
+  }
+
+  return { requestBuilder };
+}
+
+async function sendCsrfRequest(options) {
+  const { body, requestType, ...requestOptions } = options;
+  const { requestBuilder } = await createCsrfRequest(requestOptions);
+
+  if (requestType) {
+    requestBuilder.type(requestType);
+  }
+
+  if (body !== undefined) {
+    requestBuilder.send(body);
+  }
+
+  return requestBuilder;
 }
 
 function createEmptyLevel26Cells() {
@@ -205,7 +267,11 @@ describe('Levels 01-14', () => {
   // 通过标准：GET 必须被拒绝并返回提示；POST 必须成功并带出 06 的线索。
   test('05 differentiates between GET and POST challenge branches', async () => {
     const getRes = await request(app).get('/api/05');
-    const postRes = await request(app).post('/api/05');
+    const postRes = await sendCsrfRequest({
+      app,
+      method: 'post',
+      url: '/api/05',
+    });
 
     expect(getRes.status).toBe(400);
     expect(getRes.body.message).toContain('YOU SHALL NOT PASS!!!');
@@ -345,14 +411,20 @@ describe('Levels 01-14', () => {
     const agent = request.agent(app);
     const dailyPassword = getDailyPassword();
 
-    const loginRes = await agent.post('/api/12/login').type('form').send({
-      username: 'admin',
-      password: dailyPassword,
+    const loginRes = await sendCsrfRequest({
+      agent,
+      method: 'post',
+      url: '/api/12/login',
+      requestType: 'form',
+      body: {
+        username: 'admin',
+        password: dailyPassword,
+      },
     });
 
     expect(loginRes.status).toBe(200);
     expect(loginRes.body.message).toBe('登录成功');
-    expect(loginRes.headers['set-cookie'][0]).toContain('bibilabu=');
+    expect(findSetCookie(loginRes.headers, 'bibilabu')).toContain('bibilabu=');
 
     const roomRes = await agent.get('/api/12/get_room_info?room_id=13');
 
@@ -379,9 +451,14 @@ describe('Levels 01-14', () => {
   // 通过标准：接口接受该认证并在响应体中返回 15 线索。
   test('14 accepts admin basic auth and returns the 15 clue', async () => {
     const basicToken = Buffer.from('admin:admin').toString('base64');
-    const res = await request(app)
-      .post('/api/14/login')
-      .set('Authorization', `Basic ${basicToken}`);
+    const res = await sendCsrfRequest({
+      app,
+      method: 'post',
+      url: '/api/14/login',
+      headers: {
+        Authorization: `Basic ${basicToken}`,
+      },
+    });
 
     expect(res.status).toBe(200);
     expect(res.body.message).toContain('15-x2m9k4c6ra');
@@ -454,16 +531,24 @@ describe('Levels 16-25', () => {
   // 测试方式：同一个接口分别验证“答案正确”与“缺少输入”两条主分支。
   // 通过标准：正确答案时返回命中信息和 exact=10；空输入时返回 400 和明确报错。
   test('20 validates both the correct guess flow and empty input handling', async () => {
-    const correctRes = await request(app)
-      .post('/api/20')
-      .send({ guess: 't8d0v9c2c4' });
+    const correctRes = await sendCsrfRequest({
+      app,
+      method: 'post',
+      url: '/api/20',
+      body: { guess: 't8d0v9c2c4' },
+    });
 
     expect(correctRes.status).toBe(200);
     expect(correctRes.body.isCorrect).toBe(true);
     expect(correctRes.body.exact).toBe(10);
     expect(correctRes.body.message).toContain('t8d0v9c2c4');
 
-    const emptyRes = await request(app).post('/api/20').send({});
+    const emptyRes = await sendCsrfRequest({
+      app,
+      method: 'post',
+      url: '/api/20',
+      body: {},
+    });
 
     expect(emptyRes.status).toBe(400);
     expect(emptyRes.body.message).toBe('请输入要猜测的 flag。');
@@ -522,26 +607,46 @@ describe('Levels 16-25', () => {
     const agentA = request.agent(app);
     const agentB = request.agent(app);
 
-    const loginA = await agentA.post('/api/25/login').send({
-      username: 'admin',
-      password: 'admin',
+    const loginA = await sendCsrfRequest({
+      agent: agentA,
+      method: 'post',
+      url: '/api/25/login',
+      body: {
+        username: 'admin',
+        password: 'admin',
+      },
     });
-    const loginB = await agentB.post('/api/25/login').send({
-      username: 'admin',
-      password: 'admin',
+    const loginB = await sendCsrfRequest({
+      agent: agentB,
+      method: 'post',
+      url: '/api/25/login',
+      body: {
+        username: 'admin',
+        password: 'admin',
+      },
     });
 
     expect(loginA.status).toBe(200);
-    expect(loginA.headers['set-cookie'][0]).toContain(
-      `${level25Constants.SESSION_COOKIE_NAME}=`
-    );
+    expect(
+      findSetCookie(loginA.headers, level25Constants.SESSION_COOKIE_NAME)
+    ).toContain(`${level25Constants.SESSION_COOKIE_NAME}=`);
     expect(loginB.status).toBe(200);
 
-    await agentA.post('/api/25/commit').send({
-      new_value: 'edge-node-7',
+    await sendCsrfRequest({
+      agent: agentA,
+      method: 'post',
+      url: '/api/25/commit',
+      body: {
+        new_value: 'edge-node-7',
+      },
     });
-    await agentB.post('/api/25/commit').send({
-      new_value: 'edge-node-8',
+    await sendCsrfRequest({
+      agent: agentB,
+      method: 'post',
+      url: '/api/25/commit',
+      body: {
+        new_value: 'edge-node-8',
+      },
     });
 
     const stateA = await agentA.get('/api/25/state');
@@ -560,9 +665,14 @@ describe('Levels 16-25', () => {
   test('25 recovery overwrites the stored value with the snapshot payload', async () => {
     const agent = request.agent(app);
 
-    await agent.post('/api/25/login').send({
-      username: 'admin',
-      password: 'admin',
+    await sendCsrfRequest({
+      agent,
+      method: 'post',
+      url: '/api/25/login',
+      body: {
+        username: 'admin',
+        password: 'admin',
+      },
     });
 
     const templateRes = await agent.get('/api/25/snapshot-template');
@@ -570,12 +680,17 @@ describe('Levels 16-25', () => {
     expect(templateRes.status).toBe(200);
     expect(templateRes.body.snapshot_id).toBe(level25Constants.NEXT_LEVEL_FLAG);
 
-    const recoverRes = await agent.post('/api/25/recover').send({
-      field: level25Constants.DEFAULT_FIELD,
-      old_value: level25Constants.DEFAULT_VALUE,
-      new_value: 'edge-node-9',
-      modified_at: '2026-04-07T12:34:56.000Z',
-      snapshot_id: level25Constants.NEXT_LEVEL_FLAG,
+    const recoverRes = await sendCsrfRequest({
+      agent,
+      method: 'post',
+      url: '/api/25/recover',
+      body: {
+        field: level25Constants.DEFAULT_FIELD,
+        old_value: level25Constants.DEFAULT_VALUE,
+        new_value: 'edge-node-9',
+        modified_at: '2026-04-07T12:34:56.000Z',
+        snapshot_id: level25Constants.NEXT_LEVEL_FLAG,
+      },
     });
 
     expect(recoverRes.status).toBe(200);
@@ -633,7 +748,9 @@ describe('Level 26 HTTP API', () => {
         tee: expect.any(Number),
       })
     );
-    expect(res.headers['set-cookie'][0]).toMatch(
+    expect(
+      findSetCookie(res.headers, level26Constants.SESSION_COOKIE_NAME)
+    ).toMatch(
       new RegExp(`${level26Constants.SESSION_COOKIE_NAME}=[a-f0-9]{32}`)
     );
   });
@@ -745,9 +862,9 @@ describe('Level 26 HTTP API', () => {
       success: true,
       message: level26Constants.NEXT_LEVEL_FLAG,
     });
-    expect(res.headers['set-cookie'][0]).toContain(
-      `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-    );
+    expect(
+      findSetCookie(res.headers, level26Constants.SESSION_COOKIE_NAME)
+    ).toContain(`${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`);
   });
 
   // 测试方式：先写入一个固定存档，再调用 reset，确认它复用原文件路径但改写为新局。
@@ -760,12 +877,12 @@ describe('Level 26 HTTP API', () => {
       initialState
     );
 
-    const res = await request(app)
-      .post('/api/26/reset')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      );
+    const res = await sendCsrfRequest({
+      app,
+      method: 'post',
+      url: '/api/26/reset',
+      cookies: [`${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`],
+    });
 
     const nextState = readLevel26SessionState(storageDir, validSessionId);
 
@@ -788,16 +905,16 @@ describe('Level 26 HTTP API', () => {
       createControlledLevel26State()
     );
 
-    const res = await request(app)
-      .put('/api/26/tiles/5/5')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({
+    const res = await sendCsrfRequest({
+      app,
+      method: 'put',
+      url: '/api/26/tiles/5/5',
+      cookies: [`${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`],
+      body: {
         pipeType: 'tee',
         rotation: 270,
-      });
+      },
+    });
 
     const nextState = readLevel26SessionState(storageDir, validSessionId);
 
@@ -819,15 +936,24 @@ describe('Level 26 HTTP API', () => {
   // 测试方式：分别覆盖非法坐标、非法 pipeType、非法 rotation 三个参数校验分支。
   // 通过标准：三类无效输入都返回 400，并给出对应错误消息。
   test('PUT /api/26/tiles/:x/:y validates coordinates, pipeType and rotation', async () => {
-    const invalidCoordinateRes = await request(app)
-      .put('/api/26/tiles/10/0')
-      .send({ pipeType: 'straight', rotation: 0 });
-    const invalidTypeRes = await request(app)
-      .put('/api/26/tiles/1/1')
-      .send({ pipeType: 'cross', rotation: 0 });
-    const invalidRotationRes = await request(app)
-      .put('/api/26/tiles/1/1')
-      .send({ pipeType: 'straight', rotation: 45 });
+    const invalidCoordinateRes = await sendCsrfRequest({
+      app,
+      method: 'put',
+      url: '/api/26/tiles/10/0',
+      body: { pipeType: 'straight', rotation: 0 },
+    });
+    const invalidTypeRes = await sendCsrfRequest({
+      app,
+      method: 'put',
+      url: '/api/26/tiles/1/1',
+      body: { pipeType: 'cross', rotation: 0 },
+    });
+    const invalidRotationRes = await sendCsrfRequest({
+      app,
+      method: 'put',
+      url: '/api/26/tiles/1/1',
+      body: { pipeType: 'straight', rotation: 45 },
+    });
 
     expect(invalidCoordinateRes.status).toBe(400);
     expect(invalidCoordinateRes.body.message).toBe('坐标不合法');
@@ -846,48 +972,51 @@ describe('Level 26 HTTP API', () => {
     state.inventory.elbow = 0;
     writeLevel26SessionState(storageDir, validSessionId, state);
 
-    const blockerRes = await request(app)
-      .put('/api/26/tiles/3/3')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ pipeType: 'straight', rotation: 0 });
-    const lockedRes = await request(app)
-      .put('/api/26/tiles/2/2')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ pipeType: 'straight', rotation: 0 });
-    const sourceRes = await request(app)
-      .put('/api/26/tiles/1/1')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ pipeType: 'straight', rotation: 0 });
-    const targetRes = await request(app)
-      .put('/api/26/tiles/8/1')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ pipeType: 'straight', rotation: 0 });
-    const occupiedPipeRes = await request(app)
-      .put('/api/26/tiles/4/4')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ pipeType: 'straight', rotation: 0 });
-    const outOfStockRes = await request(app)
-      .put('/api/26/tiles/5/5')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ pipeType: 'elbow', rotation: 90 });
+    const sessionCookies = [
+      `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`,
+    ];
+    const blockerRes = await sendCsrfRequest({
+      app,
+      method: 'put',
+      url: '/api/26/tiles/3/3',
+      cookies: sessionCookies,
+      body: { pipeType: 'straight', rotation: 0 },
+    });
+    const lockedRes = await sendCsrfRequest({
+      app,
+      method: 'put',
+      url: '/api/26/tiles/2/2',
+      cookies: sessionCookies,
+      body: { pipeType: 'straight', rotation: 0 },
+    });
+    const sourceRes = await sendCsrfRequest({
+      app,
+      method: 'put',
+      url: '/api/26/tiles/1/1',
+      cookies: sessionCookies,
+      body: { pipeType: 'straight', rotation: 0 },
+    });
+    const targetRes = await sendCsrfRequest({
+      app,
+      method: 'put',
+      url: '/api/26/tiles/8/1',
+      cookies: sessionCookies,
+      body: { pipeType: 'straight', rotation: 0 },
+    });
+    const occupiedPipeRes = await sendCsrfRequest({
+      app,
+      method: 'put',
+      url: '/api/26/tiles/4/4',
+      cookies: sessionCookies,
+      body: { pipeType: 'straight', rotation: 0 },
+    });
+    const outOfStockRes = await sendCsrfRequest({
+      app,
+      method: 'put',
+      url: '/api/26/tiles/5/5',
+      cookies: sessionCookies,
+      body: { pipeType: 'elbow', rotation: 90 },
+    });
 
     expect(blockerRes.status).toBe(200);
     expect(blockerRes.body).toEqual({
@@ -929,17 +1058,17 @@ describe('Level 26 HTTP API', () => {
       createControlledLevel26State()
     );
 
-    const res = await request(app)
-      .patch('/api/26/tiles/4/4')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({
+    const res = await sendCsrfRequest({
+      app,
+      method: 'patch',
+      url: '/api/26/tiles/4/4',
+      cookies: [`${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`],
+      body: {
         rotation: 180,
         pipeType: 'tee',
         locked: true,
-      });
+      },
+    });
 
     const nextState = readLevel26SessionState(storageDir, validSessionId);
 
@@ -960,12 +1089,18 @@ describe('Level 26 HTTP API', () => {
   // 测试方式：分别覆盖 PATCH 的非法 rotation 和非法坐标分支。
   // 通过标准：非法 rotation 返回 400/方向不合法，非法坐标返回 400/坐标不合法。
   test('PATCH /api/26/tiles/:x/:y validates rotation and coordinates', async () => {
-    const invalidRotationRes = await request(app)
-      .patch('/api/26/tiles/4/4')
-      .send({ rotation: 45 });
-    const invalidCoordinateRes = await request(app)
-      .patch('/api/26/tiles/a/4')
-      .send({ rotation: 90 });
+    const invalidRotationRes = await sendCsrfRequest({
+      app,
+      method: 'patch',
+      url: '/api/26/tiles/4/4',
+      body: { rotation: 45 },
+    });
+    const invalidCoordinateRes = await sendCsrfRequest({
+      app,
+      method: 'patch',
+      url: '/api/26/tiles/a/4',
+      body: { rotation: 90 },
+    });
 
     expect(invalidRotationRes.status).toBe(400);
     expect(invalidRotationRes.body.message).toBe('方向不合法');
@@ -983,41 +1118,44 @@ describe('Level 26 HTTP API', () => {
       createControlledLevel26State()
     );
 
-    const emptyRes = await request(app)
-      .patch('/api/26/tiles/5/5')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ rotation: 90 });
-    const blockerRes = await request(app)
-      .patch('/api/26/tiles/3/3')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ rotation: 90 });
-    const lockedRes = await request(app)
-      .patch('/api/26/tiles/2/2')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ rotation: 90 });
-    const sourceRes = await request(app)
-      .patch('/api/26/tiles/1/1')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ rotation: 90 });
-    const targetRes = await request(app)
-      .patch('/api/26/tiles/8/1')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      )
-      .send({ rotation: 90 });
+    const sessionCookies = [
+      `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`,
+    ];
+    const emptyRes = await sendCsrfRequest({
+      app,
+      method: 'patch',
+      url: '/api/26/tiles/5/5',
+      cookies: sessionCookies,
+      body: { rotation: 90 },
+    });
+    const blockerRes = await sendCsrfRequest({
+      app,
+      method: 'patch',
+      url: '/api/26/tiles/3/3',
+      cookies: sessionCookies,
+      body: { rotation: 90 },
+    });
+    const lockedRes = await sendCsrfRequest({
+      app,
+      method: 'patch',
+      url: '/api/26/tiles/2/2',
+      cookies: sessionCookies,
+      body: { rotation: 90 },
+    });
+    const sourceRes = await sendCsrfRequest({
+      app,
+      method: 'patch',
+      url: '/api/26/tiles/1/1',
+      cookies: sessionCookies,
+      body: { rotation: 90 },
+    });
+    const targetRes = await sendCsrfRequest({
+      app,
+      method: 'patch',
+      url: '/api/26/tiles/8/1',
+      cookies: sessionCookies,
+      body: { rotation: 90 },
+    });
 
     expect(emptyRes.status).toBe(200);
     expect(emptyRes.body).toEqual({
@@ -1048,12 +1186,12 @@ describe('Level 26 HTTP API', () => {
       createControlledLevel26State()
     );
 
-    const res = await request(app)
-      .delete('/api/26/tiles/4/4')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      );
+    const res = await sendCsrfRequest({
+      app,
+      method: 'delete',
+      url: '/api/26/tiles/4/4',
+      cookies: [`${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`],
+    });
 
     const nextState = readLevel26SessionState(storageDir, validSessionId);
 
@@ -1076,38 +1214,44 @@ describe('Level 26 HTTP API', () => {
       createControlledLevel26State()
     );
 
-    const invalidCoordinateRes =
-      await request(app).delete('/api/26/tiles/-1/4');
-    const emptyRes = await request(app)
-      .delete('/api/26/tiles/5/5')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      );
-    const blockerRes = await request(app)
-      .delete('/api/26/tiles/3/3')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      );
-    const lockedRes = await request(app)
-      .delete('/api/26/tiles/2/2')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      );
-    const sourceRes = await request(app)
-      .delete('/api/26/tiles/1/1')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      );
-    const targetRes = await request(app)
-      .delete('/api/26/tiles/8/1')
-      .set(
-        'Cookie',
-        `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`
-      );
+    const sessionCookies = [
+      `${level26Constants.SESSION_COOKIE_NAME}=${validSessionId}`,
+    ];
+    const invalidCoordinateRes = await sendCsrfRequest({
+      app,
+      method: 'delete',
+      url: '/api/26/tiles/-1/4',
+    });
+    const emptyRes = await sendCsrfRequest({
+      app,
+      method: 'delete',
+      url: '/api/26/tiles/5/5',
+      cookies: sessionCookies,
+    });
+    const blockerRes = await sendCsrfRequest({
+      app,
+      method: 'delete',
+      url: '/api/26/tiles/3/3',
+      cookies: sessionCookies,
+    });
+    const lockedRes = await sendCsrfRequest({
+      app,
+      method: 'delete',
+      url: '/api/26/tiles/2/2',
+      cookies: sessionCookies,
+    });
+    const sourceRes = await sendCsrfRequest({
+      app,
+      method: 'delete',
+      url: '/api/26/tiles/1/1',
+      cookies: sessionCookies,
+    });
+    const targetRes = await sendCsrfRequest({
+      app,
+      method: 'delete',
+      url: '/api/26/tiles/8/1',
+      cookies: sessionCookies,
+    });
 
     expect(invalidCoordinateRes.status).toBe(400);
     expect(invalidCoordinateRes.body.message).toBe('坐标不合法');
