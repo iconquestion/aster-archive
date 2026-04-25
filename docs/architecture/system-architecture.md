@@ -16,8 +16,8 @@
 - Node 应用层  
   使用 Express 提供静态资源、普通 API、部分特殊关卡逻辑，并单独启动 HTTPS 与 HTTP/2 服务。
 
-- 内容与测试层  
-  `public/` 存放各关卡页面与静态资源，`src/` 存放 Node 应用入口与通用服务模块，`src/levels/` 存放后端关卡实现，`test/` 用于验证关键 API 行为。
+- 内容、测试与文档层  
+  `public/` 存放各关卡页面与静态资源，`src/` 存放 Node 应用入口与通用服务模块，`src/levels/` 存放后端关卡实现，`test/` 用于验证关键 API 行为，`docs/` 按架构、设计、题解、叙事与项目管理分目录维护文档。
 
 ## 目录架构
 
@@ -67,11 +67,27 @@ Node 服务端代码目录。
 
 - Range 分段响应
 
+### `docs/`
+
+项目文档目录。
+
+当前按用途分为：
+
+- `architecture/`：系统架构与运行说明
+
+- `design/`：页面设计规范
+
+- `gameplay/`：题解与玩法说明
+
+- `narrative/`：背景设定与世界观资料
+
+- `project-management/`：项目范围、里程碑、进度、风险与测试计划
+
 ## Node 应用层架构
 
 ### 入口服务
 
-项目入口为 [src/index.js](./src/index.js)
+项目入口为 [src/index.js](../../src/index.js)
 
 Node 进程同时启动三类服务：
 

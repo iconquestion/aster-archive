@@ -28,11 +28,17 @@ https://www.iconquestion.com/
 
 `test/` 自动化测试脚本。
 
-`101-solutions.md` 题解文档，描述每一关的设计理念和详细解题步骤。
+`docs/architecture/` 存放系统架构说明。
 
-`construction.md` 架构说明，专门负责描述网站整体系统架构。
+`docs/design/` 存放页面设计规范。
 
-详细结构说明，请参阅 [construction.md](./construction.md)
+`docs/gameplay/` 存放题解文档与玩法说明。
+
+`docs/narrative/` 存放世界观与背景设定资料。
+
+`docs/project-management/` 存放项目计划与质量管理文档，目前包含项目范围、项目里程碑、项目进度、风险管理、测试计划与测试改进路线。
+
+详细结构说明，请参阅 [系统架构说明](./docs/architecture/system-architecture.md)
 
 ## 仓库用途
 
@@ -44,7 +50,19 @@ https://www.iconquestion.com/
 
 推荐使用 `Node.js 24.14.0` 进行本地开发与测试。
 
-详细构建说明和方法，请参阅 [construction.md](./construction.md)
+详细构建说明和方法，请参阅 [系统架构说明](./docs/architecture/system-architecture.md)
+
+## 项目计划文档
+
+如果你想从软件工程或项目计划角度理解这个仓库，可以进一步阅读：
+
+- [文档索引](./docs/README.md)
+- [项目范围说明](./docs/project-management/project-scope.md)
+- [项目里程碑](./docs/project-management/project-milestones.md)
+- [项目进度记录](./docs/project-management/project-progress.md)
+- [风险管理文档](./docs/project-management/risk-management.md)
+- [测试计划文档](./docs/project-management/test-plan.md)
+- [测试改进路线](./docs/project-management/test-improvement-roadmap.md)
 
 ## 代码检查与格式化
 

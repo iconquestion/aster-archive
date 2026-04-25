@@ -80,10 +80,10 @@ If you are new to the repository, this is the rough layout:
 - `public/`: homepage, start page, level pages, scripts, fonts, styles, and other static resources
 - `src/`: Node/Express entry point and level implementations that need back-end behavior
 - `test/`: tests for key back-end levels
-- `construction.md`: architecture overview
-- `101-solutions.md`: solution notes based on the current implementation
+- `docs/architecture/system-architecture.md`: architecture overview
+- `docs/gameplay/level-solutions.md`: solution notes based on the current implementation
 
-If you plan to change deployment, request flow, port usage, or protocol-specific behavior, please read `construction.md` first.
+If you plan to change deployment, request flow, port usage, or protocol-specific behavior, please read `docs/architecture/system-architecture.md` first.
 
 ## Local Run and Test
 
