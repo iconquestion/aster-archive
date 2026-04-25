@@ -57,6 +57,8 @@ https://www.iconquestion.com/
 如果你想从软件工程或项目计划角度理解这个仓库，可以进一步阅读：
 
 - [文档索引](./docs/README.md)
+- [产品需求说明](./docs/project-management/product-requirements.md)
+- [软件需求规格说明书（SRS）](./docs/project-management/software-requirements-specification.md)
 - [项目范围说明](./docs/project-management/project-scope.md)
 - [项目里程碑](./docs/project-management/project-milestones.md)
 - [项目进度记录](./docs/project-management/project-progress.md)

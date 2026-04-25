@@ -22,6 +22,8 @@
 
 ### `project-management/`
 
+- [产品需求说明](./project-management/product-requirements.md)
+- [软件需求规格说明书（SRS）](./project-management/software-requirements-specification.md)
 - [项目范围说明](./project-management/project-scope.md)
 - [项目里程碑](./project-management/project-milestones.md)
 - [项目进度记录](./project-management/project-progress.md)
