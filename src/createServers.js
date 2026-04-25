@@ -1,3 +1,9 @@
+/**
+ * 构件：协议服务创建模块
+ * 作用：创建并管理 HTTP、HTTPS 与独立 HTTP/2 服务。
+ * 数据结构：维护 HTTP/2 session 集合，用于关闭服务时释放连接。
+ * 控制：由入口模块调用，接收 Express app、关卡控制对象、配置和日志器。
+ */
 const fs = require('fs');
 const http = require('http');
 const https = require('https');

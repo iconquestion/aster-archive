@@ -1,3 +1,9 @@
+/**
+ * 构件：第 26 关水管谜题会话路由
+ * 作用：生成水管棋盘、维护玩家放置状态，并校验 source 到 targets 的连通性。
+ * 数据结构：使用 10x10 cells 二维数组表示棋盘，使用 Cookie 关联 /tmp 下的会话文件。
+ * 控制：由 Express 应用装配模块挂载到 /api/26，并导出工厂函数和算法函数供测试使用。
+ */
 const express = require('express');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -637,7 +643,6 @@ function createTileActionSuccessResponse(solved) {
   };
 }
 
-// 构造 26 关路由。
 // 这里只保留存储目录注入；时间与随机数都直接在实际使用处生成。
 function createLevel26Router({ storageDir = STORAGE_DIR } = {}) {
   fs.mkdirSync(storageDir, { recursive: true });

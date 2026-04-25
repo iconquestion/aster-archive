@@ -1,10 +1,15 @@
+/**
+ * 构件：第 20 关猜测反馈路由
+ * 作用：对玩家提交的 guess 返回完全匹配和部分匹配数量，猜中后给出线索。
+ * 数据结构：使用 Set 记录完全匹配位置，使用 Map 统计剩余字符频次。
+ * 控制：由 Express 应用装配模块挂载到 /api/20。
+ */
 const express = require('express');
 
 const router = express.Router();
 
 const CORRECT_FLAG = 't8d0v9c2c4';
 
-// 20关：实现类似猜密码的反馈机制，返回猜测中完全匹配和部分匹配的字符数量。
 function countMatches(guess, target) {
   const exactIndices = new Set();
   let exact = 0;
@@ -41,7 +46,6 @@ function countMatches(guess, target) {
   return { exact, partial };
 }
 
-// 20关提交：接收 guess 参数，猜中后直接返回结果，否则仅反馈接近程度。
 router.post('/', (req, res) => {
   const guess = String(req.body?.guess || '').trim();
   if (!guess) {

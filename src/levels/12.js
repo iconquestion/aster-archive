@@ -1,3 +1,9 @@
+/**
+ * 构件：第 12 关每日密码登录路由
+ * 作用：校验管理员登录和当日四位密码，并通过 Cookie 授权房间信息接口。
+ * 数据结构：缓存当前日期键和当日密码，使用 Cookie 保存短期授权凭据。
+ * 控制：由 Express 应用装配模块挂载到 /api/12，并导出密码生成函数供测试使用。
+ */
 const express = require('express');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
@@ -47,7 +53,6 @@ function isFourDigitPassword(value) {
   return /^\d{4}$/.test(value);
 }
 
-// 12关登录：校验用户名和当日密码，成功后设置授权 Cookie。
 router.post('/login', (req, res) => {
   const username = req.body?.username;
   const password = req.body?.password;
@@ -88,7 +93,6 @@ router.post('/login', (req, res) => {
   });
 });
 
-// 12关房间信息：校验 room_id 与 Cookie 后返回下一关编号。
 router.get('/get_room_info', (req, res) => {
   const cookieValue = req.cookies[COOKIE_NAME];
   const roomId = req.query?.room_id;

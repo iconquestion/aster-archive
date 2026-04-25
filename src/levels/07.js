@@ -1,8 +1,13 @@
+/**
+ * 构件：第 07 关场景访问路由
+ * 作用：根据 location 查询参数返回不同场景文案和隐藏线索。
+ * 数据结构：无持久状态；使用 switch 分支表达场景到文案的映射。
+ * 控制：由 Express 应用装配模块挂载到 /api/07。
+ */
 const express = require('express');
 
 const router = express.Router();
 
-// 07关：根据 location 返回对应场景文案。
 router.get('/', (req, res) => {
   const { location } = req.query;
   let responseMsg;

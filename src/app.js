@@ -1,3 +1,9 @@
+/**
+ * 构件：Express 应用装配模块
+ * 作用：装配通用中间件、静态资源、普通 API 路由与全局错误处理。
+ * 数据结构：无持久状态；返回 Express app 与第 15 关 WebSocket 控制对象。
+ * 控制：由入口模块创建，并被 server 创建模块挂载到 HTTP/HTTPS 服务。
+ */
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');

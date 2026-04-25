@@ -1,3 +1,9 @@
+/**
+ * 构件：Node 进程入口模块
+ * 作用：串联配置、日志、Express 应用和协议服务，并注册优雅退出处理。
+ * 数据结构：维护关闭流程中的停止状态、退出码与 shutdown Promise。
+ * 控制：由 Node 直接执行或测试调用，负责启动与停止整个服务进程。
+ */
 const { loadConfig } = require('./config');
 const { createLogger } = require('./logger');
 const { createApp } = require('./app');

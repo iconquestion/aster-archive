@@ -1,3 +1,9 @@
+/**
+ * 构件：运行配置模块
+ * 作用：统一读取、校验并导出 Node 服务启动所需的环境配置。
+ * 数据结构：使用 config 对象保存端口、来源、TLS 路径与日志轮转参数。
+ * 控制：由入口模块和测试辅助逻辑调用，为应用装配与服务创建提供配置。
+ */
 const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');

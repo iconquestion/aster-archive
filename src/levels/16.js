@@ -1,3 +1,9 @@
+/**
+ * 构件：第 16 关 HTTP/3 模拟路由
+ * 作用：根据时间点参数和转发头模拟未来协议场景并返回线索。
+ * 数据结构：无持久状态；使用请求头和查询参数作为判定输入。
+ * 控制：由 Express 应用装配模块挂载到 /api/16。
+ */
 const express = require('express');
 
 const router = express.Router();
@@ -6,7 +12,6 @@ function isHttp3(req) {
   return req.get('X-Forwarded-Http3') === 'h3';
 }
 
-// 16关：根据查询参数 timepoint 判断是否来到未来，并借助请求头模拟 HTTP/3 场景返回下一关线索。
 router.get('/', (req, res) => {
   res.header('X-Forwarded-Http3', isHttp3(req));
 

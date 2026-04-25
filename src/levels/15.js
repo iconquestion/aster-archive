@@ -1,10 +1,15 @@
+/**
+ * 构件：第 15 关 WebSocket 迷宫模块
+ * 作用：提供迷宫初始化、移动判定和通关反馈，并处理 WebSocket upgrade。
+ * 数据结构：使用二维数组表示迷宫，WebSocket 连接对象保存当前游戏状态。
+ * 控制：HTTP 路由由 Express 应用挂载，upgrade 处理器由协议服务创建模块调用。
+ */
 const express = require('express');
 const { WebSocketServer } = require('ws');
 
 const router = express.Router();
 const challengeWss = new WebSocketServer({ noServer: true });
 
-// 15关：提供一个 WebSocket 迷宫挑战，玩家初始化地图后不断移动，到达终点即可拿到下一关密码。
 /**
  * 生成 perfect maze
  * 约定：

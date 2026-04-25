@@ -1,3 +1,9 @@
+/**
+ * 构件：第 25 关运维终端会话路由
+ * 作用：提供登录、状态查询和字段更新接口，引导玩家发现可修改的线索字段。
+ * 数据结构：使用 session id Cookie 关联 /tmp 下的 JSON 会话状态文件。
+ * 控制：由 Express 应用装配模块挂载到 /api/25，并导出工厂函数供测试定制存储。
+ */
 const express = require('express');
 const crypto = require('crypto');
 const fs = require('fs');

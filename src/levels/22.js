@@ -1,3 +1,9 @@
+/**
+ * 构件：第 22 关语言协商路由
+ * 作用：根据 Accept-Language 首选语言返回本地化文案，英文文案包含线索。
+ * 数据结构：无持久状态；从请求头解析语言标签作为分支依据。
+ * 控制：由 Express 应用装配模块挂载到 /api/22。
+ */
 const express = require('express');
 const router = express.Router();
 
@@ -12,7 +18,6 @@ function extractPreferredLang(req) {
   return langTag;
 }
 
-// 22关：根据 Accept-Language 返回不同语言内容，英文响应中包含下一关线索。
 router.get('/', (req, res) => {
   const lang = extractPreferredLang(req);
 

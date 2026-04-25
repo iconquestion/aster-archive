@@ -1,8 +1,13 @@
+/**
+ * 构件：第 17 关 Trailer 响应路由
+ * 作用：输出 chunked 响应，并将下一关线索隐藏在 HTTP Trailer 头中。
+ * 数据结构：无持久状态；通过响应头和 Trailer 表达协议级线索。
+ * 控制：由 Express 应用装配模块挂载到 /api/17。
+ */
 const express = require('express');
 
 const router = express.Router();
 
-// 17关：使用 chunked 响应输出正文，并把下一关线索藏在 Trailer 头里。
 router.get('/', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Trailer', 'X-Never-Be-Apart');

@@ -1,3 +1,9 @@
+/**
+ * 构件：日志创建模块
+ * 作用：创建统一的 Winston logger，支持控制台输出与按日期轮转文件。
+ * 数据结构：使用 Winston transport 集合描述 info/error 日志输出目标。
+ * 控制：由入口模块调用，生成的 logger 被应用层和服务层共享。
+ */
 const fs = require('fs');
 const winston = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');

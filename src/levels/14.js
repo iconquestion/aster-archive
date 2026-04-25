@@ -1,3 +1,9 @@
+/**
+ * 构件：第 14 关 Basic Auth 路由
+ * 作用：通过伪装认证提示引导玩家使用 Basic Auth，并校验管理员凭据。
+ * 数据结构：无持久状态；使用请求 Authorization 头解析临时凭据。
+ * 控制：由 Express 应用装配模块挂载到 /api/14。
+ */
 const express = require('express');
 
 const router = express.Router();
@@ -6,8 +12,6 @@ function attachAuthChallenge(res) {
   res.setHeader('W3-xxthxxtixxtx', '13xxix xxxlx="zako zako"');
 }
 
-// 14关：通过伪装后的认证头暗示 Basic Auth，只有用户名和密码都为 admin 才会返回下一关密码。
-// 14关登录：使用 Basic Auth，要求用户名与密码均为 admin。
 router.post('/login', (req, res) => {
   const authHeader = req.headers.authorization;
 
