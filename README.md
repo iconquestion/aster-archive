@@ -36,7 +36,7 @@ https://www.iconquestion.com/
 
 `docs/narrative/` 存放世界观与背景设定资料。
 
-`docs/project-management/` 存放项目计划与质量管理文档，目前包含项目范围、项目里程碑、项目进度、风险管理、测试计划与测试改进路线。
+`docs/project-management/` 存放产品需求、软件需求规格、项目范围、里程碑、进度、风险、测试计划与测试改进路线等项目管理文档。
 
 详细结构说明，请参阅 [系统架构说明](./docs/architecture/system-architecture.md)
 
