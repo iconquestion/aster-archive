@@ -190,7 +190,7 @@
 | 后端交互能力             | `PR-08` ~ `PR-10`   | 需要后端参与的关卡提供稳定、可观察的交互入口；协议型玩法在既定部署方式下可实际完成。           | 本文档第 `7.3`、第 `10` 章；[SRS](./software-requirements-specification.md) `FR-11` ~ `FR-18`；[测试计划文档](./test-plan.md)                        |
 | 提示与引导               | `PR-11` ~ `PR-13`   | 玩家在默认情况下能找到提示入口；存在例外规则时能在页面或公开说明中直接获知。                   | 本文档第 `7.4`、第 `10` 章；[SRS](./software-requirements-specification.md) `FR-06` ~ `FR-08`                                                        |
 | 叙事与氛围表达           | `PR-14` ~ `PR-16`   | 首页、公开页面与关卡页面在世界观、命名和气质上保持一致，不出现明显冲突。                       | 本文档第 `7.5`、第 `10` 章；[SRS](./software-requirements-specification.md) `FR-09` ~ `FR-10`；[世界观设定手册](../narrative/worldbuilding-guide.md) |
-| 可用性、维护性与可测试性 | `NFR-01` ~ `NFR-12` | 第一阶段主线可被主要用户正常游玩，且具备与阶段范围相匹配的维护边界和复核方式。                 | 本文档第 `8` 章、第 `10` 章；[SRS](./software-requirements-specification.md) 第 `2.5` ~ `2.7`、`FR-25` ~ `FR-29`；[测试计划文档](./test-plan.md)     |
+| 可用性、维护性与可测试性 | `NFR-01` ~ `NFR-11` | 第一阶段主线可被主要用户正常游玩，且具备与阶段范围相匹配的维护边界和复核方式。                 | 本文档第 `8` 章、第 `10` 章；[SRS](./software-requirements-specification.md) 第 `2.5` ~ `2.7`、`FR-25` ~ `FR-29`；[测试计划文档](./test-plan.md)     |
 
 ## 10. 验收标准
 
