@@ -102,7 +102,9 @@ npm test
 测试以 Jest + Supertest 为主，覆盖两类核心风险：
 
 - 普通接口与基础运行行为是否回归
-- WebSocket、Trailer、HTTP/2 等协议型关卡是否仍满足预期
+- WebSocket、Trailer 等已纳入自动化范围的协议型关卡是否仍满足预期
+
+第 `21` 关 HTTP/2 与 `103 Early Hints` 当前按照 [SRS](../project-management/software-requirements-specification.md) 中的人工验收步骤复核，后续再由测试改进路线补足更细粒度自动化。
 
 测试辅助代码会复用 `src/config.js` 的配置解析逻辑，并对协议类测试使用随机本地端口，避免与真实服务或其他测试用例发生冲突。
 
