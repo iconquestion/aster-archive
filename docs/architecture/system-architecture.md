@@ -178,7 +178,7 @@
 
 ### 6.1 进程入口模块
 
-[src/index.js](/var/www/www.iconquestion.com/src/index.js) 是 Node 进程入口模块，负责：
+[src/index.js](../../src/index.js) 是 Node 进程入口模块，负责：
 
 - 加载配置
 - 创建日志器
@@ -190,7 +190,7 @@
 
 ### 6.2 配置模块
 
-[src/config.js](/var/www/www.iconquestion.com/src/config.js) 负责：
+[src/config.js](../../src/config.js) 负责：
 
 - 从 `config/.env` 读取运行配置
 - 校验端口、主入口来源、TLS 证书路径等必要参数
@@ -200,7 +200,7 @@
 
 ### 6.3 Express 应用装配模块
 
-[src/app.js](/var/www/www.iconquestion.com/src/app.js) 负责：
+[src/app.js](../../src/app.js) 负责：
 
 - 装配 `urlencoded`、JSON、Cookie 解析等通用中间件
 - 统一处理基础 CORS 与预检请求
@@ -212,7 +212,7 @@
 
 ### 6.4 协议服务创建模块
 
-[src/createServers.js](/var/www/www.iconquestion.com/src/createServers.js) 负责：
+[src/createServers.js](../../src/createServers.js) 负责：
 
 - 创建 HTTP、HTTPS 和独立 HTTP/2 服务
 - 在底层 server 层接管第 `15` 关 WebSocket Upgrade
@@ -235,7 +235,7 @@
 
 ### 6.6 日志模块
 
-[src/logger.js](/var/www/www.iconquestion.com/src/logger.js) 负责创建 Winston 日志器，并将控制台输出与文件轮转输出统一到同一套初始化流程中。
+[src/logger.js](../../src/logger.js) 负责创建 Winston 日志器，并将控制台输出与文件轮转输出统一到同一套初始化流程中。
 
 ## 7. 关键运行流程
 
