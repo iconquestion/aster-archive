@@ -80,15 +80,6 @@ https://www.iconquestion.com/
 - `npm run format`
 - `npm run format:check`
 
-为避免提交后才在 CI 中发现格式问题，仓库现在包含一个版本控制下的 Git `pre-commit` hook：
-
-- 首次执行 `npm install` 后，会自动启用 `.githooks/pre-commit`
-- 每次 `git commit` 前，会对本次暂存的常见文本文件自动执行 Prettier，并重新加入暂存区
-
-如果你已经在本地安装过依赖，但 hook 还没启用，也可以手动执行一次：
-
-- `npm run prepare`
-
 ## License
 
 本项目采用分离授权方式。
@@ -104,7 +95,7 @@ https://www.iconquestion.com/
 
 本项目使用 AI 进行辅助构建。因此你可能会看到一些不太符合人类自然表述习惯的文本内容或代码注释。
 
-受个人时间和精力限制，我无法在不依赖 AI 的情况下进行快速构建和功能测试。事实证明，AI 显著提高了该网站的开发效率。
+在项目开发过程中，我将 AI 作为提升效率的工程工具，用于辅助实现与测试；项目的需求分析、架构设计、技术决策、代码审查和质量把控均由我负责。
 
 在推进网站开发的同时，我会尽力减少 AIGC 带来的不适感和违和感，在开发效率和开发质量上取得平衡。
 
