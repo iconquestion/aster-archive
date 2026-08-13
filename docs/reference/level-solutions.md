@@ -1,5 +1,7 @@
 # Solutions
 
+> **Reference / spoilers.** This is an implementation-era solution record, not a current product or system specification. It currently stops at level 25; the level 26 solution is a known, planned addition.
+
 本文档为关卡题解，说明每一关的当前实现、解法和设计目标。
 
 ## 01

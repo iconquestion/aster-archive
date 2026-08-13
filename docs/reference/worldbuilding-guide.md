@@ -1,5 +1,7 @@
 # Aster Archive 背景设定总表
 
+> **Reference.** A creative-writing guide, not an authoritative definition of product behavior, level intent, or system contract.
+
 本文档用于整理 Aster Archive 的背景设定框架，供后续关卡、页面文案、道具文本、房间命名、制度细节统一参考。
 
 阅读建议：

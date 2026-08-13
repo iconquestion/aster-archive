@@ -28,17 +28,11 @@ https://www.iconquestion.com/
 
 `test/` 自动化测试脚本。
 
-`docs/architecture/` 存放系统架构说明。
+`docs/current/` 存放维护时应优先相信的四份当前规范。
 
-`docs/design/` 存放页面设计规范。
+`docs/reference/` 存放题解、世界观和 UI 等创作参考；`docs/history/` 存放旧阶段记录。它们不定义当前需求。
 
-`docs/gameplay/` 存放题解文档与玩法说明。
-
-`docs/narrative/` 存放世界观与背景设定资料。
-
-`docs/project-management/` 存放产品需求、软件需求规格、项目范围、里程碑、进度、风险、测试计划与测试改进路线等项目管理文档。
-
-详细结构说明，请参阅 [系统架构说明](./docs/architecture/system-architecture.md)
+详细结构说明，请参阅 [架构说明](./docs/current/architecture.md)。
 
 ## 仓库用途
 
@@ -50,21 +44,11 @@ https://www.iconquestion.com/
 
 推荐使用 `Node.js 24.14.0` 进行本地开发与测试。
 
-详细构建说明和方法，请参阅 [系统架构说明](./docs/architecture/system-architecture.md)
+详细构建说明和方法，请参阅 [架构说明](./docs/current/architecture.md)。
 
-## 项目计划文档
+## 文档
 
-如果你想从软件工程或项目计划角度理解这个仓库，可以进一步阅读：
-
-- [文档索引](./docs/README.md)
-- [产品需求说明](./docs/project-management/product-requirements.md)
-- [软件需求规格说明书（SRS）](./docs/project-management/software-requirements-specification.md)
-- [项目范围说明](./docs/project-management/project-scope.md)
-- [项目里程碑](./docs/project-management/project-milestones.md)
-- [项目进度记录](./docs/project-management/project-progress.md)
-- [风险管理文档](./docs/project-management/risk-management.md)
-- [测试计划文档](./docs/project-management/test-plan.md)
-- [测试改进路线](./docs/project-management/test-improvement-roadmap.md)
+从 [文档入口](./docs/README.md) 开始：它说明当前规范、参考资料和历史材料的权威层级。
 
 ## 代码检查与格式化
 

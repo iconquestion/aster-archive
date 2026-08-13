@@ -1,5 +1,7 @@
 # Design Notes
 
+> **Reference.** Implementation and visual-design notes from a prior styling pass. They do not define current product or system requirements.
+
 本文档记录当前低风险关卡页面在第一轮 Bootstrap 化改造中使用的设计依据与结构约定。
 
 目标不是建立完整设计系统，而是给后续页面改造提供一套一致、可复用、低风险的视觉规则。
