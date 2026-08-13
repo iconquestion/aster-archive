@@ -1,5 +1,5 @@
 name: Setup Node Project
-description: Checkout the repository, setup Node.js, and install dependencies
+description: Set up Node.js and install project dependencies
 
 inputs:
   node-version:
