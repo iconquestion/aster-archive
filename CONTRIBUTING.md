@@ -80,10 +80,10 @@
 - `public/`：首页、起始页、各关卡页面，以及脚本、字体、样式等静态资源
 - `src/`：Node/Express 服务入口和需要后端能力的关卡实现
 - `test/`：关键后端关卡的测试
-- `docs/current/architecture.md`：整体架构说明
+- `docs/architecture.md`：整体架构说明
 - `docs/reference/level-solutions.md`：基于当前实现整理的剧透型解法参考
 
-如果你准备改动部署、请求流、端口使用或特殊协议相关内容，建议先读 `docs/current/system-contract.md` 和 `docs/current/architecture.md`。
+如果你准备改动部署、请求流、端口使用或特殊协议相关内容，建议先读 `docs/system-contract.md` 和 `docs/architecture.md`。
 
 ## 本地运行与测试
 

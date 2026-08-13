@@ -28,11 +28,16 @@ https://www.iconquestion.com/
 
 `test/` 自动化测试脚本。
 
-`docs/current/` 存放维护时应优先相信的四份当前规范。
+`docs/` 根目录存放当前规范；`docs/reference/` 存放题解、世界观和 UI 等创作参考。参考资料不定义当前需求。
 
-`docs/reference/` 存放题解、世界观和 UI 等创作参考；`docs/history/` 存放旧阶段记录。它们不定义当前需求。
+当前规范按以下顺序处理冲突：
 
-详细结构说明，请参阅 [架构说明](./docs/current/architecture.md)。
+1. [产品与关卡意图](./docs/product-game-intent.md)：项目目标、关卡学习意图与玩法边界。
+2. [系统契约](./docs/system-contract.md)：HTTP/API、协议、会话、持久化、配置和运行时约束。
+3. [验证](./docs/verification.md)：自动化覆盖、人工验收与已知留白。
+4. [架构](./docs/architecture.md)：模块、运行时装配及其原因；不重新定义需求。
+
+当问题同时涉及产品意图和实现细节，先以产品意图决定“要什么”，再以系统契约决定“必须如何表现”。代码与测试是实现和证据，不会自动推翻规范。
 
 ## 仓库用途
 
@@ -44,11 +49,11 @@ https://www.iconquestion.com/
 
 推荐使用 `Node.js 24.14.0` 进行本地开发与测试。
 
-详细构建说明和方法，请参阅 [架构说明](./docs/current/architecture.md)。
+详细构建说明和方法，请参阅 [架构说明](./docs/architecture.md)。
 
 ## 文档
 
-从 [文档入口](./docs/README.md) 开始：它说明当前规范、参考资料和历史材料的权威层级。
+当前规范与参考资料的权威层级见上方“仓库结构”。
 
 ## 代码检查与格式化
 

@@ -293,4 +293,3 @@ npm test
 
 - [系统契约](./system-contract.md)
 - [架构](./architecture.md)
-- [待维护者决策](./owner-decisions.md)
