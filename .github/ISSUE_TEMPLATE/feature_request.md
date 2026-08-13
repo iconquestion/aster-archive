@@ -1,19 +1,28 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
+name: 建议与想法
+about: 提出玩法、页面体验或维护建议
 title: ''
 labels: ''
 assignees: ''
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+## 建议
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+希望增加或改变什么？
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+## 目的
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+它要解决什么问题，或改善什么体验？
+
+## 影响范围
+
+- 关卡、页面、文档或部署：
+- 是否会改变原有关卡的设计意图：
+
+## 剧透说明
+
+如涉及答案、隐藏路径或关键线索，请避免在标题和公开描述中直接写出。
+
+## 补充
+
+可选的背景、截图或替代方案。

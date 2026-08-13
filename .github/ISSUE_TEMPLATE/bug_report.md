@@ -1,40 +1,36 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: 问题报告
+about: 报告可复现的游戏、页面或服务问题
 title: ''
 labels: ''
 assignees: ''
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## 问题
 
-**To Reproduce**
-Steps to reproduce the behavior:
+简要说明发生了什么。
 
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+## 复现步骤
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+1.
+2.
+3.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+## 预期结果
 
-**Desktop (please complete the following information):**
+应当出现什么结果？
 
-- OS: [e.g. iOS]
-- Browser [e.g. chrome, safari]
-- Version [e.g. 22]
+## 实际结果
 
-**Smartphone (please complete the following information):**
+实际出现了什么结果？可附截图或错误信息。
 
-- Device: [e.g. iPhone6]
-- OS: [e.g. iOS8.1]
-- Browser [e.g. stock browser, safari]
-- Version [e.g. 22]
+## 环境
 
-**Additional context**
-Add any other context about the problem here.
+- 关卡、页面或路由：
+- 浏览器与版本：
+- 操作系统：
+- 是否涉及登录、Cookie、请求头或特殊协议：
+
+## 剧透说明
+
+如涉及答案、隐藏路径或关键线索，请避免在标题和公开描述中直接写出。
