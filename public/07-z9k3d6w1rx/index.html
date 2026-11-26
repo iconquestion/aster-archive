@@ -16,20 +16,18 @@
             <div class="card-body p-4 p-md-5 puzzle-copy">
               <h1 class="display-6 fw-bold mb-3">07 - Less Is More</h1>
               <p class="text-secondary mb-2">
-                随着一阵制作卡片的咔咔哒哒声，你获得了一张经理的ID卡！
+                随着一阵制作卡片的咔咔哒哒声，你获得了一张经理的 ID 卡！
               </p>
               <p class="text-secondary mb-2">这何尝不是一种出金呢？</p>
               <p class="text-secondary mb-2">
                 但从目前来看，好像没有什么用场。
               </p>
               <p class="text-secondary mb-2">
-                机器还给出了一份新员工的地图导览，但似乎和你手里的地图是完全一样的。
+                机器打开了新员工导览，屏幕上的布局和你手里的旧地图大致相同。
               </p>
               <p class="text-secondary mb-0">
-                在屏幕上选择一个位置，就会跳到相应位置的简介，十分贴心。
+                选一个地点，屏幕就会显示那里的简介，十分贴心。
               </p>
-              <p class="text-secondary mb-0">那么，接下来是...？</p>
-
               <div class="action-stack mt-4">
                 <div class="action-row">
                   <button
@@ -54,7 +52,7 @@
                     展示长廊
                   </button>
                 </div>
-                <p id="result" class="result-panel"></p>
+                <p id="result" class="result-panel" role="status"></p>
               </div>
 
               <div class="hint-panel mt-4">
@@ -73,17 +71,17 @@
       get_json_response(
         'visit_grand_reading_hall',
         'result',
-        '/api/07?location=visit_grand_reading_hall'
+        '/api/07?location=grand_reading_hall'
       );
       get_json_response(
         'visit_archive_room',
         'result',
-        '/api/07?location=visit_archive_room'
+        '/api/07?location=archive_room'
       );
       get_json_response(
         'visit_exhibit_corridor',
         'result',
-        '/api/07?location=visit_exhibit_corridor'
+        '/api/07?location=exhibit_corridor'
       );
 
       // 更多区域正在开发中...

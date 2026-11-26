@@ -10,11 +10,23 @@ const router = express.Router();
 
 router.get('/', (req, res) => {
   const { level } = req.query;
+  let message = '';
+  switch (level) {
+    case 'manager':
+      message =
+        'Welcome, manager! Your ID card is ready. Staff guide: 07-z9k3d6w1rx.';
+      break;
+    case 'staff':
+      message = 'Welcome joining Aster Archive! Hope you have a great day!';
+      break;
+    case 'visitor':
+      message = 'Welcome visiting Aster Archive! Please enjoy your tour!';
+      break;
+    default:
+      message = 'Welcome...?';
+  }
   res.json({
-    message:
-      level == 'manager'
-        ? 'Welcome, manager! Your office is located at No.07-z9k3d6w1rx, 7th floor.'
-        : 'Welcome to Aster Archive. Hope you have a great day!',
+    message: message,
   });
 });
 

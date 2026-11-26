@@ -5,17 +5,11 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const request = require('supertest');
-const serveIndex = require('serve-index');
 const {
+  createTestApp,
   getDailyPassword,
   getTestRuntime,
 } = require('../helpers/createTestApp');
-const level04Router = require('../../src/levels/04');
-const level05Router = require('../../src/levels/05');
-const level06Router = require('../../src/levels/06');
-const level07Router = require('../../src/levels/07');
-const level12Router = require('../../src/levels/12');
-const level14Router = require('../../src/levels/14');
 const level16Router = require('../../src/levels/16');
 const level18Router = require('../../src/levels/18');
 const level20Router = require('../../src/levels/20');
@@ -32,7 +26,6 @@ const {
 function createIsolatedLevelsApp({ level25Options, level26Options } = {}) {
   const app = express();
   const publicDir = path.join(__dirname, '../../public');
-  const level08Dir = path.join(publicDir, '08-c2x8m5q9nv');
 
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
@@ -46,20 +39,6 @@ function createIsolatedLevelsApp({ level25Options, level26Options } = {}) {
     res.status(200).json({ success: true });
   });
   app.use(express.static(publicDir));
-  app.use(
-    '/08-c2x8m5q9nv/',
-    serveIndex(level08Dir, {
-      icons: true,
-      view: 'details',
-    })
-  );
-
-  app.use('/api/04', level04Router);
-  app.use('/api/05', level05Router);
-  app.use('/api/06', level06Router);
-  app.use('/api/07', level07Router);
-  app.use('/api/12', level12Router);
-  app.use('/api/14', level14Router);
   app.use('/api/16', level16Router);
   app.use('/api/18', level18Router);
   app.use('/api/20', level20Router);
@@ -214,43 +193,37 @@ describe('Config', () => {
 });
 
 describe('Levels 01-14', () => {
-  const app = createIsolatedLevelsApp();
+  const app = createTestApp();
 
-  // 01-03 为静态资源线索测试，验证文案提示与 HTML/CSS 元数据中的下一关路径。
-  // 测试方式：请求 01 页面，同时检查正文叙事和 HTML 注释中是否都带出下一关线索。
-  // 通过标准：页面返回 200，且既有入口剧情文案，也有 02 的隐藏路径。
-  test('01 ties the entrance story to the hidden 02 clue in HTML comments', async () => {
+  test('01 opens from the start page and contains the next flag in its HTML', async () => {
+    const start = await request(app).get('/00-letsstart/');
+    expect(start.status).toBe(200);
+    expect(start.text).toContain('01-k3f9x2m7qd');
+
     const res = await request(app).get('/01-k3f9x2m7qd/');
 
     expect(res.status).toBe(200);
-    expect(res.text).toContain('你决定试试看找到它的入口');
     expect(res.text).toContain('02-v8n2c4z1pa');
   });
 
-  // 测试方式：先请求 02 页面确认它把人引到 CSS，再单独请求 CSS 文件取出真正线索。
-  // 通过标准：页面能看到提示文案和 CSS 路径，CSS 文件里能找到 03 的路径。
-  test('02 points from the iron gate appearance to the CSS payload clue', async () => {
-    const pageRes = await request(app).get('/02-v8n2c4z1pa/');
-    const cssRes = await request(app).get('/css/02.css');
+  test('02 links to the CSS that contains the next flag', async () => {
+    const page = await request(app).get('/02-v8n2c4z1pa/');
+    expect(page.status).toBe(200);
+    expect(page.text).toContain('/css/02.css');
 
-    expect(pageRes.status).toBe(200);
-    expect(pageRes.text).toContain('那个年代独有的审美风格');
-    expect(pageRes.text).toContain('/css/02.css');
+    const res = await request(app).get('/css/02.css');
 
-    expect(cssRes.status).toBe(200);
-    expect(cssRes.text).toContain('font-family');
-    expect(cssRes.text).toContain('03-r5t9m1x8wb');
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('03-r5t9m1x8wb');
   });
 
-  // 测试方式：请求 03 页面，验证“去 head 里找”的提示和实际 head 中的下一关内容一致。
-  // 通过标准：页面返回 200，正文出现故事提示，源码里确实含有 04 的路径。
-  test('03 maps the leader head hint to the 04 clue in head metadata', async () => {
+  test('03 contains the next flag in the document head', async () => {
     const res = await request(app).get('/03-r5t9m1x8wb/');
 
     expect(res.status).toBe(200);
-    expect(res.text).toContain('领导人Benjamin');
-    expect(res.text).toContain('<head>');
-    expect(res.text).toContain('04-q7d2s9l4vc');
+    expect(res.text.match(/<head>.*?<\/head>/s)?.[0]).toContain(
+      '04-q7d2s9l4vc'
+    );
   });
 
   // 04-09 主要覆盖普通 HTTP 接口与静态文件线索读取。
@@ -266,90 +239,81 @@ describe('Levels 01-14', () => {
   // 测试方式：分别用 GET 和 POST 请求同一个接口，验证题目要求的请求方法分支。
   // 通过标准：GET 必须被拒绝并返回提示；POST 必须成功并带出 06 的线索。
   test('05 differentiates between GET and POST challenge branches', async () => {
-    const getRes = await request(app).get('/api/05');
-    const postRes = await sendCsrfRequest({
-      app,
-      method: 'post',
-      url: '/api/05',
-    });
+    const client = request(app);
+    const getRes = await client.get('/api/05');
+    const postRes = await client.post('/api/05');
 
-    expect(getRes.status).toBe(400);
-    expect(getRes.body.message).toContain('YOU SHALL NOT PASS!!!');
-    expect(getRes.body.message).toContain('门似乎并不是很想让你过去');
+    expect(getRes.status).toBe(405);
+    expect(getRes.headers.allow).toContain('POST');
+    expect(getRes.body.message).not.toContain('06-m4v7q2c9ta');
 
     expect(postRes.status).toBe(200);
     expect(postRes.body.message).toContain('06-m4v7q2c9ta');
   });
 
-  // 测试方式：同时覆盖页面提示、普通 staff 查询、以及 manager 查询三条路径。
-  // 通过标准：页面要暴露查询格式；staff 响应只能给欢迎语，manager 响应才出现 07 线索。
-  test('06 keeps the public staff flow on the page but hides the clue behind manager level', async () => {
+  test('06 returns the next flag for the manager level', async () => {
     const pageRes = await request(app).get('/06-m4v7q2c9ta/');
-    const staffRes = await request(app).get(
-      '/api/06?level=staff&fingerprint=test'
-    );
+    const md5Res = await request(app).get('/js/md5.js');
+    const visitorRes = await request(app).get('/api/06?level=visitor');
     const managerRes = await request(app).get('/api/06?level=manager');
 
     expect(pageRes.status).toBe(200);
-    expect(pageRes.text).toContain('指纹即可自动制作独一无二的工作卡片');
-    expect(pageRes.text).toContain('/api/06?level=staff&fingerprint=');
-
-    expect(staffRes.status).toBe(200);
-    expect(staffRes.body.message).toContain('Welcome to Aster Archive');
-    expect(staffRes.body.message).not.toContain('07-z9k3d6w1rx');
-
+    expect(md5Res.status).toBe(200);
+    expect(visitorRes.status).toBe(200);
+    expect(visitorRes.body.message).not.toContain('07-z9k3d6w1rx');
     expect(managerRes.status).toBe(200);
-    expect(managerRes.body.message).toContain('Welcome, manager!');
     expect(managerRes.body.message).toContain('07-z9k3d6w1rx');
   });
 
-  // 测试方式：先看页面上有哪些显式入口，再直接伪造参数访问隐藏地点。
-  // 通过标准：默认分支只暗示“管理办公室”存在；命中 manager office 时返回 08 线索。
-  test('07 expands the map beyond visible buttons and reveals the manager office clue', async () => {
+  test('07 returns the next flag for the manager office', async () => {
     const pageRes = await request(app).get('/07-z9k3d6w1rx/');
     const defaultRes = await request(app).get(
       '/api/07?location=visit_anywhere_else'
     );
     const managerRes = await request(app).get(
-      '/api/07?location=visit_manager_office'
+      '/api/07?location=manager_office'
     );
 
     expect(pageRes.status).toBe(200);
-    expect(pageRes.text).toContain('主览大厅');
-    expect(pageRes.text).toContain('公共档案区');
-    expect(pageRes.text).toContain('展示长廊');
-    expect(pageRes.text).toContain('更多区域正在开发中');
-
     expect(defaultRes.status).toBe(200);
-    expect(defaultRes.body.message).toContain('管理办公室');
-
+    expect(defaultRes.body.message).not.toContain('08-c2x8m5q9nv');
     expect(managerRes.status).toBe(200);
     expect(managerRes.body.message).toContain('08-c2x8m5q9nv');
   });
 
-  // 测试方式：覆盖主页、robots.txt 和被 robots 暗示出来的深层静态文件。
-  // 通过标准：主页提示站点目录能力，robots 暴露 `/stack`，目标文本文件中含有 09 线索。
-  test('08 exposes both the restricted stack path and the 09 clue', async () => {
-    const pageRes = await request(app).get('/08-c2x8m5q9nv/');
-    const robotsRes = await request(app).get('/08-c2x8m5q9nv/robots.txt');
-    const noteRes = await request(app).get(
-      '/08-c2x8m5q9nv/stack/restricted/914/2013-12-31.txt'
-    );
+  test('08 reaches the next flag through robots.txt and the directory indexes', async () => {
+    const client = request(app);
+    const root = '/08-c2x8m5q9nv';
+    const stack = `${root}/stack`;
+    const restricted = `${stack}/restricted`;
+    const room = `${restricted}/914`;
+    const note = `${room}/2013-12-31.txt`;
 
-    expect(pageRes.status).toBe(200);
-    expect(pageRes.text).toContain('独立的网站的根目录');
-    expect(pageRes.text).toContain('serveIndex');
-
+    expect((await client.get(`${root}/`)).status).toBe(200);
+    const robotsRes = await client.get(`${root}/robots.txt`);
     expect(robotsRes.status).toBe(200);
     expect(robotsRes.text).toContain('/stack');
 
+    for (const [directory, entry] of [
+      [stack, restricted],
+      [restricted, room],
+      [room, note],
+    ]) {
+      const res = await client.get(`${directory}/`);
+      expect(res.status).toBe(200);
+      expect(res.text).toContain(entry);
+    }
+
+    const noteRes = await client.get(note);
     expect(noteRes.status).toBe(200);
     expect(noteRes.text).toContain('09-t7p1z4k8ds');
   });
 
-  // 测试方式：直接请求倒计时脚本文件，验证旧脚本里是否硬编码了下一关。
-  // 通过标准：脚本返回 200，内容中出现 10 的路径。
   test('09 keeps the 10 clue in the legacy countdown script', async () => {
+    const page = await request(app).get('/09-t7p1z4k8ds/');
+    expect(page.status).toBe(200);
+    expect(page.text).toContain('/js/09.countdown.v2.js');
+
     const res = await request(app).get('/js/09.countdown.v1.js');
 
     expect(res.status).toBe(200);
@@ -411,15 +375,9 @@ describe('Levels 01-14', () => {
     const agent = request.agent(app);
     const dailyPassword = getDailyPassword();
 
-    const loginRes = await sendCsrfRequest({
-      agent,
-      method: 'post',
-      url: '/api/12/login',
-      requestType: 'form',
-      body: {
-        username: 'admin',
-        password: dailyPassword,
-      },
+    const loginRes = await agent.post('/api/12/login').type('form').send({
+      username: 'admin',
+      password: dailyPassword,
     });
 
     expect(loginRes.status).toBe(200);
@@ -450,15 +408,7 @@ describe('Levels 01-14', () => {
   // 测试方式：手工构造 `admin:admin` 的 Basic Auth 头访问登录接口。
   // 通过标准：接口接受该认证并在响应体中返回 15 线索。
   test('14 accepts admin basic auth and returns the 15 clue', async () => {
-    const basicToken = Buffer.from('admin:admin').toString('base64');
-    const res = await sendCsrfRequest({
-      app,
-      method: 'post',
-      url: '/api/14/login',
-      headers: {
-        Authorization: `Basic ${basicToken}`,
-      },
-    });
+    const res = await request(app).post('/api/14/login').auth('admin', 'admin');
 
     expect(res.status).toBe(200);
     expect(res.body.message).toContain('15-x2m9k4c6ra');

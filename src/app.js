@@ -70,6 +70,11 @@ function createApp({ appOrigin, logger }) {
     })
   );
 
+  const md5Script = require.resolve('js-md5/build/md5-lite.min.js');
+  app.get('/js/md5.js', (_req, res) => {
+    res.sendFile(md5Script);
+  });
+
   app.get('/api/status', (_req, res) => {
     res.status(200).json({ message: 'ok' });
   });

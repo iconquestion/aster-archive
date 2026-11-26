@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" href="/css/challenge-theme.css" />
-    <title>05 - Visitor's manner</title>
+    <title>05 - Not My Fault (Maybe)</title>
   </head>
 
   <body class="challenge-page">
@@ -14,36 +14,29 @@
         <div class="col-12 col-lg-9 col-xl-8">
           <section class="card puzzle-card shadow-sm">
             <div class="card-body p-4 p-md-5 puzzle-copy">
-              <h1 class="display-6 fw-bold mb-3">05 - Visitor's manner</h1>
+              <h1 class="display-6 fw-bold mb-3">05 - Not My Fault (Maybe)</h1>
               <p class="text-secondary mb-2">
-                你终于找到了路标，准确的说是一张地图。
+                你循着钟的回音拐进一条先前漏看的岔道，在尽头找到一张泛黄的地图。
               </p>
               <p class="text-secondary mb-2">
-                但地图上全都是看不懂的字，并且似乎只有二楼的内容。
+                地图上的字大多看不清，只勉强认得二楼的平面图。
               </p>
-              <p class="text-secondary mb-2">
-                好吧，无论如何也比什么都没有强。
+              <p class="text-secondary mb-0">
+                你把地图带上二楼，从离楼梯最近的那扇门开始。
               </p>
-              <p class="text-secondary mb-2">
-                根据地图的指引，你找到了楼梯，来到二楼，因为一楼似乎的确什么都没有。准确的说，只有几个看起来似乎是用于对外展览的大厅，但里面的东西早已被搬空。
-              </p>
-              <p class="text-secondary mb-2">
-                那么，从最近的房间开始探索吧！你自然地这么想。
-              </p>
-              <p class="text-secondary mb-2">你来到房间的门前。</p>
               <div class="action-stack mt-4">
                 <div class="action-row">
-                  <button id="knock" class="btn btn-primary" type="button">
+                  <button id="push" class="btn btn-primary" type="button">
                     推一下门
                   </button>
                 </div>
-                <p id="responseMsg" class="result-panel"></p>
+                <p id="responseMsg" class="result-panel" role="status"></p>
               </div>
 
               <div class="hint-panel mt-4">
                 <details>
                   <summary>Hint</summary>
-                  <p class="mb-0">推不开就拉拉试试。</p>
+                  <p class="mb-0">"难道是我的打开方式有问题(OxO)?"</p>
                 </details>
               </div>
             </div>
@@ -53,7 +46,7 @@
     </main>
     <script src="/js/get_json_response.js"></script>
     <script>
-      get_json_response('knock', 'responseMsg', '/api/05');
+      get_json_response('push', 'responseMsg', '/api/05');
     </script>
     <script src="/js/analytics.js"></script>
   </body>

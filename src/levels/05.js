@@ -9,14 +9,14 @@ const express = require('express');
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  res
-    .status(400)
-    .json({ message: 'YOU SHALL NOT PASS!!!\n门似乎并不是很想让你过去。' });
+  res.set('Allow', 'POST, OPTIONS').status(405).json({
+    message: '门纹丝不动。',
+  });
 });
 
 router.post('/', (req, res) => {
   res.json({
-    message: 'Welcome back, my master. \nThe password is 06-m4v7q2c9ta.',
+    message: '门打开了。门的背后贴着一张字条：06-m4v7q2c9ta',
   });
 });
 

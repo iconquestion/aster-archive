@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" href="/css/challenge-theme.css" />
-    <title>06 - Here's your ID card</title>
+    <title>06 - Who Am I</title>
   </head>
 
   <body class="challenge-page">
@@ -14,7 +14,7 @@
         <div class="col-12 col-lg-9 col-xl-8">
           <section class="card puzzle-card shadow-sm">
             <div class="card-body p-4 p-md-5 puzzle-copy">
-              <h1 class="display-6 fw-bold mb-3">06 - Here's your ID card</h1>
+              <h1 class="display-6 fw-bold mb-3">06 - Who Am I</h1>
               <p class="text-secondary mb-2">
                 你顺利进入了第一个房间，并且发现了"似乎所有的门都是向外拉而不是向内推"这一世界级重大秘密。
               </p>
@@ -31,7 +31,8 @@
                 就在你有些沮丧的时候，走廊上的一台机器引起了你的注意。
               </p>
               <p class="text-secondary mb-2">
-                根据标签，这是一台新入职员工自助领取工作ID卡片的机器，只需要按下指纹即可自动制作独一无二的工作卡片，还可以支持自定义样式。
+                根据标签，这是一台新入职员工自助领取工作 ID
+                卡片的机器，只需要按下指纹即可精准识别身份，并全自动制作独一无二的工卡。
               </p>
               <p class="text-secondary mb-2">谁能忍住不试一试呢？</p>
               <div class="action-stack mt-4">
@@ -46,137 +47,20 @@
                 </div>
                 <p id="result" class="result-panel"></p>
               </div>
-
-              <div class="hint-panel mt-4">
-                <details>
-                  <summary>Hint</summary>
-                  <p class="mb-0">不妨大胆一些。</p>
-                </details>
-              </div>
             </div>
           </section>
         </div>
       </div>
     </main>
     <script src="/js/get_json_response.js"></script>
+    <script src="/js/md5.js"></script>
     <script>
-      (async () => {
-        // 生成自己的指纹
-        async function getFingerPrint() {
-          const nav = window.navigator;
-          const screenInfo = window.screen;
-
-          function safeJoin(arr) {
-            return Array.isArray(arr) ? arr.join(',') : '';
-          }
-
-          function getTimezone() {
-            try {
-              return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-            } catch {
-              return '';
-            }
-          }
-
-          function getCanvasFingerprint() {
-            try {
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              if (!ctx) return '';
-
-              canvas.width = 300;
-              canvas.height = 150;
-
-              ctx.textBaseline = 'top';
-              ctx.font = '16px Arial';
-              ctx.fillStyle = '#f60';
-              ctx.fillRect(20, 20, 100, 30);
-
-              ctx.fillStyle = '#069';
-              ctx.fillText('BrowserFingerprint123!', 2, 15);
-
-              ctx.strokeStyle = 'rgba(120, 186, 176, 0.7)';
-              ctx.arc(80, 50, 20, 0, Math.PI * 2, true);
-              ctx.stroke();
-
-              return canvas.toDataURL();
-            } catch {
-              return '';
-            }
-          }
-
-          function getWebGLFingerprint() {
-            try {
-              const canvas = document.createElement('canvas');
-              const gl =
-                canvas.getContext('webgl') ||
-                canvas.getContext('experimental-webgl');
-
-              if (!gl) return '';
-
-              const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-
-              const vendor = debugInfo
-                ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
-                : '';
-              const renderer = debugInfo
-                ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
-                : '';
-
-              return `${vendor}~${renderer}`;
-            } catch {
-              return '';
-            }
-          }
-
-          async function sha256(text) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(text);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray
-              .map((b) => b.toString(16).padStart(2, '0'))
-              .join('');
-          }
-
-          const components = {
-            userAgent: nav.userAgent || '',
-            language: nav.language || '',
-            languages: safeJoin(nav.languages),
-            platform: nav.platform || '',
-            hardwareConcurrency: String(nav.hardwareConcurrency || ''),
-            deviceMemory: String(nav.deviceMemory || ''),
-            cookieEnabled: String(nav.cookieEnabled),
-            doNotTrack: nav.doNotTrack || '',
-            timezone: getTimezone(),
-            screenWidth: String(screenInfo.width || ''),
-            screenHeight: String(screenInfo.height || ''),
-            colorDepth: String(screenInfo.colorDepth || ''),
-            pixelDepth: String(screenInfo.pixelDepth || ''),
-            availWidth: String(screenInfo.availWidth || ''),
-            availHeight: String(screenInfo.availHeight || ''),
-            maxTouchPoints: String(nav.maxTouchPoints || ''),
-            canvas: getCanvasFingerprint(),
-            webgl: getWebGLFingerprint(),
-          };
-
-          const raw = Object.entries(components)
-            .map(([key, value]) => `${key}:${value}`)
-            .join('|||');
-
-          const fingerprint = await sha256(raw);
-
-          return fingerprint;
-        }
-
-        const fingerprint = await getFingerPrint();
-
-        get_json_response(
-          'getmyidcard',
-          'result',
-          '/api/06?level=staff&fingerprint=' + fingerprint
-        );
-      })();
+      const fingerprint = window.md5(String(Date.now()));
+      get_json_response(
+        'getmyidcard',
+        'result',
+        '/api/06?level=visitor&fingerprint=' + fingerprint
+      );
     </script>
     <script src="/js/analytics.js"></script>
   </body>

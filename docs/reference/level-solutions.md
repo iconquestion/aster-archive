@@ -12,12 +12,12 @@
 
 ### 文案与知识点的结合
 
-这一关的剧情关键词是入口。玩家要找建筑群的入口，而在 Web 里，这一关真正的入口信息藏在页面源码里。
+藤蔓遮住了栅栏上的入口。展开「Hint」，可以看到它借拨开藤蔓来提示玩家查看页面表面之下的内容。
 
 ### 解题步骤
 
-1. 打开 `01-k3f9x2m7qd/index.html` 的源码。
-2. 在 HTML 注释里可以直接看到：
+1. 在 `/01-k3f9x2m7qd/` 查看页面源代码。
+2. 在页面主体之后找到这条 HTML 注释。
 
 ```html
 <!-- 02-v8n2c4z1pa -->
@@ -35,20 +35,19 @@
 
 ### 文案与知识点的结合
 
-这一关写的是铁门、铁锁、年代感的外观。对应到前端里，最贴近外观的就是 CSS。
+铁锁打不开，文案让玩家「在周围进行探索」，可以先看页面引用的资源。「审美风格」进一步提示负责外观的 CSS。
 
 ### 解题步骤
 
-1. 这一关 HTML 里引用了 `/css/02.css`。
-2. 打开这个 CSS 文件：
+1. 点击「尝试打开锁」，页面会显示「然而并没有成功打开。」
+2. 查看页面源码，找到本关引用的 `/css/02.css`。
+3. 打开这个文件，在 `.archive` 的 `font-family` 列表中找到形如关卡入口的字体名。
 
 ```css
 .archive {
   font-family: 'Courier New', Courier, '03-r5t9m1x8wb', monospace;
 }
 ```
-
-3. `font-family` 里夹带了flag。
 
 ### 答案
 
@@ -62,15 +61,15 @@
 
 ### 文案与知识点的结合
 
-文案里特别写了这座楼以领导人 Benjamin 的名字命名。领导人对应英文 `head`，正好引导玩家想到 HTML 里的 `<head>`。
+告示牌提到第四任校长，姓名已经看不清。标题里的 `Headmaster` 既用 `Head` 指向 HTML 的 `<head>`，也给出了要找的元数据名 `headmaster`。「第四任」正好对应下一关的编号。
 
 ### 解题步骤
 
-1. 打开 `public/03-r5t9m1x8wb/index.html`。
-2. 在 `<head>` 里可以看到：
+1. 查看页面源码，定位到 `<head>`。
+2. 找到名为 `headmaster` 的 `<meta>` 标签，读取其 `content` 值。
 
 ```html
-<meta name="version" content="04-q7d2s9l4vc" />
+<meta name="headmaster" content="04-q7d2s9l4vc" />
 ```
 
 ### 答案
@@ -85,24 +84,19 @@
 
 ### 文案与知识点的结合
 
-这一关的核心意象是回音和钟声。页面里真正显示出来的正文内容并不重要，关键是敲一下钟之后服务器回了什么额外信息。对应到 HTTP，就是除了响应体之外，还要看响应头这种附带回声。
+敲钟的「回音」对应点击后收到的 HTTP 响应。敲钟后显示的「看透本质」提示玩家到网络面板查看完整响应，线索在响应头里。
 
 ### 实现方式
 
-后端在 `src/04.js` 中对 `GET /api/04` 设置了自定义响应头 `X-Archive-Next`。
+`src/levels/04.js` 为 `GET /api/04` 设置了自定义响应头 `X-Archive-Next`。
 
 ### 解题步骤
 
-1. 点击页面按钮，请求 `/api/04`。
-2. 使用浏览器开发人员工具或第三方工具查看响应头。
-
-`GET https://www.iconquestion.com/api/04`
-
-响应头（关键部分）：
+1. 打开开发者工具的「网络」面板，点击「敲一下钟」。
+2. 找到 `GET /api/04`，在响应头中读取 `X-Archive-Next`。
 
 ```http
 X-Archive-Next: 05-x1p8z3n6kf
-Content-Type: application/json; charset=utf-8
 ```
 
 ### 答案
@@ -113,62 +107,28 @@ Content-Type: application/json; charset=utf-8
 
 ### 设计目标
 
-让玩家学习使用不同的 HTTP Method。
+让玩家观察 HTTP 请求方法，并尝试用不同的方法访问同一个接口。
 
 ### 文案与知识点的结合
 
-剧情里你面对的是一扇门，按钮写的是"推一下门"，提示写的是"推不开就拉拉试试"。现实里的推 / 拉对应到 HTTP 里的换一种请求方式。前端默认是 `GET`，而真正能打开门的是 `POST`。
+「推一下门」失败后，Hint 问是不是「打开方式」有问题。同一扇门对应同一个 URL，换一种打开方式对应换一个 HTTP 请求方法。
 
 ### 实现方式
 
-前端按钮默认调用的是 `fetch("/api/05")`，也就是 `GET`。但后端在 `src/05.js` 中把真正答案放在 `POST /api/05`。
+页面通过 `get_json_response('push', 'responseMsg', '/api/05')` 发起默认的 `GET`。`src/levels/05.js` 分别处理 `GET` 和 `POST`。
 
 ### 解题步骤
 
-1. 查看JS代码
+1. 点击「推一下门」。在网络面板中找到返回 `405` 的 `GET /api/05`，它的 `Allow` 响应头列出了 `POST`。
+2. 向同一路径发送 `POST /api/05`，请求体可以留空。也可以在关卡页的控制台运行下面的请求。
 
-```js
-get_json_response('knock', 'responseMsg', '/api/05');
-```
+   ```js
+   await fetch('/api/05', { method: 'POST' }).then((response) =>
+     response.json()
+   );
+   ```
 
-`get_json_response` 默认不传 `fetch_attrs`，所以这是一个 `GET` 请求。
-
-2. 将 HTTP Method 改为 `POST` ，再次发送。
-
-`https://www.iconquestion.com/api/05`
-
-错误请求示例：
-
-```http
-GET /api/05 HTTP/1.1
-Host: www.iconquestion.com
-```
-
-错误响应：
-
-```json
-{ "message": "YOU SHALL NOT PASS!!!\n门似乎并不是很想让你过去。" }
-```
-
-正确请求示例：
-
-```http
-POST /api/05 HTTP/1.1
-Host: www.iconquestion.com
-Content-Length: 0
-```
-
-也可以直接用 `curl`：
-
-```bash
-curl -X POST https://www.iconquestion.com/api/05
-```
-
-正确响应：
-
-```json
-{ "message": "Welcome back, my master. \nThe password is 06-m4v7q2c9ta." }
-```
+3. 请求返回 `200`。从 `message` 中门背后的字条读出下一关入口。
 
 ### 答案
 
@@ -178,43 +138,21 @@ curl -X POST https://www.iconquestion.com/api/05
 
 ### 设计目标
 
-让玩家学习猜测和修改query查询参数，而不是完全相信前端给的默认值，培养探索思维。
+让玩家观察查询参数如何决定关卡的身份分支。
 
 ### 文案与知识点的结合
 
-剧情里这是一台员工自助领取 ID 卡片的机器，默认逻辑当然只会给普通员工流程；但文案又写了"支持自定义样式"和"不妨大胆一些"，其实是在鼓励玩家不要只照着前端按钮走，而是主动改请求参数，尝试更高权限身份。前端生成复杂指纹只是叙事包装，真正关键的知识点仍然是 query 参数可被观察和修改。
+给新员工发工卡的机器却把玩家当成访客。标题 `Who Am I` 和这段落差一起提示玩家，去请求里找机器用来判定身份的值。
 
 ### 实现方式
 
-前端会生成一段浏览器指纹，然后请求：
-
-```js
-/api/06?level=staff&fingerprint=...
-```
-
-但后端 `src/06.js` 真正判断的关键是 `level`，当它等于 `manager` 时才会给出下一关线索。
+前端用 `window.md5(String(Date.now()))` 生成 `fingerprint`，随 `level=visitor` 一起发送。`src/levels/06.js` 仅按 `level` 返回对应文案。
 
 ### 解题步骤
 
-1. 查看JS代码
-
-```js
-/api/06?level=staff&fingerprint=...
-```
-
-前端默认把你包装成普通员工 `staff`，并附带一长串指纹信息，看起来很唬人，但真正决定结果的是 `level`。
-
-2. 把 query 参数改成 `manager`，重新发送请求。
-
-`GET https://www.iconquestion.com/api/06?level=manager`
-
-响应：
-
-```json
-{
-  "message": "Welcome, manager! Your office is located at No.07-z9k3d6w1rx, 7th floor."
-}
-```
+1. 点击「按下自己的指纹」，在网络面板中找到 `GET /api/06?level=visitor&fingerprint=…`。
+2. 试用 `level=staff`，可以看到普通员工的入职欢迎语。
+3. 打开 `/api/06?level=manager`。`fingerprint` 可以省略，响应会确认经理 ID 卡已制作完成，并给出新员工导览的入口。
 
 ### 答案
 
@@ -224,64 +162,21 @@ curl -X POST https://www.iconquestion.com/api/05
 
 ### 设计目标
 
-让玩家学习进一步探索页面中未给出的其他信息。
+让玩家根据页面和响应中的线索，推断地图上未直接列出的位置。
 
 ### 文案与知识点的结合
 
-剧情里你拿到了一份地图导览，但上面只有三个可选地点，显得信息过少。标题 `Less Is More` 也是在提醒你：页面展示得越少，越应该怀疑还有隐藏分支。地图上缺失的地点，对应到 Web 里就是前端没做出来、但后端可能已经支持的参数分支。
+拿到经理 ID 卡后，导览仍只有三个公共地点。Hint「就这些地方了吗?有点无趣呢...」提醒玩家找地图外的地点，刚到手的经理卡让管理办公室成为一个自然的猜测。
 
 ### 实现方式
 
-当前实现中，只要请求一个页面上未提供的位置，后端默认分支就会返回一段提示语，提示你还有管理办公室这个方向可以尝试；当你进一步请求 `visit_manager_office` 时，才会拿到下一关线索。
+`src/levels/07.js` 通过查询参数 `location` 选择场景。未知的位置会收到推荐列表，其中包含管理办公室。
 
 ### 解题步骤
 
-1. 查看页面和页面源码。
-
-   页面上只提供了三个按钮：
-   - `visit_grand_reading_hall`
-   - `visit_archive_room`
-   - `visit_exhibit_corridor`
-
-   页面源码里还有一句注释：
-
-   ```js
-   // 更多区域正在开发中...
-   ```
-
-   因此这一步的关键不是只看现有按钮，而是自己手动尝试其他 `location` 参数，例如请求一个其他的任意位置。
-
-2. 尝试修改 location ，请求一个其他的位置。
-
-   返回：
-
-   ```json
-   {
-     "message": "很抱歉，该区域当前不对外开放。建议您前往其他区域参观，以获取更多关于档案馆的公开信息。\n以下是推荐的区域：主览大厅, 公共档案区, 展示长廊，管理办公室"
-   }
-   ```
-
-   这个响应已经明确把管理办公室作为新的可尝试方向暴露出来了。
-
-3. 尝试请求管理办公室与之对应的 query 参数。玩家需要进行一定的猜测。
-
-   后端 `src/07.js` 中对应分支是：
-
-   ```js
-   case "visit_manager_office": {
-      responseMsg = "...";
-   }
-   ```
-
-   `GET https://www.iconquestion.com/api/07?location=visit_manager_office`
-
-   响应：
-
-   ```json
-   {
-     "message": "这里曾经是档案的管理办公室，陈列着早已泛黄的旧文件和木制桌椅。最上面的文件是有关08-c2x8m5q9nv房间档案的展出规划资料。"
-   }
-   ```
+1. 点击地图按钮观察 `GET /api/07`。主览大厅、公共档案区和展示长廊对应的 `location` 值分别是 `grand_reading_hall`、`archive_room` 和 `exhibit_corridor`。页面源码还有「更多区域正在开发中」的注释。
+2. 给 `location` 传一个未列出的位置，例如 `/api/07?location=somewhere_else`。响应的推荐区域会提到管理办公室。
+3. 沿用已知地点的命名方式，访问 `/api/07?location=manager_office`。办公室最上面那份展出规划夹着一张平面图，上面标了旧书库的入口。
 
 ### 答案
 
@@ -291,48 +186,21 @@ curl -X POST https://www.iconquestion.com/api/05
 
 ### 设计目标
 
-让玩家学习查看 `robots.txt` 并利用其中的信息挖掘隐藏目录。
+让玩家结合 `robots.txt` 和目录索引，找到未列在关卡首页的档案。
 
 ### 文案与知识点的结合
 
-剧情里你找不到入口，而墙上的残缺信息提示你换一个角度理解这片区域。Hint 明说"每一关都可以视作独立的网站根目录"，这相当于把建筑平面图转换成网站目录结构。找不到房间入口，对应到 Web 里就是去根目录下找 `robots.txt`、目录索引和隐藏路径。
+撕下壁画后，点击「尝试辨认」会读到墙上的旧配置。`Robot Maintenance Room` 提示去找 `robots.txt`，`serveIndex` 提示可以继续浏览目录。Hint 将本关当前位置视作独立站点的根目录，给出了查找起点。
 
 ### 实现方式
 
-- 页面暗示"每一关都可以视作独立网站根目录"。
-- 根目录下有 `robots.txt`。
-- 服务器在 `src/index.js` 中对 `/08-c2x8m5q9nv/` 开了目录索引。
+`src/app.js` 在 `/08-c2x8m5q9nv/` 下提供目录索引。本关使用自己目录下的 `robots.txt`。
 
 ### 解题步骤
 
-1. 访问 robots.txt。
-
-   `https://www.iconquestion.com/08-c2x8m5q9nv/robots.txt`
-
-   内容是：
-
-   ```txt
-   User-agent: *
-   Disallow: /exhibition
-   Disallow: /infra
-   Disallow: /reading_room
-   Disallow: /stack
-   Disallow: /staff
-   ```
-
-   其中最值得继续看的是 `/stack`，因为它最像档案馆里的库房区域。
-
-   因为这一关目录启用了索引，可以继续浏览目录，最终会找到：
-
-   `/08-c2x8m5q9nv/stack/restricted/914/2013-12-31.txt`
-
-2. 遍历目录，寻找线索。
-
-   在`/08-c2x8m5q9nv/stack/restricted/914/2013-12-31.txt`，文件末尾写着：
-
-   ```txt
-   请立即前往档案馆医务室，并告知值班医师你已"接触09-t7p1z4k8ds"。
-   ```
+1. 打开 `/08-c2x8m5q9nv/robots.txt`。把 `Disallow` 列表里的 `/stack` 接在本关路径后。
+2. 访问 `/08-c2x8m5q9nv/stack/`，沿目录索引依次进入 `restricted/`、`914/`，打开 `2013-12-31.txt`。
+3. 在档案的「七、末尾提醒」中，找出需要报给值班医师的接触编号。下一关从寻找医务室开始。
 
 ### 答案
 
@@ -342,33 +210,21 @@ curl -X POST https://www.iconquestion.com/api/05
 
 ### 设计目标
 
-让玩家学习根据静态资源的命名规律，主动尝试旧版本文件，从历史版本中寻找线索。
+让玩家根据静态资源的版本命名，寻找保留在旧版本中的线索。
+
+### 文案与知识点的结合
+
+正文说真正的死亡是「再没有人记得它」，Hint 又说「长江后浪推前浪」。页面加载的 `v2` 是后浪，被替换的 `v1` 是前浪，回头找旧版就能找回线索。
 
 ### 实现方式
 
-页面加载的是 `/js/09.countdown.v2.js`，但真正线索在 `/js/09.countdown.v1.js` 的注释里。
+「点我开始」会把读数设为 30 并开始计时。到时将读数置为 `--`，可以再次开始。旧版本的线索可以直接从静态脚本读取。
 
 ### 解题步骤
 
-1. 查看页面源码。
-
-   不难发现下面的内容：
-
-   ```html
-   <script src="/js/09.countdown.v2.js"></script>
-   ```
-
-   根据版本号很自然可以猜测旧版本 `v1` 的存在。
-
-2. 尝试访问 v1 版本的 JS 文件。
-
-   `https://www.iconquestion.com/js/09.countdown.v1.js`
-
-   在许可证注释中有一行被故意替换：
-
-   ```txt
-   provides the Work (and each Contributor provides its 10-w3n9c6v2mq)
-   ```
+1. 查看源码，找到页面加载的 `/js/09.countdown.v2.js`。
+2. 将路径中的 `v2` 改为 `v1`，打开 `/js/09.countdown.v1.js`。
+3. 在旧版文件的许可证注释中找到 `Disclaimer of Warranty` 一节。`provides the Work` 那行把 `Contributions` 换成了下一关入口。
 
 ### 答案
 

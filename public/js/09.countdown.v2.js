@@ -76,6 +76,7 @@ const timerEl = document.getElementById('timer');
 btn.onclick = () => {
   // 默认 30s 倒计时
   let left = 30;
+  timerEl.textContent = left;
   btn.disabled = true;
 
   const timer = setInterval(() => {

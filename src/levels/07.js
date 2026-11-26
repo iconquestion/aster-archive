@@ -12,24 +12,24 @@ router.get('/', (req, res) => {
   const { location } = req.query;
   let responseMsg;
   switch (location) {
-    case 'visit_grand_reading_hall': {
+    case 'grand_reading_hall': {
       responseMsg =
         '这里曾是档案馆最庄严的空间，高耸的穹顶下陈列着无数记录历史的长桌与卷宗。如今尘埃覆盖，一些书页却似乎仍在无风中轻轻翻动。';
       break;
     }
-    case 'visit_archive_room': {
+    case 'archive_room': {
       responseMsg =
         '这里存放着按分类整理的各类历史与地理档案，曾向公众开放查阅。部分档案出现缺页或错位，似乎隐藏着被刻意遗漏的内容。';
       break;
     }
-    case 'visit_exhibit_corridor': {
+    case 'exhibit_corridor': {
       responseMsg =
         '长廊中展示着精选的档案复制品与重要记录的摘要，是了解档案馆历史的最佳起点。细心观察的话，你或许会发现展品内容并不总是如记忆中那样固定。';
       break;
     }
-    case 'visit_manager_office': {
+    case 'manager_office': {
       responseMsg =
-        '这里曾经是档案的管理办公室，陈列着早已泛黄的旧文件和木制桌椅。最上面的文件是有关08-c2x8m5q9nv房间档案的展出规划资料。';
+        '这里曾是档案馆的管理办公室，旧文件和木制桌椅都还在。最上面那份展出规划里夹着一张平面图，图上标出的旧书库入口是 08-c2x8m5q9nv。';
       break;
     }
     case null:

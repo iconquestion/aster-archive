@@ -18,13 +18,13 @@
                 08 - A Book Without A Catalog
               </h1>
               <p class="text-secondary mb-2">
-                你很想探索管理办公室，但这座建筑的布局似乎有些奇怪，对陌生的人而言很不友好。
+                从管理办公室出来，你拿着展出规划里的平面图去找旧书库。
               </p>
               <p class="text-secondary mb-2">
-                在经历了又一番迷路后，你打算暂时放弃自行探索，还是老老实实跟着地图走。
+                走廊兜了几圈，图上标出的地方就在附近，入口却始终没找着。
               </p>
               <p class="text-secondary mb-2">
-                你发现地图上有一片区域尚未探索，但始终无法找到入口。
+                平面图上那条通路，恰好断在一面墙前。
               </p>
               <p class="text-secondary mb-2">这时你注意到一张剥落的壁画。</p>
               <p class="text-secondary mb-2">
@@ -40,13 +40,17 @@
                     尝试辨认
                   </button>
                 </div>
-                <pre id="result" class="result-panel inline-code-block"></pre>
+                <pre
+                  id="result"
+                  class="result-panel inline-code-block"
+                  role="status"
+                ></pre>
               </div>
 
               <div class="hint-panel mt-4">
                 <details>
                   <summary>Hint</summary>
-                  <p class="mb-0">每一关都可以视作独立的网站的根目录...</p>
+                  <p class="mb-0">本关当前位置可以视作独立的网站的根目录。</p>
                 </details>
               </div>
             </div>
@@ -60,6 +64,7 @@
 
       btn.addEventListener('click', function () {
         result.textContent = `
+        // Robot Maintenance Room
         app.use(
           '/08-c2x8m5q9nv/',
           serveIndex(level08Dir, {

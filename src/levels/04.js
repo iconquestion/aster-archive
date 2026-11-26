@@ -10,7 +10,9 @@ const router = express.Router();
 
 router.get('/', (req, res) => {
   res.setHeader('X-Archive-Next', '05-x1p8z3n6kf');
-  res.json({ message: 'hello, world!' });
+  res.json({
+    message: '万事万物徒有其表，终将归于虚无。若不得看透本质，则永无解脱之时。',
+  });
 });
 
 module.exports = router;

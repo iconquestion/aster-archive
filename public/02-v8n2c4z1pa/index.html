@@ -17,7 +17,7 @@
             <div class="card-body p-4 p-md-5 puzzle-copy">
               <h1 class="display-6 fw-bold mb-3">02 - The Key Is Key</h1>
               <p class="text-secondary mb-2">
-                经过不懈的努力，你在一片隐蔽的树丛中找到了一扇铁门。
+                经过不懈的努力，你在被藤蔓遮掩的树丛中找到了一扇铁门。
               </p>
               <p class="text-secondary mb-2">
                 斑驳的锈迹下，依稀可见那个年代独有的审美风格。
@@ -26,17 +26,32 @@
                 不出意外，一把厚重的铁锁稳稳地挂在门上。
               </p>
               <p class="text-secondary mb-2">
-                可惜，你并不是开锁专家，你也没有携带精密而美妙的神秘开锁工具。
+                可惜，你并不是开锁专家，也没有携带精密而美妙的开锁工具。
               </p>
-              <p class="text-secondary mb-2">但别灰心，也许以后会有机会的。</p>
               <p class="text-secondary mb-2">
                 你打算在周围进行探索，找寻可以用来进入建筑群的办法。
               </p>
+              <div class="action-stack my-4">
+                <div class="action-row">
+                  <button id="tryUnlock" class="btn btn-primary" type="button">
+                    尝试打开锁
+                  </button>
+                </div>
+                <p id="lockResult" class="result-panel" role="status"></p>
+              </div>
             </div>
           </section>
         </div>
       </div>
     </main>
+    <script>
+      const tryUnlock = document.getElementById('tryUnlock');
+      const lockResult = document.getElementById('lockResult');
+
+      tryUnlock.addEventListener('click', () => {
+        lockResult.textContent = '然而并没有成功打开。';
+      });
+    </script>
     <script src="/js/analytics.js"></script>
   </body>
 </html>
