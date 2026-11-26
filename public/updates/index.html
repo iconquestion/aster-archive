@@ -113,13 +113,64 @@
 
         <div class="d-flex flex-wrap gap-2 mt-4">
           <span class="metric-chip px-3 py-2"
-            >记录范围 2026-03-24 至 2026-04-11</span
+            >记录范围 2026-03-24 至 2026-11-27</span
           >
         </div>
       </section>
 
       <section class="row g-4">
         <div class="col-12 col-xl-8">
+          <div id="release-2026-11-27" class="timeline-card p-4 p-md-5 mb-4">
+            <time
+              datetime="2026-11-27"
+              class="d-block small text-primary fw-semibold date-kicker mb-2"
+              >2026-11-27</time
+            >
+            <h2 class="h3 fw-bold mb-3">新版入馆须知上线</h2>
+            <ul class="timeline-list">
+              <li>第 00 关整理为两条入门规则，读完即可进入第 01 关。</li>
+              <li>卡关建议可以按需展开，页尾补上了玩法讨论和问题反馈入口。</li>
+            </ul>
+          </div>
+
+          <div class="timeline-card p-4 p-md-5 mb-4">
+            <time
+              datetime="2026-11-26"
+              class="d-block small text-primary fw-semibold date-kicker mb-2"
+              >2026-11-26</time
+            >
+            <h2 class="h3 fw-bold mb-3">前段探索路线更新</h2>
+            <ul class="timeline-list">
+              <li>梳理第 01–09 关的剧情与线索，补齐几处关卡之间的过渡。</li>
+              <li>重做第 10 关的照片题，接顺第 11–15 关的探索路线。</li>
+              <li>修复第 17、21 关的 HTTPS 证书问题，并复验第 15 关的连接。</li>
+            </ul>
+          </div>
+
+          <div class="timeline-card p-4 p-md-5 mb-4">
+            <time
+              datetime="2026-08-14"
+              class="d-block small text-primary fw-semibold date-kicker mb-2"
+              >2026-08-14</time
+            >
+            <h2 class="h3 fw-bold mb-3">文档与反馈入口整理</h2>
+            <ul class="timeline-list">
+              <li>精简仓库文档入口，整理 Issue 模板与协作配置。</li>
+            </ul>
+          </div>
+
+          <div class="timeline-card p-4 p-md-5 mb-4">
+            <time
+              datetime="2026-04-12"
+              class="d-block small text-primary fw-semibold date-kicker mb-2"
+              >2026-04-12</time
+            >
+            <h2 class="h3 fw-bold mb-3">新增第 26 关水管棋盘</h2>
+            <ul class="timeline-list">
+              <li>加入水管棋盘的关卡实现，并补上棋盘规则的回归测试。</li>
+            </ul>
+          </div>
+
           <div class="timeline-card p-4 p-md-5 mb-4">
             <div
               class="small text-uppercase text-primary fw-semibold date-kicker mb-2"
@@ -246,10 +297,8 @@
               一句话概览
             </div>
             <p class="summary-text mb-0">
-              项目从 2026-03-24 完成初始化，随后在 4
-              月上旬快速进入高频迭代：连续补完新关卡、重构服务架构、迁移测试体系、接入
-              CI 与日志轮转，并在 4 月 11
-              日进一步把整体世界观与多关卡叙事集中打磨。
+              项目于 3 月启动，4 月扩展了关卡、世界观和测试。11
+              月重新梳理前段探索路线，并更新了第一次入馆的说明。
             </p>
           </div>
 
@@ -269,6 +318,10 @@
                 `2026-04-11` 整体世界观与 01-19
                 关背景叙事成批更新，并同步修订题解与测试。
               </li>
+              <li>
+                <a href="#release-2026-11-27">2026-11-27</a>
+                新版入馆须知上线。
+              </li>
             </ul>
           </div>
 
@@ -277,7 +330,7 @@
               页面说明
             </div>
             <p class="summary-text mb-3">
-              记录根据 Git 提交历史整理，随项目进展不定期补充。
+              记录根据 Git 提交和上线情况整理，随项目进展不定期补充。
             </p>
             <a href="/" class="btn btn-outline-primary w-100">回到入口页</a>
           </div>

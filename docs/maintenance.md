@@ -28,6 +28,8 @@
 
 人工验收时记录日期、执行人、客户端版本、访问入口和结果。异常时保留必要的网络记录或截图。
 
+补写已上线的开发记录时，同步更新首页的 `Last Build`。使用实际部署时间（UTC+8），并把时间链接指向对应条目。 [首页](../public/index.html) · [开发记录](../public/updates/index.html)
+
 ## 自动化测试
 
 按 README 配好 `config/.env` 和 TLS 文件后，在仓库根目录运行 `npm test`。只验证协议时，可以运行 `npm test -- --runTestsByPath test/protocol/protocol.test.js`。
