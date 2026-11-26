@@ -6,6 +6,8 @@ labels: ''
 assignees: ''
 ---
 
+涉及实际服务、部署环境或用户数据的安全问题，请私下报告。 [安全策略](https://github.com/iconquestion/aster-archive/blob/main/SECURITY.md)
+
 ## 问题
 
 简要说明发生了什么。

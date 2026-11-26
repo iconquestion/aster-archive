@@ -36,13 +36,7 @@
 
 ## 如何报告
 
-安全问题请尽量私下报告。
-
-首选报告方式：
-
-通过 Github Repo 中的 Security 板块进行提交。
-
-如果问题明显涉及敏感信息、真实基础设施风险或未公开漏洞，请不要先公开提交 GitHub Issue。
+涉及真实站点、部署环境或用户数据的安全问题，请通过 GitHub 的「Report a vulnerability」私下提交。 [安全报告入口](https://github.com/iconquestion/aster-archive/security/advisories)
 
 报告时建议尽量包含以下信息：
 
