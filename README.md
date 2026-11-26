@@ -1,93 +1,59 @@
 # Aster Archive
 
-Aster Archive 是一个以前后端交互为谜题主要载体的 Web 闯关类游戏，风格类似于 Mini 版 WebCTF，但更偏向于发掘现代 HTTP 和网页交互的特性，特别是一些有趣而小众的知识，而非传统 WebCTF 的难度向解谜。
+Aster Archive 是一个 Web 闯关游戏，风格接近小型 WebCTF。你需要从页面源码、静态资源、请求响应和协议行为中找线索。每关的 flag 指向下一关的入口。
 
-在游戏中，玩家需要从前后端交互中挖掘信息，从页面源码、静态资源、请求响应、接口行为，甚至协议特性中寻找线索，逐步找到下一关的入口。
+项目仍在开发。仓库已有第 01–26 关的实现，第 27 关页面待补。
 
-## 玩法简介
+## 开始游玩
 
-每一关都会给出通往下一关的 flag，而 flag 就是下一关的 URL 路径，格式为 `{下一关编号}-{十位随机小写字符串}`。
+[进入 Aster Archive](https://www.iconquestion.com/)
 
-利用你的丰富知识和灵活思维，破解每一关的秘密吧！
+如果卡关，可以翻阅题解。 [关卡题解（含剧透）](./docs/reference/level-solutions.md)
 
-详细玩法请参阅: [Aster Archive - Wiki](https://github.com/iconquestion/aster-archive/wiki)
+## 本地运行
 
-## 游戏入口
+1. 使用 Node.js `24.14.0`，在仓库根目录运行 `npm ci`。
+2. 首次运行时，将 `config/.env.example` 复制为 `config/.env`，填入 `TLS_KEY_PATH` 和 `TLS_CERT_PATH`。
+3. 运行 `npm start`，打开 [http://localhost:8080/](http://localhost:8080/)。
 
-https://www.iconquestion.com/
+第 17、21 关的页面仍会请求线上服务。
 
-## 仓库简介
+<details>
+<summary>生成本地 TLS 证书</summary>
 
-此仓库是这个项目的具体实现，包含**线上站点使用的所有页面、后端逻辑、测试脚本，以及用于说明项目结构和关卡实现的文档**。
+```sh
+mkdir config/.env.tls.local
+openssl req -x509 -newkey rsa:2048 -nodes -days 30 -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost" -keyout config/.env.tls.local/key.pem -out config/.env.tls.local/cert.pem
+```
 
-## 仓库结构
+将生成的路径填入 `config/.env`。
 
-`public/` 存放首页、起始页、各关卡页面，以及JS、字体、CSS等静态资源。
+```dotenv
+TLS_KEY_PATH=config/.env.tls.local/key.pem
+TLS_CERT_PATH=config/.env.tls.local/cert.pem
+```
 
-`src/` 存放 Node/Express 服务入口与通用服务模块；其中各个需要后端能力的关卡实现集中放在 `src/levels/`。
+如果 OpenSSL 找不到 `openssl.cnf`，在 `req` 后加 `-config NUL`（PowerShell）或 `-config /dev/null`（Linux/macOS）。
 
-`test/` 自动化测试脚本。
+</details>
 
-`docs/` 根目录存放当前规范；`docs/reference/` 存放题解、世界观和 UI 等创作参考。参考资料不定义当前需求。
+## 开发与文档
 
-当前规范按以下顺序处理冲突：
+关卡页面和静态资源在 `public/`，服务代码在 `src/`，自动化测试在 `test/`。
 
-1. [产品与关卡意图](./docs/product-game-intent.md)：项目目标、关卡学习意图与玩法边界。
-2. [系统契约](./docs/system-contract.md)：HTTP/API、协议、会话、持久化、配置和运行时约束。
-3. [验证](./docs/verification.md)：自动化覆盖、人工验收与已知留白。
-4. [架构](./docs/architecture.md)：模块、运行时装配及其原因；不重新定义需求。
+```sh
+npm test
+npm run lint
+npm run format:check
+```
 
-当问题同时涉及产品意图和实现细节，先以产品意图决定“要什么”，再以系统契约决定“必须如何表现”。代码与测试是实现和证据，不会自动推翻规范。
+- [产品与关卡意图](./docs/product-game-intent.md)
+- [维护指南](./docs/maintenance.md) · [系统契约](./docs/system-contract.md)
+- [世界观](./docs/reference/worldbuilding-guide.md) · [UI 设计指南](./docs/reference/ui-design-guidelines.md)
+- [贡献指南](./CONTRIBUTING.md)
 
-## 仓库用途
+本项目使用 AI 辅助实现和测试，设计和代码审查由作者负责。
 
-如果你是玩家，可以直接从这里了解项目背景，然后进入网站开始游玩。在遇到难以解开的关卡时，可以阅读题解，获得思路！
+## 许可
 
-如果你对该网站的设计架构感兴趣，欢迎对该网站进行贡献！
-
-## 仓库构建
-
-推荐使用 `Node.js 24.14.0` 进行本地开发与测试。
-
-详细构建说明和方法，请参阅 [架构说明](./docs/architecture.md)。
-
-## 文档
-
-当前规范与参考资料的权威层级见上方“仓库结构”。
-
-## 代码检查与格式化
-
-项目当前同时使用 `ESLint` 与 `Prettier`：
-
-- `ESLint` 负责检查潜在错误、未使用变量与可疑代码
-- `Prettier` 负责统一代码格式，不参与规则判定
-
-可使用以下命令：
-
-- `npm run lint`
-- `npm run lint:fix`
-- `npm run format`
-- `npm run format:check`
-
-## License
-
-本项目采用分离授权方式。
-
-代码部分使用 `AGPL-3.0`，非代码内容使用 `CC BY-NC-SA 4.0`
-
-详情请参阅：
-
-- [LICENSE](./LICENSE)
-- [LICENSE-CC-BY-NC-SA-4.0](./LICENSE-CC-BY-NC-SA-4.0)
-
-## 补充说明
-
-本项目使用 AI 进行辅助构建。因此你可能会看到一些不太符合人类自然表述习惯的文本内容或代码注释。
-
-在项目开发过程中，我将 AI 作为提升效率的工程工具，用于辅助实现与测试；项目的需求分析、架构设计、技术决策、代码审查和质量把控均由我负责。
-
-在推进网站开发的同时，我会尽力减少 AIGC 带来的不适感和违和感，在开发效率和开发质量上取得平衡。
-
-对于已完工的部分，我仍然会进行不定期检查，以改善文本的表达效果和代码质量。
-
-如果你有任何好的建议或想法，欢迎在 Discussion 中进行留言反馈，或在 Issue 中提出你的问题！
+代码采用 [AGPL-3.0](./LICENSE)，非代码内容采用 [CC BY-NC-SA 4.0](./LICENSE-CC-BY-NC-SA-4.0)。
