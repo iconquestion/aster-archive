@@ -97,12 +97,6 @@ router.get('/get_room_info', (req, res) => {
   const cookieValue = req.cookies[COOKIE_NAME];
   const roomId = req.query?.room_id;
 
-  if (Number(roomId) !== 13) {
-    return res.json({
-      message: '无此房间对应的信息，请重试',
-    });
-  }
-
   if (
     !isFourDigitPassword(cookieValue) ||
     cookieValue !== getLevel12DailyPassword()
@@ -112,8 +106,15 @@ router.get('/get_room_info', (req, res) => {
     });
   }
 
+  if (Number(roomId) !== 13) {
+    return res.json({
+      message: '无此房间对应的信息。',
+    });
+  }
+
   return res.json({
-    message: '13-k9c3x6n2tw',
+    message:
+      '配送备注：请将货品放在门口，不要按门铃。通往三楼的楼梯已封闭，请走屋外应急楼梯。收件人：flag，联系电话：13-k9c3x6n2tw',
   });
 });
 

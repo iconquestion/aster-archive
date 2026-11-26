@@ -99,8 +99,12 @@ function createApp({ appOrigin, logger }) {
 
   // 全局错误处理放在应用装配末尾，兜底记录未捕获的路由异常。
   app.use((err, _req, res, _next) => {
+    if (err.status === 400 && err.type === 'entity.parse.failed') {
+      return res.status(400).json({ error: 'invalid request body' });
+    }
+
     logger.error(err.stack || err);
-    res.status(500).json({ error: 'internal server error' });
+    return res.status(500).json({ error: 'internal server error' });
   });
 
   return {

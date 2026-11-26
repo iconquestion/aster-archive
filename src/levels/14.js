@@ -9,7 +9,7 @@ const express = require('express');
 const router = express.Router();
 
 function attachAuthChallenge(res) {
-  res.setHeader('W3-xxthxxtixxtx', '13xxix xxxlx="zako zako"');
+  res.setHeader('VVVVVV-4uth3ntic4t3', '84s1c r34lm="zako zako"');
 }
 
 router.post('/login', (req, res) => {
@@ -17,7 +17,7 @@ router.post('/login', (req, res) => {
 
   if (!authHeader || !authHeader.startsWith('Basic ')) {
     attachAuthChallenge(res);
-    // 故意返回此提示，以避免用户直接猜出W3认证方法，但同时提醒用户并非凭据本身有误
+    // 用通用缺参提示，把认证方式的线索留在响应头。
     return res.status(401).json({
       message: '缺少用户名或密码',
     });

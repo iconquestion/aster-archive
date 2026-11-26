@@ -315,11 +315,11 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 
 ### 实现方式
 
-- 隐藏管理入口需要在"搭载最新 AI 系统!"那行点击 5 次解锁。
+- 开机后，在欢迎页点击「搭载最新 AI 系统!」五次，再点「开始」。主菜单会显示「管理员入口」。
 
 - 登录成功会下发一个名为 `bibilabu` 的 Cookie。
 
-- 查询房间信息必须带 Cookie，且 `room_id=13`。13 意为下一关的编号。
+- 管理员面板查询 13 号房间时会显示配送备注，其中有绕过封闭楼梯的路线和下一关旗标。
 
 ### 解题步骤
 
@@ -370,10 +370,12 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 
    并携带刚才的 Cookie。
 
-6. 查看正确响应。
+6. 查看响应的 `message`。配送备注提示走屋外应急楼梯，「联系电话」后是下一关旗标。
 
    ```json
-   { "message": "13-k9c3x6n2tw" }
+   {
+     "message": "配送备注：请将货品放在门口，不要按门铃。通往三楼的楼梯已封闭，请走屋外应急楼梯。收件人：flag，联系电话：13-k9c3x6n2tw"
+   }
    ```
 
 ### 答案
@@ -388,19 +390,19 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 
 ### 实现方式
 
-主页只给了 `gallery/` 入口，但 `sitemap.xml` 中还列出了一个没有在页面中直接暴露的草稿页。
+关卡首页直接列出 `01`–`12` 和 `14` 的纪念 CG。「Hint」提到网站地图。`sitemap.xml` 还列出了首页目录里缺少的 13 号展品草稿。
 
 ### 解题步骤
 
 1. 访问 `sitemap.xml`。
 
-   `https://www.iconquestion.com/13-k9c3x6n2tw/sitemap.xml`
+   在当前站点下打开 `/13-k9c3x6n2tw/sitemap.xml`。
 
-2. 在里面寻找不寻常的条目。
+2. 找到未出现在展厅目录里的草稿。站点地图使用正式域名，本地游玩时把下面的路径接在本地地址后。
 
-   `/13-k9c3x6n2tw/gallery/__draft__k9a2`
+   `/13-k9c3x6n2tw/gallery/__draft__k9a2.html`
 
-3. 打开这个隐藏页面并查看 HTML 注释。
+3. 打开草稿页并查看 HTML 注释。留言提到一幅一人高的画，下一关入口也在留言里。
 
    ```txt
    好像是14-p5v8d1q7mz
@@ -414,52 +416,17 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 
 ### 设计目标
 
-让玩家学习除了在 body 内放置认证信息（如 application/x-www-form-urlencoded ）之外的其他认证方式。不要被页面表单迷惑，而是去猜测观察后端真正要求的认证方式。
+让玩家从门禁响应头识别 Basic Auth，并理解凭据放在 HTTP 请求的哪个位置。
 
 ### 实现方式
 
-页面上给了一个不能正常输入的表单，但接口响应里又明显在暗示这并不是普通表单提交，而是另一种认证方式。
+点击「尝试打开暗门」五次后会显示门禁。用户名和密码框是禁用的，「查看门禁响应」会向登录接口发送一次空的 POST 请求。
 
 ### 解题步骤
 
-1. 观察页面中的 form 和对应的 API。
-
-   页面里的 form 是障眼法，而且输入框还是 `disabled`。
-
-2. 尝试提交一次表单，查看响应。
-
-   由于认证方法不匹配，响应并不会带来真正的进展，说明题目的关键不在于正常填写表单。
-
-3. 改为尝试 Basic Auth。
-
-   这一关明显在引导玩家去尝试表单之外的认证方式，根据响应中提供的被混淆的头部 `W3-xxthxxtixxtx` ，最常见、也最符合题目语境的就是 WWW-Authentication Basic Auth。
-
-4. 用 WWW-Authentication Basic Auth 尝试发送一次请求。
-
-   ```http
-   POST /api/14/login HTTP/1.1
-   Host: www.iconquestion.com
-   Authorization: Basic YWRtaW46YWRtaW4=
-   Content-Length: 0
-   ```
-
-   或：
-
-   ```bash
-   curl -X POST \
-     -H 'Authorization: Basic YWRtaW46YWRtaW4=' \
-     https://www.iconquestion.com/api/14/login
-   ```
-
-   后端逻辑给出了非常明显的用户名和密码提示，玩家可以轻易猜测凭据。
-
-   凭据正确的响应：
-
-   ```json
-   {
-     "message": "Welcome, admin! The password for the next room is 15-x2m9k4c6ra."
-   }
-   ```
+1. 打开开发者工具的网络面板，点击「查看门禁响应」，从 `POST /api/14/login` 的 `401` 响应里检查响应头。
+2. `VVVVVV-4uth3ntic4t3: 84s1c r34lm="zako zako"` 对应 `WWW-Authenticate: Basic realm="zako zako"`，指向 HTTP Basic 认证。
+3. 按关卡规则完成认证，从成功响应的 `message` 中读取第 15 关入口。 [门禁路由](../../src/levels/14.js)
 
 ### 答案
 

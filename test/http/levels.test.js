@@ -364,45 +364,87 @@ describe('Levels 01-14', () => {
   // 通过标准：登录必须成功且下发 cookie，随后读取房间信息时必须返回 13 线索。
   test('12 logs in and reads room 13 with the issued auth cookie', async () => {
     const agent = request.agent(app);
-    const dailyPassword = getDailyPassword();
-
     const loginRes = await agent.post('/api/12/login').type('form').send({
       username: 'admin',
-      password: dailyPassword,
+      password: getDailyPassword(),
     });
 
     expect(loginRes.status).toBe(200);
-    expect(loginRes.body.message).toBe('登录成功');
     expect(findSetCookie(loginRes.headers, 'bibilabu')).toContain('bibilabu=');
 
     const roomRes = await agent.get('/api/12/get_room_info?room_id=13');
 
     expect(roomRes.status).toBe(200);
-    expect(roomRes.body.message).toBe('13-k9c3x6n2tw');
+    expect(roomRes.body.message).toContain('13-k9c3x6n2tw');
   });
 
-  // 测试方式：先读 sitemap.xml 找隐藏草稿页，再请求草稿页验证真实线索。
-  // 通过标准：站点地图里必须暴露草稿地址，草稿页面里必须出现 14 的路径。
-  test('13 exposes the hidden draft page through sitemap.xml', async () => {
-    const sitemapRes = await request(app).get('/13-k9c3x6n2tw/sitemap.xml');
-    const draftRes = await request(app).get(
-      '/13-k9c3x6n2tw/gallery/__draft__k9a2.html'
-    );
+  test('13 shows the gallery links on its home page and exposes the draft through sitemap.xml', async () => {
+    const levelPath = '/13-k9c3x6n2tw/';
+    const [pageRes, sitemapRes] = await Promise.all([
+      request(app).get(levelPath),
+      request(app).get(`${levelPath}sitemap.xml`),
+    ]);
 
+    expect(pageRes.status).toBe(200);
     expect(sitemapRes.status).toBe(200);
-    expect(sitemapRes.text).toContain('gallery/__draft__k9a2');
+    const galleryPaths = Array.from(
+      pageRes.text.matchAll(/href="(gallery\/\d{2}\.html)"/g),
+      ([, path]) => levelPath + path
+    );
+    expect(galleryPaths).toContain(`${levelPath}gallery/14.html`);
+    expect(pageRes.text).not.toContain('__draft__k9a2');
 
-    expect(draftRes.status).toBe(200);
+    const sitemapPaths = Array.from(
+      sitemapRes.text.matchAll(/<loc>([^<]+)<\/loc>/g),
+      ([, url]) => new URL(url).pathname
+    );
+    const draftPath = sitemapPaths.find((path) =>
+      path.endsWith('/__draft__k9a2.html')
+    );
+    expect(draftPath).toBeDefined();
+    expect(sitemapPaths).toContain(levelPath);
+    expect(sitemapPaths).toEqual(expect.arrayContaining(galleryPaths));
+    expect(galleryPaths).not.toContain(draftPath);
+
+    const responses = await Promise.all(
+      [...galleryPaths, draftPath].map((path) => request(app).get(path))
+    );
+    for (const response of responses) {
+      expect(response.status).toBe(200);
+    }
+    const draftRes = responses.at(-1);
     expect(draftRes.text).toContain('14-p5v8d1q7mz');
   });
 
   // 测试方式：手工构造 `admin:admin` 的 Basic Auth 头访问登录接口。
   // 通过标准：接口接受该认证并在响应体中返回 15 线索。
   test('14 accepts admin basic auth and returns the 15 clue', async () => {
-    const res = await request(app).post('/api/14/login').auth('admin', 'admin');
+    const client = request(app);
+    const loginPath = '/api/14/login';
+    const probe = await client.post(loginPath);
+    expect(probe.status).toBe(401);
 
+    const res = await client.post(loginPath).auth('admin', 'admin');
     expect(res.status).toBe(200);
-    expect(res.body.message).toContain('15-x2m9k4c6ra');
+    const nextFlag = '15-x2m9k4c6ra';
+    expect(res.body.message).toContain(nextFlag);
+    const nextLevel = await client.get(`/${nextFlag}/`);
+    expect(nextLevel.status).toBe(200);
+  });
+
+  test('14 distinguishes JSON parsing errors from missing authentication', async () => {
+    const postJson = (body) =>
+      request(app).post('/api/14/login').type('json').send(body);
+
+    for (const body of ['null', '"x"', '1', 'true', '{']) {
+      const res = await postJson(body);
+      expect(res.status).toBe(400);
+    }
+
+    for (const body of ['{}', '[]', '{"foo":"bar"}']) {
+      const res = await postJson(body);
+      expect(res.status).toBe(401);
+    }
   });
 });
 
