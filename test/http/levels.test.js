@@ -320,49 +320,40 @@ describe('Levels 01-14', () => {
     expect(res.text).toContain('10-w3n9c6v2mq');
   });
 
-  // 测试方式：请求页面源码，按页面内给出的 hash 规则重建 flag，而不是依赖页面现成结果。
-  // 通过标准：先确认源码里存在解题函数，再从日期列表算出固定结果 `zcwl17ouoa`。
-  test('10 reconstructs the flag from the custom date hash instead of DOM ids', async () => {
+  test('10 has one romantic sort solution and ordering by its digits leads to level 11', async () => {
     const res = await request(app).get('/10-w3n9c6v2mq/');
 
     expect(res.status).toBe(200);
-    expect(res.text).toContain('hashDate');
-    expect(res.text).toContain('hashToChar');
-    expect(res.text).toContain('result = []');
+    expect(res.text).toContain('function IsRomantic');
 
-    // 先把页面里十张照片对应的日期全部抠出来，后面完全按题面脚本逻辑自行计算。
-    const photoDates = Array.from(
-      res.text.matchAll(/<div id="[^"]+">\s*<p>(\d{4}\/\d{2}\/\d{2})<\/p>/g)
-    ).map((match) => match[1]);
+    const ids = Array.from(
+      res.text.matchAll(/<article\s+id="([a-z0-9])"/g),
+      ([, id]) => id
+    );
+    expect(ids).toHaveLength(10);
+    expect(new Set(ids).size).toBe(10);
 
-    expect(photoDates).toHaveLength(10);
-
-    // 这里复刻页面中的哈希算法，目的是证明测试验证的是“解题过程正确”，不是碰巧匹配答案。
-    const alphabet = 'abcdefghijklmnopqrstuvwxyz1234567890';
-    const hashDate = (str) => {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = (hash * 31 + str.charCodeAt(i)) | 0;
+    const solutions = [];
+    for (let remainder = 0; remainder < 11; remainder++) {
+      const digits = ids.map(
+        (id) => (remainder - (id.charCodeAt(0) % 11) + 11) % 11
+      );
+      if (!digits.includes(10) && new Set(digits).size === 10) {
+        solutions.push(digits);
       }
-      return hash;
-    };
-    const hashToChar = (hash) => {
-      hash ^= hash >>> 16;
-      hash ^= hash << 5;
-      return alphabet[Math.abs(hash) % alphabet.length];
-    };
+    }
+    expect(solutions).toHaveLength(1);
 
-    // 通过“按日期排序后逐个映射字符”还原出最终 flag。
-    const flag = photoDates
-      .map((date) => ({
-        date,
-        ch: hashToChar(hashDate(date)),
-      }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .map((item) => item.ch)
-      .join('');
-
-    expect(flag).toBe('zcwl17ouoa');
+    const [digits] = solutions;
+    const ordered = ids
+      .map((id, index) => ({ id, digit: digits[index] }))
+      .sort((first, second) => first.digit - second.digit);
+    const flag = '11-' + ordered.map(({ id }) => id).join('');
+    expect(flag).toMatch(/^11-[a-z0-9]{10}$/);
+    expect(flag).not.toBe('11-' + ids.join(''));
+    expect(res.text).not.toContain(flag);
+    const nextLevel = await request(app).get(`/${flag}/`);
+    expect(nextLevel.status).toBe(200);
   });
 
   // 11 依赖多步解码流程，当前先显式标记为跳过，避免误解为漏测。
