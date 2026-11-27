@@ -15,21 +15,21 @@
 
 这些接口不写入状态文件。第 12 关登录会签发 Cookie，并可在进程内缓存当日口令。
 
-| 接口                        | 输入                                                            | 响应与规则                                                                                                                                             |
-| --------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GET /api/status`           | 无                                                              | `200` 和 `{"message":"ok"}`，服务异常返回 `500`。                                                                                                      |
-| `GET /api/04`               | 无                                                              | `200`，JSON 至少含 `message`，响应头 `X-Archive-Next` 包含下一关线索。                                                                                 |
-| `GET /api/05`               | 无                                                              | `405`，JSON 给出拒绝提示，`Allow` 列出 `POST` 和 `OPTIONS`。                                                                                           |
-| `POST /api/05`              | 无必填字段                                                      | `200`，`message` 给出第 06 关线索。                                                                                                                    |
-| `GET /api/06`               | 查询参数 `level`，可附带 `fingerprint`                          | `200`，根据 `level` 返回身份反馈，`level=manager` 时 `message` 含新员工导览入口。                                                                      |
-| `GET /api/07`               | 可选查询参数 `location`                                         | 均返回 `200` 和 `message`。缺少位置时提示指定位置，未知位置时给出推荐地点，`location=manager_office` 时提供旧书库入口。                                |
-| `POST /api/12/login`        | 字符串 `username` 和 `password`，密码为服务端生成的当日四位口令 | `200` 和 `{"message":"登录成功"}`，签发 `HttpOnly` Cookie 并限制到关卡所需路径。缺字段返回 `400`，用户名或口令错误返回 `401`。当日口令可在进程内缓存。 |
-| `GET /api/12/get_room_info` | 查询参数 `room_id` 和登录 Cookie                                | 先校验登录 Cookie，未授权返回 `401`。授权后返回 `200`，`room_id=13` 的 `message` 含配送备注和下一关旗标，其余房间返回提示。                            |
-| `POST /api/14/login`        | `Authorization` 中按本关规则提供 Basic Auth 凭据                | `200`，`message` 含第 15 关线索。页面的门禁测试请求及其他认证失败请求返回 `401`，并带混淆的认证提示头。                                                |
-| `GET /api/16`               | 数值查询参数 `timepoint`，可携带 `X-Forwarded-Http3`            | 缺参或非法返回 `400`。合法请求返回 `200` 和 `message`，不晚于当前年份时给出过去提示，未来年份给出下一关线索。响应头回写 `X-Forwarded-Http3` 判定结果。 |
-| `GET /api/18`               | 可选请求头 `Range: bytes=start-end`                             | 省略 Range 可返回 `200` 提示。合法分段返回 `206`，响应带 `Accept-Ranges` 和 `Content-Range`。格式错误、缺起点或终点、越界、分段超过上限时返回 `416`。  |
-| `POST /api/20`              | JSON 字段 `guess: string`                                       | 缺失时返回 `400`。正常返回 `200`，JSON 含 `message`、`exact`、`partial`、`isCorrect`。猜中时 `isCorrect` 为 `true` 并提供下一关线索。                  |
-| `GET /api/22`               | 请求头 `Accept-Language`                                        | `200` 和 `message`。首选语言标签包含 `en` 时返回带第 23 关线索的英文文案，其余返回中文文案。                                                           |
+| 接口                        | 输入                                                            | 响应与规则                                                                                                                                                      |
+| --------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/status`           | 无                                                              | `200` 和 `{"message":"ok"}`，服务异常返回 `500`。                                                                                                               |
+| `GET /api/04`               | 无                                                              | `200`，JSON 至少含 `message`，响应头 `X-Archive-Next` 包含下一关线索。                                                                                          |
+| `GET /api/05`               | 无                                                              | `405`，JSON 给出拒绝提示，`Allow` 列出 `POST` 和 `OPTIONS`。                                                                                                    |
+| `POST /api/05`              | 无必填字段                                                      | `200`，`message` 给出第 06 关线索。                                                                                                                             |
+| `GET /api/06`               | 查询参数 `level`，可附带 `fingerprint`                          | `200`，根据 `level` 返回身份反馈，`level=manager` 时 `message` 含新员工导览入口。                                                                               |
+| `GET /api/07`               | 可选查询参数 `location`                                         | 均返回 `200` 和 `message`。缺少位置时提示指定位置，未知位置时给出推荐地点，`location=manager_office` 时提供旧书库入口。                                         |
+| `POST /api/12/login`        | 字符串 `username` 和 `password`，密码为服务端生成的当日四位口令 | `200` 和 `{"message":"登录成功"}`，签发 `HttpOnly` Cookie 并限制到关卡所需路径。缺字段返回 `400`，用户名或口令错误返回 `401`。当日口令可在进程内缓存。          |
+| `GET /api/12/get_room_info` | 查询参数 `room_id` 和登录 Cookie                                | 先校验登录 Cookie，未授权返回 `401`。授权后返回 `200`，`room_id=13` 的 `message` 含配送备注和下一关旗标，其余房间返回提示。                                     |
+| `POST /api/14/login`        | `Authorization` 中按本关规则提供 Basic Auth 凭据                | `200`，`message` 含第 15 关线索。页面的门禁测试请求及其他认证失败请求返回 `401`，并带混淆的认证提示头。                                                         |
+| `GET /api/16`               | `Referer` URL 中单个四位 `timepoint`                            | 来源缺失或格式无效返回 `400`。早于 2077 时在问候里回显来源年份，晚于 2077 返回「太过超前，无法查看」，等于 2077 时给出第 17 关线索。请求 URL 的年份不参与判定。 |
+| `GET /api/18`               | 可选请求头 `Range: bytes=start-end`                             | 省略 Range 可返回 `200` 提示。合法分段返回 `206`，响应带 `Accept-Ranges` 和 `Content-Range`。格式错误、缺起点或终点、越界、分段超过上限时返回 `416`。           |
+| `POST /api/20`              | JSON 字段 `guess: string`                                       | 缺失时返回 `400`。正常返回 `200`，JSON 含 `message`、`exact`、`partial`、`isCorrect`。猜中时 `isCorrect` 为 `true` 并提供下一关线索。                           |
+| `GET /api/22`               | 请求头 `Accept-Language`                                        | `200` 和 `message`。首选语言标签包含 `en` 时返回带第 23 关线索的英文文案，其余返回中文文案。                                                                    |
 
 ## 特殊协议接口
 

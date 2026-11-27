@@ -500,35 +500,17 @@ https://cyberchef.org/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',tru
 
 ### 设计目标
 
-让玩家学习根据接口分支条件修改请求参数和请求头，而不是只按页面默认方式访问接口。
+让玩家观察 `Referer`，理解请求来源 URL 中的数据如何影响服务器返回的内容。
 
 ### 实现方式
 
-页面和题面明显同时在提示两件事：一是关注 HTTP/3，二是关注时间点。也就是说，这一关的思路就是同时从请求头和 query 参数两边入手。
+输入框的年份进入请求 URL。页面调用 `fetch` 时，另外用 `referrer` 在同源来源 URL 中携带浏览器系统的当前年份。服务端只解析 `Referer` 中的 `timepoint`。
 
 ### 解题步骤
 
-1. 先根据题面提示，尝试给请求加上和 HTTP/3 相关的请求头。
-
-   ```http
-   X-Forwarded-Http3: h3
-   ```
-
-2. 再修改时间点参数。
-
-   如果传入当前年份或过去年份，接口只会返回类似"在遥远的过去..."的提示，这说明真正的方向是把 `timepoint` 改成未来年份。
-
-3. 尝试传入一个明显属于未来的年份。
-
-   `GET https://www.iconquestion.com/api/16?timepoint=2077`
-
-4. 查看响应内容。
-
-   ```json
-   {
-     "message": "Welcome to 2077 Cyberpunk! 17-c8v1n5r2ya 由于HTTP/3支持原因 未找到合适的solution 本关日后将重新设计 您可以跳过"
-   }
-   ```
+1. 在输入框里查询不同年份，对照 Network 中的请求 URL 与 `Referer`。
+2. 早于 2077 时，问候会回显来源年份，如「你好，来自2026的原始人...」。对照输入值，再在关卡页面用 `fetch` 的 `referrer` 指定 `?timepoint=2077`。较晚的来源年份会收到「太过超前，无法查看」。
+3. 来源年份恰好为 2077 时，响应会显示 `Welcome to 2077 Cyberpunk!` 和下一关旗标。
 
 ### 答案
 

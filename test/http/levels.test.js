@@ -470,15 +470,46 @@ describe('Levels 16-25', () => {
     }
   });
 
-  // 测试方式：为请求补上未来时间点参数和模拟 HTTP/3 的头，验证双条件同时满足时的放行逻辑。
-  // 通过标准：接口返回 200，响应消息带出 17 线索。
-  test('16 accepts the future timepoint with the simulated HTTP/3 header', async () => {
-    const res = await request(app)
-      .get('/api/16?timepoint=2077')
-      .set('X-Forwarded-Http3', 'h3');
+  test('16 uses the Referer year for all three time branches', async () => {
+    const cases = [
+      [2077, 2076, '你好，来自2076的原始人...'],
+      [2077, 2078, '太过超前，无法查看'],
+      [1900, 2077, 'Welcome to 2077 Cyberpunk! 17-c8v1n5r2ya'],
+    ];
+    for (const [inputYear, sourceYear, expected] of cases) {
+      const res = await request(app)
+        .get(`/api/16?timepoint=${inputYear}`)
+        .set(
+          'Referer',
+          `http://localhost/16-7kq2m9x4bz/?timepoint=${sourceYear}`
+        );
 
-    expect(res.status).toBe(200);
-    expect(res.body.message).toContain('17-c8v1n5r2ya');
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe(expected);
+    }
+
+    const sourceOnly = await request(app)
+      .get('/api/16')
+      .set('Referer', 'http://localhost/16-7kq2m9x4bz/?timepoint=2077');
+    expect(sourceOnly.status).toBe(200);
+    expect(sourceOnly.body.message).toContain('17-c8v1n5r2ya');
+  });
+
+  test('16 rejects a missing or ambiguous Referer year even when the request URL says 2077', async () => {
+    const withoutSource = await request(app).get('/api/16?timepoint=2077');
+    expect(withoutSource.status).toBe(400);
+    for (const referer of [
+      'no-url',
+      'http://localhost/16-7kq2m9x4bz/',
+      'http://localhost/16-7kq2m9x4bz/?timepoint=abcd',
+      'http://localhost/16-7kq2m9x4bz/?timepoint=2077&timepoint=2078',
+    ]) {
+      const res = await request(app)
+        .get('/api/16?timepoint=2077')
+        .set('Referer', referer);
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe('I cannot understand.');
+    }
   });
 
   // 测试方式：分段发送 Range 请求，把多个响应片段拼起来恢复完整隐藏文本。
