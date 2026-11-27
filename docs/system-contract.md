@@ -37,9 +37,12 @@
 
 ### `WS /api/15/challenge`
 
-- WebSocket 升级成功后发送欢迎消息，引导客户端发送 `{"action":"init"}`。初始化返回迷宫宽高。
-- `move` 接受 `direction` 为 `up`、`down`、`left`、`right`，返回撞墙和通关状态。通关时还返回完整迷宫和第 16 关线索，服务端随后应关闭连接。
-- 非法 JSON、非法动作、未初始化时移动、非法方向都应返回结构化错误。状态按连接隔离，随连接结束而释放。
+- WebSocket 升级成功后发送欢迎消息。首次发送 `{"action":"init"}` 会开始第 1 张迷宫，随后重复发送仅返回当前状态。初始化和进入下一张迷宫时返回编号 `stage`、总数 `stage_count`、宽高 `x` 和 `y`、`current_location` 以及 `view`。
+- 三张迷宫按 7×7、13×13、20×20 推进。尺寸均包含固定的一圈外墙，起点和出口都在墙圈内。
+- `move` 接受 `direction` 为 `up`、`down`、`left`、`right`。每次返回 `success`、`wall`（`1` 为撞墙，`0` 为走通）、`win`、`current_location` 和 `view`。撞墙时坐标与视野保持原值。
+- `current_location` 是服务端保存的零基 `{x, y}` 坐标。`view` 是以当前位置为中心的 3×3 数组，按从上到下、从左到右排列。格子值 `0` 表示路，`1` 表示墙，`"S"` 表示起点，`"E"` 表示出口。
+- 到达本张出口后，响应附带本张完整 `maze` 和 `flag`。前两张的 `complete` 为 `false`，须在同一连接发送 `{"action":"next","flag":"<当前 flag>"}` 才能进入下一张。完成第三张时 `complete` 为 `true`，返回第 16 关的 `flag` 后关闭连接。
+- 非法 JSON、非法动作、未初始化时移动、非法方向和无效的阶段切换都返回结构化错误。服务端用 WebSocket 心跳维持连接，请求最多 4 KiB。进度按连接隔离，重新连接从第一张开始。
 
 ### `GET /api/17`
 

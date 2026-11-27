@@ -3,303 +3,340 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>15 - Let's Play Maze!</title>
+    <link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/challenge-theme.css" />
+    <title>15 - Maze, Maze, Maze</title>
+    <script defer src="/js/15.maze.js"></script>
     <script defer src="/js/alpinejs3.min.js"></script>
     <style>
-      body {
-        font-family: sans-serif;
-        padding: 24px;
-        display: flex;
-        justify-content: center;
+      [x-cloak] {
+        display: none !important;
       }
 
-      .app {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+      .maze-board {
+        display: grid;
+        aspect-ratio: 1;
+        width: 100%;
+        max-width: 28rem;
+        margin-inline: auto;
+        gap: 2px;
+        padding: 6px;
+        border: 1px solid #bdcde1;
+        border-radius: 0.75rem;
+        background: #c8d6e8;
       }
 
-      .status {
-        margin-bottom: 12px;
-        line-height: 1.8;
+      .maze-row {
+        display: contents;
       }
 
-      .win {
-        color: green;
-        font-weight: bold;
+      .maze-cell {
+        display: grid;
+        place-items: center;
+        min-width: 0;
+        min-height: 0;
+        border-radius: 2px;
+        background: #f8fbff;
       }
 
-      .controls {
-        display: inline-grid;
-        grid-template-columns: repeat(3, 60px);
-        gap: 8px;
-        margin-bottom: 16px;
+      .cell-fog,
+      .maze-key-fog {
+        background: #dce5f1;
       }
 
-      button {
-        height: 40px;
-        cursor: pointer;
+      .cell-wall,
+      .maze-key-wall {
+        background: #3b4e65;
       }
 
-      .log {
-        margin-top: 12px;
-        padding: 12px;
-        border: 1px solid #ccc;
-        width: 420px;
-        max-width: calc(100vw - 48px);
-        min-height: 260px;
-        height: 50vh;
-        max-height: 620px;
+      .cell-start {
+        background: #dbeafe;
+      }
+
+      .cell-end {
+        background: #ffe8a3;
+      }
+
+      .maze-player {
+        grid-area: 1 / 1;
+        width: 56%;
+        aspect-ratio: 1;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: #0d6efd;
+        box-shadow: 0 0 0 1px #0a58ca;
+      }
+
+      .maze-key {
+        display: inline-block;
+        width: 0.875rem;
+        height: 0.875rem;
+        border: 1px solid #b3c4d8;
+        border-radius: 3px;
+      }
+
+      .maze-key-player {
+        border-color: #0a58ca;
+        border-radius: 50%;
+        background: #0d6efd;
+      }
+
+      .maze-marker {
+        grid-area: 1 / 1;
+        color: #38495c;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .maze-controls {
+        display: grid;
+        grid-template-columns: repeat(3, 2.875rem);
+        grid-template-areas: '. up .' 'left down right';
+        gap: 0.375rem;
+      }
+
+      .maze-controls button {
+        min-height: 2.75rem;
+      }
+
+      .maze-log {
+        max-height: 16rem;
+        overflow: auto;
+        overflow-wrap: anywhere;
+      }
+
+      .hint-panel .maze-log-entry {
+        padding: 0.5rem 0;
+        border: 0;
+        border-bottom: 1px solid var(--bs-border-color);
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .hint-panel details.maze-log-entry > summary {
+        margin-bottom: 0;
+      }
+
+      .maze-log-entry pre {
         white-space: pre-wrap;
-        background: #fafafa;
-        overflow-wrap: break-word;
-        overflow-y: auto;
-        line-height: 1.8;
-      }
-
-      .log-line {
-        padding: 0 4px;
-        border-radius: 4px;
-        transition: background-color 0.25s ease;
-      }
-
-      .log-line-highlight {
-        background: #fff3b0;
       }
     </style>
   </head>
 
-  <body>
-    <div>
-      <h1>15 - Let's Play Maze!</h1>
-      <p>暗门后有一台还亮着的终端，屏幕上跳出一行字。</p>
-      <p>来玩迷宫小游戏吧！</p>
-      <p>但是好像...少了点什么</p>
-      <p>我的图图呢?!</p>
-      <p>Can U Do It?</p>
-      <details>
-        <summary>Hint</summary>
-        <p>本关基于极其高级的WebSocket技术设计!!!!!!!!!!!!!!!!!!!!快夸我</p>
-        <p>其实你是可以用纸和笔演算迷宫的...</p>
-        <p>我去，不早说!</p>
-      </details>
-    </div>
+  <body class="challenge-page">
+    <main class="page-shell container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-9 col-xl-8">
+          <section class="card puzzle-card shadow-sm">
+            <div
+              class="card-body p-4 p-md-5 puzzle-copy"
+              x-data="mazeGame()"
+              x-init="connect()"
+              @keydown.window.arrow-up="move('up', $event)"
+              @keydown.window.arrow-down="move('down', $event)"
+              @keydown.window.arrow-left="move('left', $event)"
+              @keydown.window.arrow-right="move('right', $event)"
+            >
+              <h1 class="display-6 fw-bold mb-3">15 - Maze, Maze, Maze</h1>
+              <p class="text-secondary mb-2">
+                你推开了暗门，门发出了一声悠长的吱呦声，露出了昏暗的通道，一眼望不到尽头。
+              </p>
+              <p class="text-secondary mb-2">
+                借助手机的手电筒，你勉强能够看清前路。
+              </p>
+              <p class="text-secondary mb-2">
+                空气中弥漫着一股陈旧的气息。通道时而左转，时而右转，不知将要去往何处。
+              </p>
+              <p class="text-secondary mb-2">
+                通道的尽头又是一扇门。你轻轻推开，发现里面又有三扇一模一样的门，分别通向三个方向。
+              </p>
+              <p class="text-secondary mb-2">
+                你意识到，自己或许正身处于一个巨大的迷宫之中。
+              </p>
+              <p class="text-secondary mb-0">
+                依次找到三张迷宫的出口吧。屏幕会照亮脚下和身边八格。
+              </p>
 
-    <div
-      class="app"
-      x-data="mazeGame()"
-      x-init="connect()"
-      @keydown.window.arrow-up.prevent="move('up')"
-      @keydown.window.arrow-down.prevent="move('down')"
-      @keydown.window.arrow-left.prevent="move('left')"
-      @keydown.window.arrow-right.prevent="move('right')"
-    >
-      <div class="status">
-        <div>
-          连接状态：<span x-text="connected ? '已连接' : '未连接'"></span>
+              <figure class="list-surface mt-4 mb-3">
+                <div
+                  class="maze-board"
+                  role="img"
+                  aria-label="迷雾迷宫"
+                  :aria-label="initialized ? size.x + '×' + size.y + ' 迷雾迷宫' : '迷雾迷宫'"
+                  :style="{ gridTemplateColumns: 'repeat(' + size.x + ', minmax(0, 1fr))', gridTemplateRows: 'repeat(' + size.y + ', minmax(0, 1fr))' }"
+                >
+                  <template x-for="row in size.y" :key="row">
+                    <div class="maze-row">
+                      <template x-for="col in size.x" :key="col">
+                        <div
+                          class="maze-cell"
+                          :class="cellClass(cellAt(col - 1, row - 1))"
+                        >
+                          <span
+                            class="maze-marker"
+                            x-text="({S: '起', E: '出'}[cellAt(col - 1, row - 1)] || '')"
+                          ></span>
+                          <span
+                            class="maze-player"
+                            x-show="player?.x === col - 1 && player?.y === row - 1"
+                          ></span>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+
+                <figcaption
+                  class="d-flex flex-wrap justify-content-center gap-3 small text-secondary mt-2"
+                >
+                  <span class="d-inline-flex align-items-center gap-1"
+                    ><span class="maze-key maze-key-player"></span> 你</span
+                  >
+                  <span class="d-inline-flex align-items-center gap-1"
+                    ><span class="maze-key maze-key-wall"></span> 墙</span
+                  >
+                  <span
+                    x-cloak
+                    x-show.important="!win"
+                    class="d-inline-flex align-items-center gap-1"
+                    ><span class="maze-key maze-key-fog"></span> 迷雾</span
+                  >
+                </figcaption>
+              </figure>
+
+              <div class="action-stack mb-4" x-cloak>
+                <div class="list-surface small" role="status">
+                  <div
+                    class="d-flex flex-wrap align-items-baseline column-gap-3 row-gap-1"
+                  >
+                    <span
+                      x-show="initialized"
+                      class="fw-semibold"
+                      x-text="'第 ' + stage + ' / ' + stageCount + ' 张迷宫 · ' + size.x + '×' + size.y"
+                    ></span>
+                    <span
+                      class="text-secondary"
+                      x-show="player"
+                      x-text="player ? '当前位置 (' + player.x + ', ' + player.y + ')' : ''"
+                    ></span>
+                    <span
+                      class="text-secondary"
+                      x-show="!complete"
+                      x-text="terminalStatus"
+                    ></span>
+                  </div>
+                  <div
+                    class="fw-semibold mt-2"
+                    :class="{ 'text-success': win }"
+                    x-show="moveStatus"
+                    x-text="moveStatus"
+                  ></div>
+                </div>
+                <div x-show="!win">
+                  <p class="small mb-2">使用方向键或按钮移动。</p>
+                  <div class="maze-controls" role="group" aria-label="移动方向">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      style="grid-area: up"
+                      aria-label="向上移动"
+                      :disabled="!connected || !initialized || win"
+                      @click="move('up')"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      style="grid-area: left"
+                      aria-label="向左移动"
+                      :disabled="!connected || !initialized || win"
+                      @click="move('left')"
+                    >
+                      ←
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      style="grid-area: down"
+                      aria-label="向下移动"
+                      :disabled="!connected || !initialized || win"
+                      @click="move('down')"
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      style="grid-area: right"
+                      aria-label="向右移动"
+                      :disabled="!connected || !initialized || win"
+                      @click="move('right')"
+                    >
+                      →
+                    </button>
+                  </div>
+                </div>
+                <div class="action-row">
+                  <button
+                    x-show="canAdvance"
+                    type="button"
+                    class="btn btn-primary"
+                    :disabled="!connected || pending"
+                    @click="next()"
+                  >
+                    进入下一张迷宫
+                  </button>
+                  <a
+                    x-show="nextLevelFlag"
+                    :href="nextLevelFlag ? '/' + nextLevelFlag + '/' : null"
+                    class="btn btn-primary"
+                    >进入第 16 关</a
+                  >
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    @click="reconnect()"
+                  >
+                    重新开始
+                  </button>
+                </div>
+              </div>
+
+              <div class="hint-panel">
+                <details
+                  @toggle.self="$event.currentTarget.open && $nextTick(() => scrollLogToBottom())"
+                >
+                  <summary>WebSocket 记录</summary>
+                  <div
+                    class="maze-log small"
+                    x-ref="logBox"
+                    tabindex="0"
+                    aria-label="WebSocket 消息列表"
+                  >
+                    <template x-for="item in logs" :key="item.id">
+                      <details class="maze-log-entry">
+                        <summary>
+                          <time
+                            class="font-monospace text-secondary me-2"
+                            :datetime="item.datetime"
+                            x-text="item.time"
+                          ></time>
+                          <span class="me-2" x-text="item.direction"></span>
+                          <code x-text="item.event"></code>
+                        </summary>
+                        <pre class="mt-2 mb-0" x-text="item.json"></pre>
+                      </details>
+                    </template>
+                  </div>
+                </details>
+              </div>
+            </div>
+          </section>
         </div>
-        <div x-show="win" class="win">你赢了！</div>
       </div>
+    </main>
 
-      <div class="controls">
-        <div></div>
-        <button @click="move('up')">上</button>
-        <div></div>
-
-        <button @click="move('left')">左</button>
-        <button disabled>●</button>
-        <button @click="move('right')">右</button>
-
-        <div></div>
-        <button @click="move('down')">下</button>
-        <div></div>
-      </div>
-
-      <div>
-        <button @click="reconnect()">重新连接</button>
-      </div>
-
-      <div class="log" x-ref="logBox">
-        <template x-for="item in logs" :key="item.id">
-          <div
-            class="log-line"
-            :class="item.highlight ? 'log-line-highlight' : ''"
-            x-text="item.text"
-          ></div>
-        </template>
-      </div>
-    </div>
-
-    <script>
-      function mazeGame() {
-        return {
-          ws: null,
-          connected: false,
-          initialized: false,
-          win: false,
-          logs: [],
-          logId: 0,
-          pendingDir: null,
-          lastMoveAt: 0,
-          moveCooldownMs: 120,
-
-          addLog(text) {
-            const id = ++this.logId;
-            this.logs.push({ id, text, highlight: true });
-
-            setTimeout(() => {
-              const target = this.logs.find((item) => item.id === id);
-              if (target) target.highlight = false;
-            }, 1000);
-
-            this.$nextTick(() => this.scrollLogToBottom());
-          },
-
-          scrollLogToBottom() {
-            const box = this.$refs.logBox;
-            if (!box) return;
-            box.scrollTop = box.scrollHeight;
-          },
-
-          connect() {
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${wsProtocol}//${location.host}/api/15/challenge`;
-
-            this.addLog('尝试连接: ' + wsUrl);
-            this.ws = new WebSocket(wsUrl);
-
-            this.ws.onopen = () => {
-              this.connected = true;
-              this.addLog('WebSocket 已连接');
-              this.initGame();
-            };
-
-            this.ws.onmessage = (event) => {
-              try {
-                const data = JSON.parse(event.data);
-                this.handleMessage(data, event.data);
-              } catch (e) {
-                this.addLog('收到非法数据: ' + event.data);
-              }
-            };
-
-            this.ws.onclose = () => {
-              this.connected = false;
-              this.pendingDir = null;
-              this.addLog('连接关闭');
-            };
-
-            this.ws.onerror = () => {
-              this.pendingDir = null;
-              this.addLog('连接出错');
-            };
-          },
-
-          initGame() {
-            if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-              this.addLog('init 失败：连接尚未就绪');
-              return;
-            }
-
-            this.addLog('发送 init');
-            this.ws.send(JSON.stringify({ action: 'init' }));
-          },
-
-          handleMessage(data, rawText) {
-            if (
-              typeof data.x === 'number' &&
-              typeof data.y === 'number' &&
-              !this.initialized
-            ) {
-              this.initialized = true;
-              this.win = false;
-              this.pendingDir = null;
-              this.addLog(`游戏初始化完成，地图大小：${data.x} x ${data.y}`);
-              this.addLog(`Have Fun! :)`);
-              return;
-            }
-
-            if (
-              typeof data.wall === 'number' &&
-              typeof data.win === 'boolean'
-            ) {
-              this.handleMoveResult(data);
-              return;
-            }
-
-            if (data.message) {
-              this.addLog(data.message);
-              return;
-            }
-
-            if (data.error) {
-              this.addLog('错误: ' + data.error);
-              this.pendingDir = null;
-              return;
-            }
-
-            this.addLog('收到未知消息: ' + rawText);
-          },
-
-          move(direction) {
-            if (!this.connected || !this.initialized || this.win) return;
-            if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-              this.addLog('连接尚未就绪');
-              return;
-            }
-            if (this.pendingDir) return;
-
-            const now = Date.now();
-            if (now - this.lastMoveAt < this.moveCooldownMs) return;
-            this.lastMoveAt = now;
-
-            this.pendingDir = direction;
-            this.addLog('尝试移动: ' + direction);
-
-            this.ws.send(
-              JSON.stringify({
-                action: 'move',
-                direction,
-              })
-            );
-          },
-
-          handleMoveResult(data) {
-            if (data.wall === 1) {
-              this.addLog('撞墙');
-              this.pendingDir = null;
-              return;
-            }
-
-            if (data.win === true) {
-              this.win = true;
-              this.addLog('胜利！');
-              if (data.flag) {
-                this.addLog('flag:\n' + data.flag);
-              }
-            } else {
-              this.addLog('前进成功');
-            }
-
-            this.pendingDir = null;
-          },
-
-          reconnect() {
-            try {
-              if (this.ws) this.ws.close();
-            } catch (e) {}
-
-            this.connected = false;
-            this.initialized = false;
-            this.win = false;
-            this.pendingDir = null;
-            this.logs = [];
-            this.addLog('开始重新连接');
-            this.connect();
-          },
-        };
-      }
-    </script>
     <script src="/js/analytics.js"></script>
   </body>
 </html>
